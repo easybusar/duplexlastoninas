@@ -1,0 +1,509 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// CATÁLOGO DE UNIDADES (4 DÚPLEX Y 1 DEPARTAMENTO)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const properties = [
+  {
+    id: "duplex-1",
+    name: "Dúplex 1",
+    type: "duplex",
+    capacity: 6,
+    pricePerNight: 45000,
+    price_per_night: 45000,
+    seasonalRates: [
+      {
+        id: "rate-d1-ene",
+        name: "Temporada Alta Enero",
+        startDate: "2025-01-01",
+        endDate: "2025-01-31",
+        pricePerNight: 70000,
+      },
+      {
+        id: "rate-d1-feb",
+        name: "Temporada Alta Febrero",
+        startDate: "2025-02-01",
+        endDate: "2025-02-28",
+        pricePerNight: 60000,
+      },
+    ],
+    images: [
+      "/fotos/FRENTE/DUPLEX1.jpg",
+      "/fotos/DUPLEX/LT DUPLEX 13.jpg",
+      "/fotos/DUPLEX/LT DUPLEX 14.jpg",
+      "/fotos/DUPLEX/LT DUPLEX 8.jpg",
+      "/fotos/DUPLEX/LT DUPLEX 4.jpg",
+      "/fotos/DUPLEX/LT DUPLEX 2.jpg",
+    ],
+    amenities: ["WiFi", "Aire Acondicionado", "Calefacción", "Cocina Equipada", "Smart TV", "Estacionamiento", "Parrilla"],
+    description: "Luminoso dúplex de dos plantas completamente equipado en Calle 12 Nº 495. Zona de parrilla individual, cochera y a solo 400 metros de las playas amplias con escolleras.",
+  },
+  {
+    id: "duplex-2",
+    name: "Dúplex 2",
+    type: "duplex",
+    capacity: 6,
+    pricePerNight: 45000,
+    price_per_night: 45000,
+    seasonalRates: [
+      {
+        id: "rate-d2-ene",
+        name: "Temporada Alta Enero",
+        startDate: "2025-01-01",
+        endDate: "2025-01-31",
+        pricePerNight: 70000,
+      },
+      {
+        id: "rate-d2-feb",
+        name: "Temporada Alta Febrero",
+        startDate: "2025-02-01",
+        endDate: "2025-02-28",
+        pricePerNight: 60000,
+      },
+    ],
+    images: [
+      "/fotos/FRENTE/DUPLEX2.JPG",
+      "/fotos/DUPLEX/LT DUPLEX 12.jpg",
+      "/fotos/DUPLEX/LT DUPLEX 3.jpg",
+      "/fotos/DUPLEX/LT DUPLEX 7.jpg",
+      "/fotos/DUPLEX/100085073_892639904547016_3812533114496876544_n.jpg",
+      "/fotos/DUPLEX/101459021_246880323393933_6864321130237263872_n.jpg",
+    ],
+    amenities: ["WiFi", "Aire Acondicionado", "Calefacción", "Cocina Equipada", "Smart TV", "Estacionamiento", "Parrilla"],
+    description: "Dúplex ideal para familias a 400m de la playa. Ambientes amplios, cocina completa, patio propio y parrilla individual incluida.",
+  },
+  {
+    id: "duplex-3",
+    name: "Dúplex 3",
+    type: "duplex",
+    capacity: 6,
+    pricePerNight: 45000,
+    price_per_night: 45000,
+    seasonalRates: [
+      {
+        id: "rate-d3-ene",
+        name: "Temporada Alta Enero",
+        startDate: "2025-01-01",
+        endDate: "2025-01-31",
+        pricePerNight: 70000,
+      },
+      {
+        id: "rate-d3-feb",
+        name: "Temporada Alta Febrero",
+        startDate: "2025-02-01",
+        endDate: "2025-02-28",
+        pricePerNight: 60000,
+      },
+    ],
+    images: [
+      "/fotos/FRENTE/DUPLEX3.JPG",
+      "/fotos/DUPLEX/LT DUPLEX 8.jpg",
+      "/fotos/DUPLEX/101395951_1017869315281973_6020210364078096384_n.jpg",
+      "/fotos/DUPLEX/101673128_1331273097069440_5941149795799269376_n.jpg",
+      "/fotos/DUPLEX/100731088_248916043210969_6265887694614691840_n.jpg",
+    ],
+    amenities: ["WiFi", "Aire Acondicionado", "Calefacción", "Cocina Equipada", "Smart TV", "Estacionamiento", "Parrilla"],
+    description: "Cómodo dúplex de dos plantas con dos dormitorios, baño completo, cocina equipada, living-comedor integrado y cochera.",
+  },
+  {
+    id: "duplex-4",
+    name: "Dúplex 4",
+    type: "duplex",
+    capacity: 6,
+    pricePerNight: 45000,
+    price_per_night: 45000,
+    seasonalRates: [
+      {
+        id: "rate-d4-ene",
+        name: "Temporada Alta Enero",
+        startDate: "2025-01-01",
+        endDate: "2025-01-31",
+        pricePerNight: 70000,
+      },
+      {
+        id: "rate-d4-feb",
+        name: "Temporada Alta Febrero",
+        startDate: "2025-02-01",
+        endDate: "2025-02-28",
+        pricePerNight: 60000,
+      },
+    ],
+    images: [
+      "/fotos/FRENTE/DUPLEX4.jpg",
+      "/fotos/DUPLEX/101181759_591098334851980_7757318008728453120_n.jpg",
+      "/fotos/DUPLEX/101405420_923929474726045_4672883478419734528_n.jpg",
+      "/fotos/DUPLEX/99424582_763869581020458_7135901223852441600_n.jpg",
+      "/fotos/DUPLEX/99294744_3433262796693572_5767960118670917632_n.jpg",
+    ],
+    amenities: ["WiFi", "Aire Acondicionado", "Calefacción", "Cocina Equipada", "Smart TV", "Estacionamiento", "Parrilla"],
+    description: "Espacioso dúplex con amplias habitaciones, living luminoso y zona de parrilla privada. Ideal para descansar cerca del mar.",
+  },
+  {
+    id: "depto-1",
+    name: "Departamento",
+    type: "departamento",
+    capacity: 5,
+    pricePerNight: 35000,
+    price_per_night: 35000,
+    seasonalRates: [
+      {
+        id: "rate-dep-ene",
+        name: "Temporada Alta Enero",
+        startDate: "2025-01-01",
+        endDate: "2025-01-31",
+        pricePerNight: 55000,
+      },
+      {
+        id: "rate-dep-feb",
+        name: "Temporada Alta Febrero",
+        startDate: "2025-02-01",
+        endDate: "2025-02-28",
+        pricePerNight: 48000,
+      },
+    ],
+    images: [
+      "/fotos/FRENTE/DEPARTAMENTO.jpg",
+      "/fotos/DEPARTAMENTO/LT DEPTO 1.jpg",
+      "/fotos/DEPARTAMENTO/LT DEPTO 2.jpg",
+      "/fotos/DEPARTAMENTO/LT DEPTO 3.jpg",
+      "/fotos/DEPARTAMENTO/LT DEPTO 4.jpg",
+      "/fotos/DEPARTAMENTO/LT DEPTO 12.jpg",
+    ],
+    amenities: ["WiFi", "Aire Acondicionado", "Calefacción", "Cocina Equipada", "Smart TV"],
+    description: "Departamento ubicado en primer piso con acceso por escalera en Calle 12 Nº 495. Cómodo y totalmente equipado para hasta 5 personas.",
+    notes: "Acceso por escalera · Primer piso",
+  },
+];
+
+// ─── Mock bookings con Residencia (Semilla inicial) ──────────────────────────
+export const mockBookings = [
+  {
+    id: "bk001",
+    propertyId: "duplex-1",
+    guestName: "Carlos Rodríguez",
+    guestPhone: "+54 9 11 5555-1111",
+    guestResidence: "CABA, Buenos Aires",
+    checkIn: "2025-01-10",
+    checkOut: "2025-01-17",
+    guests: 5,
+    totalAmount: 315000,
+    depositPaid: 94500,
+    status: "confirmed",
+    paymentMethod: "MercadoPago",
+    createdAt: "2024-12-20",
+  },
+  {
+    id: "bk002",
+    propertyId: "duplex-2",
+    guestName: "Ana González",
+    guestPhone: "+54 9 11 5555-2222",
+    guestResidence: "Rosario, Santa Fe",
+    checkIn: "2025-01-10",
+    checkOut: "2025-01-14",
+    guests: 4,
+    totalAmount: 180000,
+    depositPaid: 54000,
+    status: "confirmed",
+    paymentMethod: "Transferencia",
+    createdAt: "2024-12-18",
+  },
+  {
+    id: "bk003",
+    propertyId: "duplex-3",
+    guestName: "Laura Martínez",
+    guestPhone: "+54 9 11 5555-3333",
+    guestResidence: "La Plata, Buenos Aires",
+    checkIn: "2025-01-17",
+    checkOut: "2025-01-24",
+    guests: 6,
+    totalAmount: 315000,
+    depositPaid: 0,
+    status: "pending",
+    paymentMethod: "Transferencia",
+    createdAt: "2024-12-22",
+  },
+  {
+    id: "bk004",
+    propertyId: "depto-1",
+    guestName: "Martín López",
+    guestPhone: "+54 9 11 5555-4444",
+    guestResidence: "Córdoba Capital",
+    checkIn: "2025-02-01",
+    checkOut: "2025-02-08",
+    guests: 3,
+    totalAmount: 245000,
+    depositPaid: 73500,
+    status: "confirmed",
+    paymentMethod: "MercadoPago",
+    createdAt: "2025-01-02",
+  },
+  {
+    id: "bk005",
+    propertyId: "duplex-4",
+    guestName: "Sofía Pérez",
+    guestPhone: "+54 9 11 5555-5555",
+    guestResidence: "Mar del Plata",
+    checkIn: "2025-02-14",
+    checkOut: "2025-02-21",
+    guests: 5,
+    totalAmount: 315000,
+    depositPaid: 315000,
+    status: "completed",
+    paymentMethod: "MercadoPago",
+    createdAt: "2025-01-10",
+  },
+];
+
+// ─── LocalStorage Persistence Layer ─────────────────────────────────────────
+export const STORAGE_KEY_BOOKINGS = "toninas_bookings_persistent_v1";
+
+export function getStoredBookings() {
+  if (typeof window === "undefined") return mockBookings;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_BOOKINGS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEY_BOOKINGS, JSON.stringify(mockBookings));
+      return mockBookings;
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : mockBookings;
+  } catch (e) {
+    console.warn("Error leyendo reservas locales:", e);
+    return mockBookings;
+  }
+}
+
+export function saveStoredBookings(bookings) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY_BOOKINGS, JSON.stringify(bookings));
+    window.dispatchEvent(new Event("toninas_bookings_changed"));
+  } catch (e) {
+    console.warn("Error guardando reservas locales:", e);
+  }
+}
+
+// ─── Helpers de Formato DD-MM-AAAA ──────────────────────────────────────────
+export function formatDateDDMMAAAA(dateStr) {
+  if (!dateStr) return "—";
+  // Si ya viene en formato DD-MM-AAAA
+  if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) return dateStr;
+  // Si viene en formato YYYY-MM-DD
+  const match = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const [, yyyy, mm, dd] = match;
+    return `${dd}-${mm}-${yyyy}`;
+  }
+  // Si es un Date object o parseable
+  try {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      const dd = String(d.getUTCDate()).padStart(2, "0");
+      const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const yyyy = d.getUTCFullYear();
+      return `${dd}-${mm}-${yyyy}`;
+    }
+  } catch {}
+  return String(dateStr);
+}
+
+// ─── LocalStorage Persistence Layer for Properties ─────────────────────────
+export const STORAGE_KEY_PROPERTIES = "toninas_properties_persistent_v1";
+
+export function getStoredProperties() {
+  if (typeof window === "undefined") return properties;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_PROPERTIES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEY_PROPERTIES, JSON.stringify(properties));
+      return properties;
+    }
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map((p) => ({
+        ...p,
+        pricePerNight: Number(p.price_per_night || p.pricePerNight || 45000),
+        price_per_night: Number(p.price_per_night || p.pricePerNight || 45000),
+        seasonalRates: Array.isArray(p.seasonalRates || p.seasonal_rates)
+          ? (p.seasonalRates || p.seasonal_rates)
+          : [],
+      }));
+    }
+    return properties;
+  } catch (e) {
+    console.warn("Error leyendo propiedades locales:", e);
+    return properties;
+  }
+}
+
+export function saveStoredProperties(propsList) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY_PROPERTIES, JSON.stringify(propsList));
+    window.dispatchEvent(new Event("toninas_properties_changed"));
+  } catch (e) {
+    console.warn("Error guardando propiedades locales:", e);
+  }
+}
+
+export function updateStoredProperty(propertyId, updates) {
+  const current = getStoredProperties();
+  const next = current.map((p) => {
+    if (p.id === propertyId) {
+      const updated = { ...p, ...updates };
+      if (updates.price_per_night !== undefined) {
+        updated.pricePerNight = Number(updates.price_per_night);
+        updated.price_per_night = Number(updates.price_per_night);
+      } else if (updates.pricePerNight !== undefined) {
+        updated.pricePerNight = Number(updates.pricePerNight);
+        updated.price_per_night = Number(updates.pricePerNight);
+      }
+      if (updates.seasonalRates !== undefined) {
+        updated.seasonalRates = updates.seasonalRates;
+      }
+      return updated;
+    }
+    return p;
+  });
+  saveStoredProperties(next);
+  return next.find((p) => p.id === propertyId);
+}
+
+// ─── Helpers de Disponibilidad y Cálculos ───────────────────────────────────
+export function getBookingsForProperty(propertyId) {
+  const all = getStoredBookings();
+  return all.filter((b) => (b.propertyId || b.property_id) === propertyId);
+}
+
+export function isDateRangeAvailable(propertyId, checkIn, checkOut, excludeBookingId = null) {
+  const all = getStoredBookings();
+  const bookings = all.filter((b) => {
+    const pid = b.propertyId || b.property_id;
+    if (pid !== propertyId) return false;
+    if (excludeBookingId && b.id === excludeBookingId) return false;
+    return b.status === "confirmed" || b.status === "pending" || b.status === "checked_in";
+  });
+
+  const startDate = new Date(checkIn);
+  const endDate = new Date(checkOut);
+
+  for (const booking of bookings) {
+    const bStart = new Date(booking.checkIn || booking.check_in);
+    const bEnd = new Date(booking.checkOut || booking.check_out);
+    if (startDate < bEnd && endDate > bStart) return false;
+  }
+  return true;
+}
+
+/**
+ * Calcula el monto de la estadía contemplando tarifas por temporada / rangos de alta demanda.
+ * Acepta tanto un objeto property completo como un número de tarifa base.
+ */
+export function calculateStayPrice(propertyOrPrice, checkIn, checkOut) {
+  const prop = typeof propertyOrPrice === "object" && propertyOrPrice !== null ? propertyOrPrice : null;
+  const basePrice = prop
+    ? Number(prop.price_per_night || prop.pricePerNight || 45000)
+    : Number(propertyOrPrice) || 45000;
+  const seasonalRates = prop?.seasonalRates || prop?.seasonal_rates || [];
+
+  if (!checkIn || !checkOut) {
+    return {
+      days: 1,
+      total: basePrice,
+      deposit: Math.round(basePrice * 0.3),
+      avgPerNight: basePrice,
+      hasSeasonalRate: false,
+      breakdown: [
+        {
+          name: "Tarifa Estándar",
+          pricePerNight: basePrice,
+          nights: 1,
+          subtotal: basePrice,
+        },
+      ],
+    };
+  }
+
+  const startDate = new Date(checkIn + "T12:00:00");
+  const endDate = new Date(checkOut + "T12:00:00");
+  const diffTime = endDate.getTime() - startDate.getTime();
+  const totalNights = Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24)));
+
+  let totalAmount = 0;
+  let hasSeasonalRate = false;
+  const ratesMap = {};
+
+  const cur = new Date(startDate);
+  for (let i = 0; i < totalNights; i++) {
+    const yyyy = cur.getFullYear();
+    const mm = String(cur.getMonth() + 1).padStart(2, "0");
+    const dd = String(cur.getDate()).padStart(2, "0");
+    const nightStr = `${yyyy}-${mm}-${dd}`;
+
+    // Buscar si alguna tarifa de temporada aplica a esta noche
+    const matchedSeason = seasonalRates.find((s) => {
+      const sStart = s.startDate || s.start_date;
+      const sEnd = s.endDate || s.end_date;
+      return nightStr >= sStart && nightStr <= sEnd;
+    });
+
+    if (matchedSeason) {
+      hasSeasonalRate = true;
+      const ratePrice = Number(matchedSeason.pricePerNight || matchedSeason.price_per_night || basePrice);
+      totalAmount += ratePrice;
+      const key = matchedSeason.id || matchedSeason.name || "season";
+      if (!ratesMap[key]) {
+        ratesMap[key] = {
+          name: matchedSeason.name || "Temporada Alta",
+          pricePerNight: ratePrice,
+          nights: 0,
+          subtotal: 0,
+        };
+      }
+      ratesMap[key].nights += 1;
+      ratesMap[key].subtotal += ratePrice;
+    } else {
+      totalAmount += basePrice;
+      if (!ratesMap["base"]) {
+        ratesMap["base"] = {
+          name: "Tarifa Estándar",
+          pricePerNight: basePrice,
+          nights: 0,
+          subtotal: 0,
+        };
+      }
+      ratesMap["base"].nights += 1;
+      ratesMap["base"].subtotal += basePrice;
+    }
+
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  const breakdown = Object.values(ratesMap);
+  const deposit = Math.round(totalAmount * 0.3);
+  const avgPerNight = Math.round(totalAmount / totalNights);
+
+  return {
+    days: totalNights,
+    total: totalAmount,
+    deposit,
+    avgPerNight,
+    hasSeasonalRate,
+    breakdown,
+  };
+}
+
+export function calculateTotal(pricePerNightOrProp, checkIn, checkOut) {
+  return calculateStayPrice(pricePerNightOrProp, checkIn, checkOut);
+}
+
+export function getStatusLabel(status) {
+  const map = {
+    confirmed:   { label: "Confirmada",  color: "#065f46", bg: "#d1fae5" },
+    pending:     { label: "Pendiente",   color: "#92400e", bg: "#fef3c7" },
+    checked_in:  { label: "En Estadía",  color: "#1e40af", bg: "#dbeafe" },
+    checked_out: { label: "Check-out",   color: "#374151", bg: "#f3f4f6" },
+    completed:   { label: "Completada",  color: "#1E293B", bg: "#E7EEF5" },
+    cancelled:   { label: "Cancelada",   color: "#991b1b", bg: "#fee2e2" },
+  };
+  return map[status] || map.pending;
+}
