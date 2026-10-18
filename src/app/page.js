@@ -1,9 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { properties, getStoredProperties } from "@/lib/data";
+import {
+  properties,
+  getStoredProperties,
+  getStoredSiteSettings,
+  buildWhatsAppUrl,
+  trackAdsConversion,
+} from "@/lib/data";
+import { getProperties, getSiteSettings } from "@/lib/supabase";
 import { siteContent } from "@/lib/content";
 import {
   Sparkles,
@@ -26,7 +33,22 @@ import {
   Camera,
   X,
   Menu,
+  ShieldCheck,
 } from "lucide-react";
+
+// ─── Official WhatsApp Logo SVG ─────────────────────────────────────────────
+function WhatsAppIcon({ className = "size-6" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M12.031 2c-5.516 0-9.999 4.486-9.999 10.003 0 1.766.461 3.49 1.337 5.01L2 22l5.118-1.341c1.474.805 3.136 1.23 4.913 1.23h.004c5.515 0 9.998-4.486 9.998-10.002 0-2.672-1.04-5.185-2.928-7.074C17.216 3.041 14.703 2 12.031 2zm5.829 14.294c-.246.693-1.432 1.326-1.997 1.411-.513.076-1.183.109-1.91-.121-.441-.14-1.007-.327-1.732-.641-3.047-1.316-5.037-4.387-5.189-4.59-.152-.203-1.24-1.649-1.24-3.146 0-1.497.784-2.232 1.063-2.537.279-.305.608-.381.811-.381.203 0 .406.002.583.011.187.009.438-.071.685.523.254.609.863 2.106.939 2.258.076.152.127.33.025.533-.101.203-.152.33-.305.507-.152.178-.32.398-.457.533-.152.152-.311.317-.133.622.178.305.789 1.302 1.694 2.109 1.164 1.038 2.145 1.36 2.45 1.512.305.152.482.127.66-.076.178-.203.761-.888.964-1.193.203-.305.406-.254.685-.152.279.101 1.777.838 2.081.99.305.152.508.228.584.355.076.127.076.736-.17 1.429z" />
+    </svg>
+  );
+}
 
 // ─── Rivr Concentric Ring Icon ──────────────────────────────────────────────
 function RivrRingLogo({ className = "size-6" }) {
@@ -40,7 +62,7 @@ function RivrRingLogo({ className = "size-6" }) {
 }
 
 // ─── 1. HERO SECTION RIVR (Framed Canvas + Video + Cutout Corner Dock) ──────
-function RivrHeroSection() {
+function RivrHeroSection({ heroRef }) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [checkIn, setCheckIn] = useState("");
@@ -48,10 +70,15 @@ function RivrHeroSection() {
   const [guests, setGuests] = useState(4);
 
   const today = new Date().toISOString().split("T")[0];
-  const { brand, hero } = siteContent;
+  const { brand, navigation, hero } = siteContent;
 
   const handleBookingSubmit = (e) => {
     e.preventDefault();
+    trackAdsConversion("search_availability", {
+      check_in: checkIn,
+      check_out: checkOut,
+      guests,
+    });
     const params = new URLSearchParams();
     if (checkIn) params.append("checkIn", checkIn);
     if (checkOut) params.append("checkOut", checkOut);
@@ -62,6 +89,7 @@ function RivrHeroSection() {
   return (
     <section
       id="home"
+      ref={heroRef}
       data-slot="hero"
       className="flex min-h-dvh w-full items-stretch justify-center bg-[#EFEFEF] p-3 md:p-5"
     >
@@ -81,12 +109,13 @@ function RivrHeroSection() {
         {/* Rivr Atmosphere Gradient Overlay */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 z-[1] bg-gradient-to-b from-[#EFEFEF]/85 via-[#1E293B]/25 to-[#0F172A]/75"
+          className="absolute inset-0 z-[1] bg-gradient-to-b from-[#EFEFEF]/85 via-[#0F172A]/40 to-[#0F172A]/80"
         />
 
         {/* Top Rivr In-Canvas Navbar */}
         <nav
           data-slot="rivr-nav"
+          aria-label="Navegación Principal"
           className="relative z-20 flex w-full items-center justify-between gap-4 px-5 py-5 md:px-9"
         >
           <Link
@@ -101,44 +130,44 @@ function RivrHeroSection() {
               height={32}
               className="size-8 object-contain"
             />
-            <span className="text-base sm:text-lg font-bold tracking-tight text-[#1E293B]">
+            <span className="text-base sm:text-lg font-extrabold tracking-tight text-[#1E293B]">
               {brand.shortName}
             </span>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <ul className="hidden items-center gap-8 text-sm font-medium text-[#1E293B]/85 lg:flex">
+          {/* Desktop Navigation Links: Lugar | Alojamiento | Galería | Ubicación */}
+          <ul className="hidden items-center gap-9 text-sm font-bold text-[#1E293B]/90 lg:flex">
             <li>
               <a
                 href="#escolleras"
-                className="flex items-center gap-1 transition-colors hover:text-[#1E293B]"
+                className="flex items-center gap-1 transition-colors hover:text-[#0F172A]"
               >
-                Playas y Escolleras
+                {navigation?.lugar || "Lugar"}
               </a>
             </li>
             <li>
               <a
                 href="#unidades"
-                className="group/item flex items-center gap-1 transition-colors hover:text-[#1E293B]"
+                className="group/item flex items-center gap-1 transition-colors hover:text-[#0F172A]"
               >
-                <span>Unidades (Dúplex y Depto)</span>
+                <span>{navigation?.alojamiento || "Alojamiento"}</span>
                 <ChevronRight className="size-4 transition-transform group-hover/item:translate-x-0.5" />
               </a>
             </li>
             <li>
               <a
                 href="#galeria"
-                className="transition-colors hover:text-[#1E293B]"
+                className="transition-colors hover:text-[#0F172A]"
               >
-                Galería
+                {navigation?.galeria || "Galería"}
               </a>
             </li>
             <li>
               <a
                 href="#ubicacion"
-                className="transition-colors hover:text-[#1E293B]"
+                className="transition-colors hover:text-[#0F172A]"
               >
-                {brand.address}
+                {navigation?.ubicacion || "Ubicación"}
               </a>
             </li>
           </ul>
@@ -147,9 +176,10 @@ function RivrHeroSection() {
           <div className="flex items-center gap-2.5">
             <Link
               href="/reservar"
-              className="inline-flex shrink-0 items-center justify-center gap-2.5 rounded-xl bg-[#1E293B] text-white hover:bg-[#0F172A] px-4 py-2 text-sm font-medium transition-all shadow-sm"
+              onClick={() => trackAdsConversion("click_reservar_nav")}
+              className="inline-flex shrink-0 items-center justify-center gap-2.5 rounded-xl bg-[#1E293B] text-white hover:bg-[#0F172A] px-4 py-2 text-sm font-semibold transition-all shadow-sm"
             >
-              <span>Reservar Online</span>
+              <span>{navigation?.ctaButton || "Reservar Online"}</span>
               <span className="flex size-7 items-center justify-center rounded-full bg-white/20">
                 <ArrowUpRight className="size-4" />
               </span>
@@ -159,7 +189,7 @@ function RivrHeroSection() {
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Abrir menú"
-              className="lg:hidden flex size-10 items-center justify-center rounded-xl bg-white/80 backdrop-blur-md text-[#1E293B]"
+              className="lg:hidden flex size-10 items-center justify-center rounded-xl bg-white/85 backdrop-blur-md text-[#1E293B]"
             >
               {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
@@ -172,70 +202,61 @@ function RivrHeroSection() {
             <a
               href="#escolleras"
               onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-semibold text-[#1E293B] border-b border-slate-100"
+              className="block py-2 text-sm font-bold text-[#1E293B] border-b border-slate-100"
             >
-              Playas Amplias y Escolleras
+              {navigation?.lugar || "Lugar"}
             </a>
             <a
               href="#unidades"
               onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-semibold text-[#1E293B] border-b border-slate-100"
+              className="block py-2 text-sm font-bold text-[#1E293B] border-b border-slate-100"
             >
-              Nuestras Unidades (4 Dúplex y 1 Depto)
+              {navigation?.alojamiento || "Alojamiento"}
             </a>
             <a
               href="#galeria"
               onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-semibold text-[#1E293B] border-b border-slate-100"
+              className="block py-2 text-sm font-bold text-[#1E293B] border-b border-slate-100"
             >
-              Galería de Fotos
+              {navigation?.galeria || "Galería"}
             </a>
             <a
               href="#ubicacion"
               onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-semibold text-[#1E293B]"
+              className="block py-2 text-sm font-bold text-[#1E293B]"
             >
-              Ubicación: {brand.address}
+              {navigation?.ubicacion || "Ubicación"}
             </a>
           </div>
         )}
 
-        {/* Center Hero Headline & Badge */}
-        <div className="relative z-10 my-auto flex flex-col items-center justify-center px-6 py-10 text-center max-w-4xl mx-auto">
-          <div
-            data-slot="hero-badge"
-            className="mx-auto mb-5 flex w-fit items-center gap-2 rounded-full border border-white/40 bg-white/75 px-4 py-2 backdrop-blur-md shadow-xs"
-          >
-            <Sparkles className="size-4 text-[#1E293B]" />
-            <span className="text-xs sm:text-sm font-semibold text-[#1E293B]">
-              {hero.topBadge}
-            </span>
-          </div>
-
+        {/* Center Hero Headline & Persuasive SEO Description (No top pill) */}
+        <div className="relative z-10 my-auto flex flex-col items-center justify-center px-5 py-10 text-center max-w-5xl mx-auto">
           <h1
             data-slot="hero-title"
-            className="mb-4 text-4xl leading-[1.04] font-semibold tracking-[-0.03em] text-white drop-shadow-sm sm:text-5xl md:text-6xl lg:text-[74px]"
+            className="mb-5 text-[clamp(2.35rem,1.35rem+4.5vw,5.25rem)] leading-[1.03] font-extrabold tracking-[-0.035em] text-white text-balance drop-shadow-[0_4px_24px_rgba(15,23,42,0.5)]"
           >
             {hero.title}
           </h1>
 
-          <p className="max-w-2xl text-base leading-relaxed text-white/95 font-medium sm:text-lg drop-shadow-xs">
-            {hero.subtitle}
+          <p className="max-w-[64ch] text-[clamp(1rem,0.92rem+0.45vw,1.25rem)] leading-[1.58] text-white/95 font-semibold text-pretty drop-shadow-[0_2px_12px_rgba(15,23,42,0.45)]">
+            Tu mejor opción de <strong className="font-extrabold text-white underline decoration-white/40 underline-offset-4">alquiler de temporada</strong> a 400 metros del mar.{" "}
+            <strong className="font-extrabold text-white">Alquiler de dúplex</strong> y departamento totalmente equipados con cochera y parrilla propia en la zona de playas más amplias. Reservá con total confianza, trato directo con sus dueños y sin comisiones.
           </p>
         </div>
 
-        {/* Bottom Area: Left Frosted Stat Card + Right Cutout Booking Dock */}
-        <div className="relative z-20 w-full flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-4 p-4 md:p-0">
-          {/* Bottom-Left Frosted Glass Stat Card (Rivr Signature) */}
+        {/* Bottom Area: Left Frosted Stat Card (Desktop Only) + Right Cutout Booking Dock */}
+        <div className="relative z-20 w-full flex flex-col lg:flex-row items-stretch lg:items-end justify-end lg:justify-between gap-4 p-4 md:p-0">
+          {/* Bottom-Left Frosted Glass Stat Card (Hidden on Mobile, Visible on Web/Desktop) */}
           <div
             data-slot="hero-stat"
-            className="flex w-full lg:w-fit min-w-[220px] flex-col gap-3 rounded-[1.5rem] border border-white/35 bg-white/25 p-5 backdrop-blur-xl lg:ms-8 lg:mb-8 lg:rounded-[2rem]"
+            className="hidden lg:flex w-fit min-w-[230px] flex-col gap-3 rounded-[2rem] border border-white/35 bg-white/25 p-5 backdrop-blur-xl lg:ms-8 lg:mb-8 shadow-sm"
           >
             <div className="flex flex-col">
-              <span className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
+              <span className="text-4xl font-extrabold tracking-tight text-white">
                 {hero.statCard.value}
               </span>
-              <span className="text-[11px] font-semibold tracking-wider text-white/85 uppercase">
+              <span className="text-[11px] font-bold tracking-wider text-white/90 uppercase mt-0.5">
                 {hero.statCard.label}
               </span>
             </div>
@@ -246,7 +267,7 @@ function RivrHeroSection() {
               <span className="flex items-center justify-center rounded-full bg-[#1E293B]/10 p-1">
                 <ArrowUpRight className="size-4 text-[#1E293B]" />
               </span>
-              <span className="text-xs sm:text-sm font-semibold">
+              <span className="text-xs sm:text-sm font-bold">
                 {hero.statCard.buttonText}
               </span>
             </a>
@@ -255,7 +276,7 @@ function RivrHeroSection() {
           {/* Bottom-Right Cutout Dock with Interactive Booking Search */}
           <div
             data-slot="hero-docs"
-            className="relative flex w-full lg:w-auto items-center rounded-[1.5rem] lg:rounded-none lg:rounded-ss-[3rem] bg-[#EFEFEF] p-4 sm:p-5 md:p-6 md:ps-10 md:pt-7"
+            className="relative flex w-full lg:w-auto lg:ms-auto items-center rounded-[1.5rem] lg:rounded-none lg:rounded-ss-[3rem] bg-[#EFEFEF] p-4 sm:p-5 md:p-6 md:ps-10 md:pt-7"
           >
             {/* Rivr Inverted Corner Cutout SVG Masks (Desktop) */}
             <div className="hidden lg:block pointer-events-none absolute end-0 -top-[3rem] size-[3rem] text-[#EFEFEF]">
@@ -418,7 +439,7 @@ function RivrMetricsSection() {
   );
 }
 
-// ─── 3. BENTO GRID DE CARACTERÍSTICAS Y PLAYAS CON ESCOLLERAS ───────────────
+// ─── 3. BENTO GRID DE LUGAR Y COMODIDADES ───────────────────────────────────
 function RivrFeaturesBentoSection() {
   const { bento } = siteContent;
   const pillIcons = [Wifi, Wind, Tv, Utensils];
@@ -436,7 +457,7 @@ function RivrFeaturesBentoSection() {
             <MapPin className="size-3.5 text-[#1E293B]" />
             {bento.eyebrow}
           </span>
-          <h2 className="max-w-2xl text-3xl leading-tight font-semibold tracking-tight text-[#1E293B] sm:text-4xl md:text-5xl">
+          <h2 className="max-w-2xl text-3xl leading-tight font-semibold tracking-tight text-[#1E293B] text-balance sm:text-4xl md:text-5xl">
             {bento.sectionTitle}
           </h2>
         </div>
@@ -486,10 +507,10 @@ function RivrFeaturesBentoSection() {
           </div>
 
           <div className="relative">
-            <h3 className="text-2xl leading-snug font-semibold text-[#1E293B] md:text-3xl">
+            <h3 className="text-2xl leading-snug font-semibold text-[#1E293B] md:text-3xl text-balance">
               {bento.beachCard.title}
             </h3>
-            <p className="mt-3 text-sm leading-relaxed text-[#5A697D]">
+            <p className="mt-3 text-sm leading-relaxed text-[#5A697D] text-pretty">
               {bento.beachCard.description}
             </p>
           </div>
@@ -530,7 +551,7 @@ function RivrFeaturesBentoSection() {
             <h3 className="text-xl font-semibold text-[#1E293B] md:text-2xl">
               {bento.equipmentCard.title}
             </h3>
-            <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-[#5A697D]">
+            <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-[#5A697D] text-pretty">
               {bento.equipmentCard.description}
             </p>
           </div>
@@ -551,7 +572,7 @@ function RivrFeaturesBentoSection() {
             <h3 className="text-xl font-semibold text-[#1E293B]">
               {bento.grillCard.title}
             </h3>
-            <p className="mt-2 text-sm leading-relaxed text-[#5A697D]">
+            <p className="mt-2 text-sm leading-relaxed text-[#5A697D] text-pretty">
               {bento.grillCard.description}
             </p>
             <a
@@ -576,7 +597,7 @@ function RivrFeaturesBentoSection() {
             <h3 className="text-xl font-semibold text-[#1E293B]">
               {bento.bookingCard.title}
             </h3>
-            <p className="mt-1.5 text-sm text-[#5A697D] max-w-xs">
+            <p className="mt-1.5 text-sm text-[#5A697D] max-w-xs text-pretty">
               {bento.bookingCard.description}
             </p>
           </div>
@@ -586,14 +607,20 @@ function RivrFeaturesBentoSection() {
   );
 }
 
-// ─── 4. CATÁLOGO DE UNIDADES (4 Dúplex y 1 Departamento) ────────────────────
-function RivrUnitsCatalogSection({ onOpenGallery }) {
+// ─── 4. CATÁLOGO DE ALOJAMIENTO (4 Dúplex y 1 Departamento) ─────────────────
+function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
   const [filter, setFilter] = useState("todos");
   const [items, setItems] = useState(properties);
   const { brand, unitsSection } = siteContent;
 
   useEffect(() => {
     setItems(getStoredProperties());
+    getProperties()
+      .then((res) => {
+        if (res && res.length > 0) setItems(res);
+      })
+      .catch(() => {});
+
     const handleSync = () => setItems(getStoredProperties());
     window.addEventListener("toninas_properties_changed", handleSync);
     window.addEventListener("storage", handleSync);
@@ -620,7 +647,7 @@ function RivrUnitsCatalogSection({ onOpenGallery }) {
             <span className="text-xs font-bold uppercase tracking-widest text-[#5A697D]">
               {unitsSection.eyebrow}
             </span>
-            <h2 className="mt-1 text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-[#1E293B]">
+            <h2 className="mt-1 text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-[#1E293B] text-balance">
               {unitsSection.title}
             </h2>
           </div>
@@ -652,6 +679,11 @@ function RivrUnitsCatalogSection({ onOpenGallery }) {
           {filtered.map((prop) => {
             const currentPrice = Number(prop.price_per_night || prop.pricePerNight || 45000);
             const hasSeasons = (prop.seasonalRates || prop.seasonal_rates || []).length > 0;
+            const unitWaUrl = buildWhatsAppUrl(
+              whatsappNumber,
+              `Hola! Estoy viendo la web de Dúplex Las Toninas y quiero consultar disponibilidad y precio por el ${prop.name} (hasta ${prop.capacity} personas).`
+            );
+
             return (
               <div
                 key={prop.id}
@@ -665,7 +697,7 @@ function RivrUnitsCatalogSection({ onOpenGallery }) {
                   >
                     <img
                       src={prop.images[0]}
-                      alt={prop.name}
+                      alt={`${prop.name} - Alquiler en Las Toninas`}
                       loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
@@ -683,71 +715,90 @@ function RivrUnitsCatalogSection({ onOpenGallery }) {
                     </div>
                   </div>
 
-                {/* Info */}
-                <div className="px-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-xl font-semibold text-[#1E293B]">
-                      {prop.name}
-                    </h3>
-                    <span className="text-xs font-bold text-[#1E293B] bg-[#E7EEF5] px-2.5 py-1 rounded-full">
-                      Hasta {prop.capacity} pers.
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-[#5A697D] mt-1.5">
-                    <MapPin className="size-3.5 text-[#1E293B] shrink-0" />
-                    <span>
-                      {brand.address}, {brand.city} · A {brand.distanceToSea} del mar
-                    </span>
-                  </div>
-
-                  <p className="mt-3 text-xs sm:text-sm text-[#5A697D] leading-relaxed">
-                    {prop.description}
-                  </p>
-
-                  {/* Amenity Tags */}
-                  <div className="flex flex-wrap gap-1.5 mt-4">
-                    {prop.amenities.map((am) => (
-                      <span
-                        key={am}
-                        className="rounded-full bg-white border border-[#D7E0EB] px-2.5 py-0.5 text-[11px] font-medium text-[#1E293B]"
-                      >
-                        {am}
+                  {/* Info */}
+                  <div className="px-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-xl font-semibold text-[#1E293B]">
+                        {prop.name}
+                      </h3>
+                      <span className="text-xs font-bold text-[#1E293B] bg-[#E7EEF5] px-2.5 py-1 rounded-full">
+                        Hasta {prop.capacity} pers.
                       </span>
-                    ))}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-[#5A697D] mt-1.5">
+                      <MapPin className="size-3.5 text-[#1E293B] shrink-0" />
+                      <span>
+                        {brand.address}, {brand.city} · A {brand.distanceToSea} del mar
+                      </span>
+                    </div>
+
+                    <p className="mt-3 text-xs sm:text-sm text-[#5A697D] leading-relaxed text-pretty">
+                      {prop.description}
+                    </p>
+
+                    {/* Amenity Tags */}
+                    <div className="flex flex-wrap gap-1.5 mt-4">
+                      {prop.amenities.map((am) => (
+                        <span
+                          key={am}
+                          className="rounded-full bg-white border border-[#D7E0EB] px-2.5 py-0.5 text-[11px] font-medium text-[#1E293B]"
+                        >
+                          {am}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Card Footer Actions */}
-              <div className="mt-6 pt-4 border-t border-[#D7E0EB]/80 flex items-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => onOpenGallery(prop)}
-                  className="flex-1 py-2.5 px-3 rounded-xl border border-[#D7E0EB] bg-white text-xs font-semibold text-[#1E293B] hover:bg-[#E7EEF5] transition-colors cursor-pointer"
-                >
-                  Galería ({prop.images.length})
-                </button>
-                <Link
-                  href={`/reservar?property=${prop.id}`}
-                  className="flex-1 py-2 px-3 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all"
-                >
-                  <span>Reservar</span>
-                  <span className="flex size-5 items-center justify-center rounded-full bg-white/20">
-                    <ArrowUpRight className="size-3" />
-                  </span>
-                </Link>
+                {/* Card Footer Actions */}
+                <div className="mt-6 pt-4 border-t border-[#D7E0EB]/80 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onOpenGallery(prop)}
+                    className="py-2.5 px-3 rounded-xl border border-[#D7E0EB] bg-white text-xs font-semibold text-[#1E293B] hover:bg-[#E7EEF5] transition-colors cursor-pointer"
+                  >
+                    Fotos ({prop.images.length})
+                  </button>
+                  <a
+                    href={unitWaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      trackAdsConversion("whatsapp_click", {
+                        source: "unit_card",
+                        unit: prop.name,
+                      })
+                    }
+                    aria-label={`Consultar por WhatsApp sobre ${prop.name}`}
+                    className="py-2.5 px-3 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <WhatsAppIcon className="size-3.5 text-emerald-600 shrink-0" />
+                    <span>WhatsApp</span>
+                  </a>
+                  <Link
+                    href={`/reservar?property=${prop.id}`}
+                    onClick={() =>
+                      trackAdsConversion("begin_checkout", { unit: prop.name })
+                    }
+                    className="flex-1 py-2 px-3 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <span>Reservar</span>
+                    <span className="flex size-5 items-center justify-center rounded-full bg-white/20">
+                      <ArrowUpRight className="size-3" />
+                    </span>
+                  </Link>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
         </div>
       </div>
     </section>
   );
 }
 
-// ─── 5. GALERÍA DESTACADA EN PORTADA (Editable desde src/lib/content.js) ────
+// ─── 5. GALERÍA DESTACADA EN PORTADA ────────────────────────────────────────
 function RivrGallerySection() {
   const { gallerySection } = siteContent;
   if (!gallerySection?.images?.length) return null;
@@ -818,7 +869,7 @@ function RivrLocationSection() {
             <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight leading-snug">
               {locationSection.title}
             </h3>
-            <p className="mt-3 text-sm text-white/80 leading-relaxed">
+            <p className="mt-3 text-sm text-white/80 leading-relaxed text-pretty">
               {locationSection.description}
             </p>
           </div>
@@ -870,11 +921,12 @@ function RivrLocationSection() {
 }
 
 // ─── 7. BANNER DE CIERRE CTA RIVR ───────────────────────────────────────────
-function RivrCtaBannerSection() {
-  const { brand, hero, bento, ctaBanner } = siteContent;
-  const waUrl = `https://wa.me/${brand.whatsappNumber}?text=${encodeURIComponent(
-    brand.whatsappDefaultMessage
-  )}`;
+function RivrCtaBannerSection({ whatsappNumber }) {
+  const { hero, bento, ctaBanner } = siteContent;
+  const waUrl = buildWhatsAppUrl(
+    whatsappNumber,
+    "Hola! Vi la web de Dúplex Las Toninas (Calle 12 Nº 495) y quiero consultar disponibilidad para alquiler de temporada directo con dueño."
+  );
 
   return (
     <section
@@ -903,18 +955,19 @@ function RivrCtaBannerSection() {
             {ctaBanner.badge}
           </span>
 
-          <h2 className="text-4xl leading-[1.05] font-semibold tracking-tight text-white sm:text-5xl md:text-6xl">
+          <h2 className="text-4xl leading-[1.05] font-semibold tracking-tight text-white text-balance sm:text-5xl md:text-6xl">
             {ctaBanner.title}
           </h2>
 
-          <p className="text-sm sm:text-base text-white/85 max-w-lg leading-relaxed">
+          <p className="text-sm sm:text-base text-white/85 max-w-lg leading-relaxed text-pretty">
             {ctaBanner.subtitle}
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/reservar"
-              className="group inline-flex items-center gap-2.5 rounded-full bg-white py-2 ps-5 pe-2 text-sm font-semibold text-[#1E293B] transition-colors hover:bg-white/90 shadow-md"
+              onClick={() => trackAdsConversion("click_reservar_cta_banner")}
+              className="group inline-flex items-center gap-2.5 rounded-full bg-white py-2.5 ps-5 pe-2 text-sm font-semibold text-[#1E293B] transition-colors hover:bg-white/90 shadow-md"
             >
               <span>{ctaBanner.primaryButton}</span>
               <span className="flex size-7 items-center justify-center rounded-full bg-[#1E293B]/10">
@@ -926,9 +979,12 @@ function RivrCtaBannerSection() {
               href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-6 py-2.5 text-sm font-medium text-white backdrop-blur-md transition-colors hover:bg-white/20"
+              onClick={() =>
+                trackAdsConversion("whatsapp_click", { source: "cta_banner" })
+              }
+              className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-[#25D366] hover:bg-[#1ebe5d] px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all"
             >
-              <Phone className="size-4" />
+              <WhatsAppIcon className="size-4" />
               <span>{ctaBanner.secondaryButton}</span>
             </a>
           </div>
@@ -939,13 +995,17 @@ function RivrCtaBannerSection() {
 }
 
 // ─── 8. FOOTER RIVR ─────────────────────────────────────────────────────────
-function RivrFooter() {
-  const { brand } = siteContent;
+function RivrFooter({ whatsappNumber }) {
+  const { brand, navigation } = siteContent;
+  const footerWaUrl = buildWhatsAppUrl(
+    whatsappNumber,
+    "Hola! Me comunico desde el sitio web de Dúplex Las Toninas para hacer una consulta sobre el alojamiento."
+  );
 
   return (
     <footer
       data-slot="footer"
-      className="border-t border-[#D7E0EB] bg-[#EFEFEF] text-[#1E293B]"
+      className="border-t border-[#D7E0EB] bg-[#EFEFEF] text-[#1E293B] pb-24"
     >
       <div className="mx-auto w-full max-w-[1536px] px-6 py-14 md:px-10 md:py-18">
         <div className="flex flex-col gap-12 md:flex-row md:justify-between">
@@ -959,8 +1019,8 @@ function RivrFooter() {
                 {brand.fullName}
               </span>
             </Link>
-            <p className="mt-4 text-sm text-[#5A697D] leading-relaxed">
-              4 Dúplex y 1 Departamento equipados en {brand.address}, {brand.city}. A {brand.distanceToSea} de las mejores playas amplias con escolleras.
+            <p className="mt-4 text-sm text-[#5A697D] leading-relaxed text-pretty">
+              Alquiler de Dúplex y Departamento de temporada en {brand.address}, {brand.city}. A {brand.distanceToSea} de las mejores playas amplias con escolleras.
             </p>
           </div>
 
@@ -969,7 +1029,9 @@ function RivrFooter() {
             className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:gap-16"
           >
             <div>
-              <h3 className="text-sm font-semibold text-[#1E293B]">Unidades</h3>
+              <h3 className="text-sm font-semibold text-[#1E293B]">
+                {navigation?.alojamiento || "Alojamiento"}
+              </h3>
               <ul className="mt-4 flex flex-col gap-3">
                 <li>
                   <a href="#unidades" className="text-sm text-[#5A697D] hover:text-[#1E293B]">
@@ -983,12 +1045,12 @@ function RivrFooter() {
                 </li>
                 <li>
                   <a href="#escolleras" className="text-sm text-[#5A697D] hover:text-[#1E293B]">
-                    Playas y Escolleras
+                    {navigation?.lugar || "Lugar"}
                   </a>
                 </li>
                 <li>
                   <a href="#galeria" className="text-sm text-[#5A697D] hover:text-[#1E293B]">
-                    Galería de Fotos
+                    {navigation?.galeria || "Galería"}
                   </a>
                 </li>
               </ul>
@@ -1016,19 +1078,25 @@ function RivrFooter() {
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-[#1E293B]">Ubicación</h3>
+              <h3 className="text-sm font-semibold text-[#1E293B]">
+                {navigation?.ubicacion || "Ubicación"}
+              </h3>
               <ul className="mt-4 flex flex-col gap-3 text-sm text-[#5A697D]">
                 <li>{brand.address}</li>
                 <li>{brand.city}, Buenos Aires</li>
                 <li>A {brand.distanceToSea} del mar</li>
                 <li>
                   <a
-                    href={`https://wa.me/${brand.whatsappNumber}`}
+                    href={footerWaUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[#1E293B] font-semibold hover:underline"
+                    onClick={() =>
+                      trackAdsConversion("whatsapp_click", { source: "footer" })
+                    }
+                    className="inline-flex items-center gap-1.5 text-[#1E293B] font-semibold hover:underline"
                   >
-                    Contacto WhatsApp ↗
+                    <WhatsAppIcon className="size-4 text-[#25D366]" />
+                    <span>Contacto WhatsApp ↗</span>
                   </a>
                 </li>
               </ul>
@@ -1047,13 +1115,18 @@ function RivrFooter() {
 }
 
 // ─── Lightbox Modal for Property Photos ─────────────────────────────────────
-function PhotoGalleryModal({ property, onClose }) {
+function PhotoGalleryModal({ property, onClose, whatsappNumber }) {
   const [index, setIndex] = useState(0);
   if (!property) return null;
 
   const images = property.images || [];
   const prev = () => setIndex((i) => (i === 0 ? images.length - 1 : i - 1));
   const next = () => setIndex((i) => (i === images.length - 1 ? 0 : i + 1));
+
+  const modalWaUrl = buildWhatsAppUrl(
+    whatsappNumber,
+    `Hola! Estuve viendo las fotos del ${property.name} en la web de Dúplex Las Toninas y quiero consultar disponibilidad y precio.`
+  );
 
   return (
     <div className="fixed inset-0 z-50 bg-[#0F172A]/85 backdrop-blur-md flex items-center justify-center p-4">
@@ -1126,38 +1199,147 @@ function PhotoGalleryModal({ property, onClose }) {
             ))}
           </div>
 
-          <Link
-            href={`/reservar?property=${property.id}`}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#1E293B] hover:bg-[#0F172A] px-5 py-2.5 text-xs font-semibold text-white shrink-0"
-          >
-            <span>Reservar {property.name}</span>
-            <ArrowUpRight className="size-3.5" />
-          </Link>
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <a
+              href={modalWaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                trackAdsConversion("whatsapp_click", {
+                  source: "gallery_modal",
+                  unit: property.name,
+                })
+              }
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] hover:bg-[#1ebe5d] px-4 py-2.5 text-xs font-bold text-white"
+            >
+              <WhatsAppIcon className="size-4" />
+              <span>Consultar</span>
+            </a>
+            <Link
+              href={`/reservar?property=${property.id}`}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-full bg-[#1E293B] hover:bg-[#0F172A] px-5 py-2.5 text-xs font-semibold text-white"
+            >
+              <span>Reservar {property.name}</span>
+              <ArrowUpRight className="size-3.5" />
+            </Link>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
+// ─── Floating WhatsApp Button (Slow Smooth Transition on Scroll) ────────────
+function FloatingWhatsAppButton({ isVisible, whatsappNumber, defaultMessage }) {
+  const waUrl = buildWhatsAppUrl(
+    whatsappNumber,
+    defaultMessage ||
+      "Hola! Estoy visitando la web de Dúplex Las Toninas y quiero consultar disponibilidad y tarifas de alquiler de temporada."
+  );
+
+  return (
+    <a
+      href={waUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Consultar disponibilidad por WhatsApp"
+      onClick={() =>
+        trackAdsConversion("whatsapp_click", { source: "floating_button" })
+      }
+      className={`whatsapp-float-btn ${
+        isVisible ? "is-visible" : ""
+      } fixed bottom-5 right-5 sm:bottom-7 sm:right-7 z-40 group flex items-center gap-3 rounded-full bg-[#25D366] hover:bg-[#1ebe5d] text-white p-3.5 sm:py-3.5 sm:ps-4 sm:pe-5 shadow-[0_12px_32px_rgba(37,211,102,0.42)] hover:shadow-[0_16px_40px_rgba(37,211,102,0.55)] hover:scale-105 border-2 border-white/90`}
+    >
+      <span className="relative flex size-7 sm:size-8 items-center justify-center rounded-full bg-white text-[#25D366] shrink-0">
+        <WhatsAppIcon className="size-5 sm:size-6" />
+      </span>
+      <span className="hidden sm:flex flex-col text-left leading-tight">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-white/90">
+          Dueño Directo
+        </span>
+        <span className="text-sm font-extrabold text-white">
+          Consultar por WhatsApp
+        </span>
+      </span>
+    </a>
+  );
+}
+
 // ─── Main Rivr Landing Page ─────────────────────────────────────────────────
 export default function HomePage() {
   const [galleryProperty, setGalleryProperty] = useState(null);
+  const [siteSettings, setSiteSettings] = useState(getStoredSiteSettings);
+  const [showFloatingWa, setShowFloatingWa] = useState(false);
+  const heroRef = useRef(null);
+
+  // Cargar teléfono de WhatsApp y configuración general desde Supabase y LocalStorage
+  useEffect(() => {
+    setSiteSettings(getStoredSiteSettings());
+    getSiteSettings()
+      .then((s) => {
+        if (s) setSiteSettings(s);
+      })
+      .catch(() => {});
+
+    const handleSettingsSync = () => {
+      setSiteSettings(getStoredSiteSettings());
+    };
+    window.addEventListener("toninas_settings_changed", handleSettingsSync);
+    window.addEventListener("storage", handleSettingsSync);
+    return () => {
+      window.removeEventListener("toninas_settings_changed", handleSettingsSync);
+      window.removeEventListener("storage", handleSettingsSync);
+    };
+  }, []);
+
+  // Activar logo flotante de WhatsApp con transición suave cuando el usuario hace scroll y avanza la portada
+  useEffect(() => {
+    const handleScroll = () => {
+      const threshold = Math.min(window.innerHeight * 0.35, 280);
+      setShowFloatingWa(window.scrollY > threshold);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const activePhone =
+    siteSettings?.whatsappNumber || siteContent.brand.whatsappNumber;
+  const activeMessage =
+    siteSettings?.whatsappDefaultMessage ||
+    siteContent.brand.whatsappDefaultMessage;
 
   return (
-    <div className="rivr relative min-h-svh bg-[#EFEFEF] text-[#1E293B] antialiased">
-      <RivrHeroSection />
+    <div
+      className={`rivr rivr-scroll-root ${
+        showFloatingWa ? "scrolled" : ""
+      } relative min-h-svh bg-[#EFEFEF] text-[#1E293B] antialiased`}
+    >
+      <div className="scroll-sentinel" aria-hidden="true" />
+      <RivrHeroSection heroRef={heroRef} />
       <RivrMetricsSection />
       <RivrFeaturesBentoSection />
-      <RivrUnitsCatalogSection onOpenGallery={(prop) => setGalleryProperty(prop)} />
+      <RivrUnitsCatalogSection
+        onOpenGallery={(prop) => setGalleryProperty(prop)}
+        whatsappNumber={activePhone}
+      />
       <RivrGallerySection />
       <RivrLocationSection />
-      <RivrCtaBannerSection />
-      <RivrFooter />
+      <RivrCtaBannerSection whatsappNumber={activePhone} />
+      <RivrFooter whatsappNumber={activePhone} />
+
+      <FloatingWhatsAppButton
+        isVisible={showFloatingWa}
+        whatsappNumber={activePhone}
+        defaultMessage={activeMessage}
+      />
 
       {galleryProperty && (
         <PhotoGalleryModal
           property={galleryProperty}
           onClose={() => setGalleryProperty(null)}
+          whatsappNumber={activePhone}
         />
       )}
     </div>

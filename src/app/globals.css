@@ -563,3 +563,47 @@
 .fsh-spacer {
   width: 100%;
 }
+
+/* ─── Scroll-Position-Aware Floating WhatsApp Button ───────────────────────── */
+.rivr-scroll-root {
+  container-type: scroll-state;
+}
+
+.scroll-sentinel {
+  height: 0;
+  width: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.whatsapp-float-btn {
+  visibility: hidden;
+  opacity: 0;
+  translate: 0 24px;
+  pointer-events: none;
+  transition:
+    visibility 0.75s,
+    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+    translate 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.3s ease;
+}
+
+.scrolled .whatsapp-float-btn,
+.whatsapp-float-btn.is-visible {
+  visibility: visible;
+  opacity: 1;
+  translate: 0 0;
+  pointer-events: auto;
+}
+
+@supports (container-type: scroll-state) {
+  @container scroll-state(scrollable: top) {
+    .whatsapp-float-btn {
+      visibility: visible;
+      opacity: 1;
+      translate: 0 0;
+      pointer-events: auto;
+    }
+  }
+}
+

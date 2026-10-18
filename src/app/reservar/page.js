@@ -6,13 +6,16 @@ import Link from "next/link";
 import {
   properties,
   getStoredProperties,
+  getStoredSiteSettings,
+  buildWhatsAppUrl,
+  trackAdsConversion,
   isDateRangeAvailable,
   calculateTotal,
   calculateStayPrice,
   formatDateDDMMAAAA,
 } from "@/lib/data";
 import { siteContent } from "@/lib/content";
-import { createBooking } from "@/lib/supabase";
+import { createBooking, getProperties, getSiteSettings } from "@/lib/supabase";
 import {
   ArrowUpRight,
   ArrowLeft,
@@ -36,17 +39,41 @@ function ReservarContent() {
   const { brand } = siteContent;
 
   const [propertiesList, setPropertiesList] = useState(properties);
+  const [siteSettings, setSiteSettings] = useState(getStoredSiteSettings);
 
   useEffect(() => {
     setPropertiesList(getStoredProperties());
-    const handleSync = () => setPropertiesList(getStoredProperties());
+    setSiteSettings(getStoredSiteSettings());
+
+    getProperties()
+      .then((res) => {
+        if (res && res.length > 0) setPropertiesList(res);
+      })
+      .catch(() => {});
+    getSiteSettings()
+      .then((s) => {
+        if (s) setSiteSettings(s);
+      })
+      .catch(() => {});
+
+    const handleSync = () => {
+      setPropertiesList(getStoredProperties());
+      setSiteSettings(getStoredSiteSettings());
+    };
     window.addEventListener("toninas_properties_changed", handleSync);
+    window.addEventListener("toninas_settings_changed", handleSync);
     window.addEventListener("storage", handleSync);
     return () => {
       window.removeEventListener("toninas_properties_changed", handleSync);
+      window.removeEventListener("toninas_settings_changed", handleSync);
       window.removeEventListener("storage", handleSync);
     };
   }, []);
+
+  const activeWhatsappNumber =
+    siteSettings?.whatsappNumber || brand.whatsappNumber;
+  const activePaymentAlias =
+    siteSettings?.paymentAlias || brand.paymentAlias;
 
   const hasDates = Boolean(searchParams.get("checkIn") && searchParams.get("checkOut"));
   const [step, setStep] = useState(hasDates ? 2 : 1);
@@ -111,6 +138,11 @@ function ReservarContent() {
         status: "pending",
         source: "web",
       });
+      trackAdsConversion("purchase_reservation", {
+        value: total,
+        currency: "ARS",
+        unit: selectedPropertyData?.name || selectedProperty,
+      });
     } catch (err) {
       console.warn("Error creando reserva:", err);
     } finally {
@@ -120,10 +152,11 @@ function ReservarContent() {
   };
 
   const copyAlias = () => {
-    navigator.clipboard.writeText(brand.paymentAlias);
+    navigator.clipboard.writeText(activePaymentAlias);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
 
   const steps = [
     { n: 1, label: "1. Fechas y Personas" },
@@ -659,7 +692,7 @@ function ReservarContent() {
                           Alias Oficial
                         </span>
                         <span className="text-lg font-bold text-[#1E293B] tracking-tight">
-                          {brand.paymentAlias}
+                          {activePaymentAlias}
                         </span>
                       </div>
                       <button
@@ -817,21 +850,30 @@ function ReservarContent() {
                 </div>
                 <div className="flex justify-between text-xs text-[#5A697D]">
                   <span>Alias MercadoPago:</span>
-                  <strong className="text-[#1E293B]">{brand.paymentAlias}</strong>
+                  <strong className="text-[#1E293B]">{activePaymentAlias}</strong>
                 </div>
               </div>
             )}
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
-                href={`https://wa.me/${brand.whatsappNumber}?text=${encodeURIComponent(
-                  `Hola! Acabo de registrar una reserva a nombre de ${guestData.name}${
-                    guestData.residence ? ` (${guestData.residence})` : ""
-                  } para el ${selectedPropertyData?.name} (${formatDateDDMMAAAA(selectedCheckIn)} al ${formatDateDDMMAAAA(selectedCheckOut)}). Adjunto comprobante de la seña.`
-                )}`}
+                href={buildWhatsAppUrl(
+                  activeWhatsappNumber,
+                  `Hola! Acabo de registrar una reserva desde la web a nombre de ${guestData.name}${
+                    guestData.residence ? ` (de ${guestData.residence})` : ""
+                  } para el ${selectedPropertyData?.name} del ${formatDateDDMMAAAA(
+                    selectedCheckIn
+                  )} al ${formatDateDDMMAAAA(selectedCheckOut)} (${selectedGuests} personas). Adjunto el comprobante de la seña.`
+                )}
+                onClick={() =>
+                  trackAdsConversion("whatsapp_click", {
+                    placement: "booking_step4_receipt",
+                    property_id: selectedPropertyData?.id,
+                  })
+                }
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-full bg-[#1E293B] hover:bg-[#0F172A] text-white px-6 py-3.5 text-sm font-semibold transition-all shadow-sm"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-full bg-[#25D366] hover:bg-[#1ebe5d] text-white px-6 py-3.5 text-sm font-semibold transition-all shadow-sm"
               >
                 <Phone className="size-4" />
                 <span>Enviar Comprobante por WhatsApp</span>

@@ -7,6 +7,9 @@ import {
   mockBookings,
   properties as staticProperties,
   getStoredProperties,
+  getStoredSiteSettings,
+  normalizeWhatsAppNumber,
+  buildWhatsAppUrl,
   getStatusLabel,
   formatDateDDMMAAAA,
   calculateTotal,
@@ -19,6 +22,8 @@ import PropiedadesAdmin from "@/components/PropiedadesAdmin";
 import {
   getBookings,
   getProperties,
+  getSiteSettings,
+  updateSiteSettings,
   updateBookingStatus,
   deleteBooking,
   createBooking,
@@ -29,6 +34,8 @@ import {
   Calendar,
   Wallet,
   Building2,
+  Settings,
+  MessageCircle,
   ArrowUpRight,
   LogOut,
   CheckCircle2,
@@ -51,6 +58,7 @@ const NAV_ITEMS = [
   { id: "calendario", icon: Calendar, label: "Calendario" },
   { id: "pagos", icon: Wallet, label: "Pagos y Señas" },
   { id: "propiedades", icon: Building2, label: "Unidades" },
+  { id: "configuracion", icon: Settings, label: "WhatsApp y Config" },
 ];
 
 // ─── Modal para Cargar Reserva Manual ───────────────────────────────────────
@@ -547,7 +555,42 @@ function Sidebar({ activeSection, setActiveSection, onOpenManualModal }) {
 }
 
 // ─── Dashboard Overview (Rivr Layout) ───────────────────────────────────────
-function DashboardSection({ bookings, propertiesList, onOpenManualModal }) {
+function DashboardSection({
+  bookings,
+  propertiesList,
+  siteSettings,
+  onSaveSiteSettings,
+  onOpenManualModal,
+  onGoToConfig,
+}) {
+  const [quickPhone, setQuickPhone] = useState(siteSettings?.whatsappNumber || "5491100000000");
+  const [savingPhone, setSavingPhone] = useState(false);
+  const [savedPhoneOk, setSavedPhoneOk] = useState(false);
+
+  useEffect(() => {
+    if (siteSettings?.whatsappNumber) {
+      setQuickPhone(siteSettings.whatsappNumber);
+    }
+  }, [siteSettings?.whatsappNumber]);
+
+  const handleQuickPhoneSave = async (e) => {
+    e.preventDefault();
+    setSavingPhone(true);
+    setSavedPhoneOk(false);
+    try {
+      const normalized = normalizeWhatsAppNumber(quickPhone);
+      await onSaveSiteSettings({
+        ...siteSettings,
+        whatsappNumber: normalized,
+      });
+      setQuickPhone(normalized);
+      setSavedPhoneOk(true);
+      setTimeout(() => setSavedPhoneOk(false), 3500);
+    } finally {
+      setSavingPhone(false);
+    }
+  };
+
   const totalRevenue = bookings
     .filter((b) => b.status !== "cancelled")
     .reduce((s, b) => s + (b.totalAmount || b.total_amount || 0), 0);
@@ -655,6 +698,60 @@ function DashboardSection({ bookings, propertiesList, onOpenManualModal }) {
           })}
         </div>
       </div>
+
+      {/* Quick WhatsApp Phone Configuration Card */}
+      <form
+        onSubmit={handleQuickPhoneSave}
+        className="rounded-[1.75rem] bg-white p-5 sm:p-6 border border-[#D7E0EB] flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-2xs"
+      >
+        <div className="flex items-start sm:items-center gap-3.5">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#25D366]/15 text-[#15803d]">
+            <MessageCircle className="size-6" />
+          </span>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-base font-bold text-[#1E293B]">
+                Teléfono de WhatsApp para recibir consultas y reservas
+              </h3>
+              <span className="rounded-full bg-[#E7EEF5] px-2.5 py-0.5 text-[11px] font-bold text-[#1E293B]">
+                Activo en toda la web
+              </span>
+            </div>
+            <p className="text-xs text-[#5A697D] mt-0.5">
+              Todos los botones de WhatsApp y el botón flotante enviarán las consultas con mensaje identificatorio a este número.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          <div className="relative">
+            <input
+              type="tel"
+              value={quickPhone}
+              onChange={(e) => setQuickPhone(e.target.value)}
+              placeholder="Ej: 5491123456789"
+              aria-label="Número de WhatsApp para atención"
+              className="w-full sm:w-56 rounded-xl bg-[#EFEFEF]/80 border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-bold text-[#1E293B]"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={savingPhone}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] disabled:opacity-50 text-white px-4 py-2.5 text-xs font-semibold cursor-pointer transition-all"
+          >
+            {savedPhoneOk ? <Check className="size-4 text-emerald-400" /> : <Save className="size-4" />}
+            <span>{savingPhone ? "Guardando..." : savedPhoneOk ? "¡Número Guardado!" : "Guardar Teléfono"}</span>
+          </button>
+          <button
+            type="button"
+            onClick={onGoToConfig}
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#D7E0EB] bg-white hover:bg-[#E7EEF5] text-[#1E293B] px-3.5 py-2.5 text-xs font-semibold cursor-pointer"
+          >
+            <Settings className="size-3.5" />
+            <span>Más opciones</span>
+          </button>
+        </div>
+      </form>
 
       {/* Revenue Curve Chart */}
       <div className="rounded-[1.75rem] md:rounded-[2.25rem] bg-white p-6 sm:p-8 border border-[#D7E0EB]">
@@ -1123,23 +1220,234 @@ function PagosSection({ bookings }) {
   );
 }
 
+// ─── Configuración General (WhatsApp, Alias, Google Ads) ──────────────────
+function ConfiguracionSection({ siteSettings, onSave }) {
+  const [whatsappNumber, setWhatsappNumber] = useState(
+    siteSettings?.whatsappNumber || "5491100000000"
+  );
+  const [whatsappDefaultMessage, setWhatsappDefaultMessage] = useState(
+    siteSettings?.whatsappDefaultMessage ||
+      "Hola! Vengo desde la web de Complejo Las Toninas. Quisiera consultar disponibilidad y tarifas de alquiler para esta temporada."
+  );
+  const [paymentAlias, setPaymentAlias] = useState(
+    siteSettings?.paymentAlias || "complejo.toninas.mp"
+  );
+  const [googleAdsId, setGoogleAdsId] = useState(siteSettings?.googleAdsId || "");
+  const [saving, setSaving] = useState(false);
+  const [savedSuccess, setSavedSuccess] = useState(false);
+
+  useEffect(() => {
+    if (siteSettings) {
+      setWhatsappNumber(siteSettings.whatsappNumber || "5491100000000");
+      setWhatsappDefaultMessage(
+        siteSettings.whatsappDefaultMessage ||
+          "Hola! Vengo desde la web de Complejo Las Toninas. Quisiera consultar disponibilidad y tarifas de alquiler para esta temporada."
+      );
+      setPaymentAlias(siteSettings.paymentAlias || "complejo.toninas.mp");
+      setGoogleAdsId(siteSettings.googleAdsId || "");
+    }
+  }, [siteSettings]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setSavedSuccess(false);
+    try {
+      const normalized = normalizeWhatsAppNumber(whatsappNumber);
+      setWhatsappNumber(normalized);
+      await onSave({
+        whatsappNumber: normalized,
+        whatsappDefaultMessage: whatsappDefaultMessage.trim(),
+        paymentAlias: paymentAlias.trim(),
+        googleAdsId: googleAdsId.trim(),
+      });
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 4000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const previewCleanPhone = normalizeWhatsAppNumber(whatsappNumber);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <span className="text-xs font-bold uppercase tracking-widest text-[#5A697D]">
+          Atención al Cliente, Pagos y Marketing
+        </span>
+        <h2 className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-[#1E293B]">
+          Configuración de WhatsApp y Sitio Web
+        </h2>
+        <p className="mt-1 text-xs sm:text-sm text-[#5A697D]">
+          Cambiá el teléfono receptor de WhatsApp cuando quieras. El cambio impacta en vivo en el botón flotante, tarjetas de unidades, pie de página y envío de comprobantes.
+        </p>
+      </div>
+
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-[1.75rem] md:rounded-[2.25rem] bg-white p-6 sm:p-8 border border-[#D7E0EB] space-y-6 max-w-3xl"
+      >
+        {/* Número de WhatsApp */}
+        <div className="rounded-2xl bg-[#EFEFEF]/60 p-5 border border-[#D7E0EB] space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-[#25D366] text-white">
+              <MessageCircle className="size-5" />
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-[#1E293B]">
+                Teléfono de WhatsApp para Contestar Consultas
+              </h3>
+              <p className="text-xs text-[#5A697D]">
+                Podés ingresar tu número con código de área (ej: 1123456789 o 5491123456789). El sistema lo formatea automáticamente para WhatsApp Internacional.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <div className="sm:col-span-8">
+              <label
+                htmlFor="config-whatsapp-number"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+              >
+                Número de Teléfono (WhatsApp) *
+              </label>
+              <input
+                id="config-whatsapp-number"
+                type="tel"
+                value={whatsappNumber}
+                onChange={(e) => setWhatsappNumber(e.target.value)}
+                placeholder="Ej: 5491123456789"
+                required
+                className="w-full rounded-xl bg-white border border-[#D7E0EB] px-4 py-3 text-base font-bold text-[#1E293B]"
+              />
+            </div>
+            <div className="sm:col-span-4">
+              <a
+                href={buildWhatsAppUrl(previewCleanPhone, whatsappDefaultMessage)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white px-4 py-3 text-xs font-bold transition-all shadow-2xs"
+              >
+                <Phone className="size-4" />
+                <span>Probar WhatsApp</span>
+                <ArrowUpRight className="size-3.5" />
+              </a>
+            </div>
+          </div>
+
+          <div className="text-xs text-[#5A697D] flex items-center justify-between bg-white rounded-xl px-3.5 py-2 border border-[#D7E0EB]">
+            <span>Enlace activo que verán los clientes:</span>
+            <strong className="text-[#1E293B] font-mono">
+              wa.me/{previewCleanPhone}
+            </strong>
+          </div>
+        </div>
+
+        {/* Mensaje predeterminado */}
+        <div>
+          <label
+            htmlFor="config-whatsapp-msg"
+            className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+          >
+            Mensaje predeterminado del Botón Flotante de WhatsApp
+          </label>
+          <textarea
+            id="config-whatsapp-msg"
+            rows={3}
+            value={whatsappDefaultMessage}
+            onChange={(e) => setWhatsappDefaultMessage(e.target.value)}
+            className="w-full rounded-xl bg-[#EFEFEF]/60 border border-[#D7E0EB] px-4 py-3 text-sm font-medium text-[#1E293B]"
+          />
+          <p className="mt-1.5 text-xs text-[#5A697D]">
+            Además de este mensaje general, cada unidad (Dúplex 1 al 4 y Depto) envía automáticamente su propio nombre y capacidad en el texto para que sepas exactamente por cuál te escriben.
+          </p>
+        </div>
+
+        {/* Alias de Pago y Google Ads */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#EFEFEF]">
+          <div>
+            <label
+              htmlFor="config-payment-alias"
+              className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+            >
+              Alias Oficial (Transferencia / MercadoPago)
+            </label>
+            <input
+              id="config-payment-alias"
+              type="text"
+              value={paymentAlias}
+              onChange={(e) => setPaymentAlias(e.target.value)}
+              placeholder="complejo.toninas.mp"
+              className="w-full rounded-xl bg-[#EFEFEF]/60 border border-[#D7E0EB] px-4 py-2.5 text-sm font-bold text-[#1E293B]"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="config-google-ads"
+              className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+            >
+              ID de Google Ads (Opcional)
+            </label>
+            <input
+              id="config-google-ads"
+              type="text"
+              value={googleAdsId}
+              onChange={(e) => setGoogleAdsId(e.target.value)}
+              placeholder="Ej: AW-123456789"
+              className="w-full rounded-xl bg-[#EFEFEF]/60 border border-[#D7E0EB] px-4 py-2.5 text-sm font-semibold text-[#1E293B]"
+            />
+          </div>
+        </div>
+
+        {savedSuccess && (
+          <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3.5 text-xs font-bold text-emerald-900 flex items-center gap-2">
+            <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
+            <span>
+              ¡Configuración guardada y sincronizada! Todos los enlaces de WhatsApp del sitio ya dirigen al número {previewCleanPhone}.
+            </span>
+          </div>
+        )}
+
+        <div className="flex justify-end pt-2">
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-full bg-[#1E293B] hover:bg-[#0F172A] disabled:opacity-50 text-white px-6 py-3 text-sm font-semibold cursor-pointer transition-all shadow-xs"
+          >
+            <Save className="size-4" />
+            <span>{saving ? "Guardando cambios..." : "Guardar Configuración"}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 // ─── Main Admin Page ───────────────────────────────────────────────────────
 export default function AdminPage() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState("dashboard");
   const [bookingsList, setBookingsList] = useState(mockBookings);
   const [propertiesList, setPropertiesList] = useState(getStoredProperties);
+  const [siteSettings, setSiteSettings] = useState(getStoredSiteSettings);
   const [manualModalOpen, setManualModalOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
-      const [bData, pData] = await Promise.all([
+      const [bData, pData, sData] = await Promise.all([
         getBookings().catch(() => null),
         getProperties().catch(() => null),
+        getSiteSettings().catch(() => null),
       ]);
 
       if (bData && bData.length > 0) {
         setBookingsList(bData);
+      }
+
+      if (sData) {
+        setSiteSettings(sData);
       }
 
       const currentProps = pData && pData.length > 0 ? pData : getStoredProperties();
@@ -1159,19 +1467,27 @@ export default function AdminPage() {
     if (!session) router.push("/admin/login");
     loadData();
 
-    // Escuchar cambios de reservas y propiedades entre pestañas y desde otras secciones
+    // Escuchar cambios de reservas, propiedades y ajustes entre pestañas
     const handleStorageChange = () => {
       loadData();
     };
     window.addEventListener("toninas_bookings_changed", handleStorageChange);
     window.addEventListener("toninas_properties_changed", handleStorageChange);
+    window.addEventListener("toninas_settings_changed", handleStorageChange);
     window.addEventListener("storage", handleStorageChange);
     return () => {
       window.removeEventListener("toninas_bookings_changed", handleStorageChange);
       window.removeEventListener("toninas_properties_changed", handleStorageChange);
+      window.removeEventListener("toninas_settings_changed", handleStorageChange);
       window.removeEventListener("storage", handleStorageChange);
     };
   }, [router, loadData]);
+
+  const handleSaveSiteSettings = async (newSettings) => {
+    const updated = await updateSiteSettings(newSettings);
+    setSiteSettings(updated);
+    return updated;
+  };
 
   const handleStatusChange = async (bookingId, newStatus) => {
     try {
@@ -1207,7 +1523,10 @@ export default function AdminPage() {
             <DashboardSection
               bookings={bookingsList}
               propertiesList={propertiesList}
+              siteSettings={siteSettings}
+              onSaveSiteSettings={handleSaveSiteSettings}
               onOpenManualModal={() => setManualModalOpen(true)}
+              onGoToConfig={() => setActiveSection("configuracion")}
             />
           )}
           {activeSection === "reservas" && (
@@ -1230,6 +1549,12 @@ export default function AdminPage() {
             </div>
           )}
           {activeSection === "propiedades" && <PropiedadesAdmin />}
+          {activeSection === "configuracion" && (
+            <ConfiguracionSection
+              siteSettings={siteSettings}
+              onSave={handleSaveSiteSettings}
+            />
+          )}
         </main>
       </div>
 

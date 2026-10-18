@@ -507,3 +507,90 @@ export function getStatusLabel(status) {
   };
   return map[status] || map.pending;
 }
+
+// ─── Configuración General del Sitio (WhatsApp, Alias, Google Ads) ──────────
+export const STORAGE_KEY_SETTINGS = "toninas_site_settings_v1";
+
+export const defaultSiteSettings = {
+  whatsappNumber: "5491155551111",
+  whatsappDefaultMessage:
+    "Hola! Estoy visitando la web de Dúplex Las Toninas y quiero consultar disponibilidad y tarifas de alquiler de temporada.",
+  paymentAlias: "DUPLEX.TONINAS.MP",
+  googleAdsId: "",
+  googleAdsConversionLabel: "",
+};
+
+export function normalizeWhatsAppNumber(rawPhone) {
+  if (!rawPhone) return defaultSiteSettings.whatsappNumber;
+  let digits = String(rawPhone).replace(/\D/g, "");
+  if (!digits) return defaultSiteSettings.whatsappNumber;
+  // Si el usuario ingresa 10 dígitos de Argentina (ej. 1123456789 o 2246123456), agregamos 549
+  if (digits.length === 10) {
+    digits = "549" + digits;
+  } else if (digits.length === 11 && digits.startsWith("0")) {
+    digits = "549" + digits.slice(1);
+  } else if (digits.length === 12 && digits.startsWith("54") && !digits.startsWith("549")) {
+    digits = "549" + digits.slice(2);
+  }
+  return digits;
+}
+
+export function getStoredSiteSettings() {
+  if (typeof window === "undefined") return defaultSiteSettings;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
+    if (!raw) return defaultSiteSettings;
+    const parsed = JSON.parse(raw);
+    return {
+      ...defaultSiteSettings,
+      ...parsed,
+      whatsappNumber: normalizeWhatsAppNumber(parsed.whatsappNumber || defaultSiteSettings.whatsappNumber),
+    };
+  } catch {
+    return defaultSiteSettings;
+  }
+}
+
+export function saveStoredSiteSettings(newSettings) {
+  if (typeof window === "undefined") return defaultSiteSettings;
+  try {
+    const current = getStoredSiteSettings();
+    const merged = {
+      ...current,
+      ...newSettings,
+      whatsappNumber: normalizeWhatsAppNumber(
+        newSettings.whatsappNumber !== undefined ? newSettings.whatsappNumber : current.whatsappNumber
+      ),
+    };
+    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(merged));
+    window.dispatchEvent(new Event("toninas_settings_changed"));
+    return merged;
+  } catch {
+    return defaultSiteSettings;
+  }
+}
+
+export function buildWhatsAppUrl(phoneNumber, customMessage) {
+  const cleanPhone = normalizeWhatsAppNumber(phoneNumber);
+  const message =
+    customMessage ||
+    defaultSiteSettings.whatsappDefaultMessage;
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+}
+
+// ─── Google Ads & GTM Conversion Tracking Helper ────────────────────────────
+export function trackAdsConversion(eventName, eventParams = {}) {
+  if (typeof window === "undefined") return;
+  try {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: eventName,
+      ...eventParams,
+      timestamp: new Date().toISOString(),
+    });
+    if (typeof window.gtag === "function") {
+      window.gtag("event", eventName, eventParams);
+    }
+  } catch {}
+}
+

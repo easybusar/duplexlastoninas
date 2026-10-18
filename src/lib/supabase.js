@@ -5,6 +5,8 @@ import {
   getStoredProperties,
   saveStoredProperties,
   updateStoredProperty,
+  getStoredSiteSettings,
+  saveStoredSiteSettings,
 } from "./data";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -41,6 +43,47 @@ export async function getSession() {
   }
 }
 
+// ─── Site Settings (Teléfono WhatsApp, Alias, Google Ads) ──────────────────
+export async function getSiteSettings() {
+  const localSettings = getStoredSiteSettings();
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const { data, error } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("id", "site-settings")
+      .single()
+      .abortSignal(controller.signal);
+    clearTimeout(timeoutId);
+
+    if (!error && data && data.description) {
+      const parsed = JSON.parse(data.description);
+      return saveStoredSiteSettings(parsed);
+    }
+  } catch {}
+  return localSettings;
+}
+
+export async function updateSiteSettings(newSettings) {
+  const savedLocal = saveStoredSiteSettings(newSettings);
+  try {
+    await supabase.from("properties").upsert({
+      id: "site-settings",
+      name: "Configuración General",
+      type: "config",
+      description: JSON.stringify(savedLocal),
+      capacity: 1,
+      price_per_night: 0,
+      is_active: false,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.warn("Supabase site-settings warning:", err);
+  }
+  return savedLocal;
+}
+
 // ─── Properties con persistencia local garantizada y sync ──────────────────
 export async function getProperties() {
   const localProps = getStoredProperties();
@@ -55,24 +98,35 @@ export async function getProperties() {
     clearTimeout(timeoutId);
 
     if (!error && Array.isArray(data) && data.length > 0) {
+      // Sincronizar configuración general si viene en la consulta
+      const configRow = data.find((r) => r.id === "site-settings" || r.type === "config");
+      if (configRow && configRow.description) {
+        try {
+          saveStoredSiteSettings(JSON.parse(configRow.description));
+        } catch {}
+      }
+
+      const unitRows = data.filter((r) => r.id !== "site-settings" && r.type !== "config");
       // Cruzar con seasonalRates locales
-      const merged = localProps.map((lp) => {
-        const remote = data.find((r) => r.id === lp.id);
-        if (!remote) return lp;
-        return {
-          ...lp,
-          name: remote.name || lp.name,
-          pricePerNight: remote.price_per_night || lp.pricePerNight,
-          price_per_night: remote.price_per_night || lp.price_per_night,
-          description: remote.description || lp.description,
-          capacity: remote.capacity || lp.capacity,
-        };
-      });
+      const merged = localProps
+        .filter((lp) => lp.id !== "site-settings" && lp.type !== "config")
+        .map((lp) => {
+          const remote = unitRows.find((r) => r.id === lp.id);
+          if (!remote) return lp;
+          return {
+            ...lp,
+            name: remote.name || lp.name,
+            pricePerNight: remote.price_per_night || lp.pricePerNight,
+            price_per_night: remote.price_per_night || lp.price_per_night,
+            description: remote.description || lp.description,
+            capacity: remote.capacity || lp.capacity,
+          };
+        });
       saveStoredProperties(merged);
       return merged;
     }
   } catch {}
-  return localProps;
+  return localProps.filter((lp) => lp.id !== "site-settings" && lp.type !== "config");
 }
 
 export async function updateProperty(propertyId, updates) {
@@ -99,6 +153,7 @@ export async function updateProperty(propertyId, updates) {
 export async function updatePropertyPrice(propertyId, pricePerNight) {
   return updateProperty(propertyId, { price_per_night: pricePerNight });
 }
+
 
 // ─── Bookings con almacenamiento resiliente (Supabase + LocalStorage) ───────
 export async function getBookings(filters = {}) {
