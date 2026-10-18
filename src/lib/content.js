@@ -40,9 +40,9 @@ export const siteContent = {
   hero: {
     videoUrl: "/videos/portada.mp4",
     posterImage: "/fotos/FRENTE/DUPLEX1.jpg",
-    title: "Alquiler de Dúplex en Las Toninas directo con sus dueños",
+    title: "Alquiler Duplex en Las Toninas",
     subtitle:
-      "Tu mejor opción de alquiler de temporada a 400 metros del mar. 4 Dúplex y 1 Departamento totalmente equipados con cochera y parrilla propia en la zona de playas más amplias. Reservá con total confianza, sin intermediarios ni comisiones.",
+      "Tu mejor opción de alquiler de temporada a 400 metros del mar. 4 Dúplex y 1 Departamento totalmente equipados con parrilla propia y espacio para estacionar al frente en la zona de playas más amplias. Trato directo con dueño, sin comisiones ni intermediarios.",
     statCard: {
       value: "400m",
       label: "Playas amplias todo el día",
@@ -72,14 +72,14 @@ export const siteContent = {
     },
     {
       value: "100%",
-      label: "Trato directo con dueños, sin comisión",
+      label: "Trato directo con dueño, sin comisión",
     },
   ],
 
   // ─── 5. SECCIÓN LUGAR: ESCOLLERAS Y COMODIDADES (BENTO GRID) ────────────────
   bento: {
     eyebrow: "Calle 12 Nº 495 · Las Toninas",
-    sectionTitle: "La mejor zona de playas amplias y el máximo confort para tu alquiler de temporada",
+    sectionTitle: "La mejor zona de playas amplias",
     ctaButton: "Ver Disponibilidad",
 
     // Tarjeta 1 Principal (Vertical con foto de las escolleras)
@@ -94,30 +94,40 @@ export const siteContent = {
 
     // Tarjeta 2 Horizontal (Equipamiento)
     equipmentCard: {
+      badge: "Confort y Comodidad",
+      image: "/fotos/cocina-equipamiento.jpg",
+      imageCaption: "Cocina completa y microondas",
       title: "Equipamiento completo como en tu propia casa",
       description:
-        "Cada unidad de alquiler cuenta con cocina equipada, vajilla familiar completa, heladera con freezer, microondas, aire acondicionado, calefacción, Smart TV y conexión Wi-Fi estable para que descanses sin preocupaciones.",
+        "Cada unidad de alquiler cuenta con cocina equipada, vajilla familiar completa, heladera con freezer, microondas, Smart TV y conexión Wi-Fi de alta velocidad para que descanses sin preocupaciones.",
       pills: [
         "Wi-Fi Alta Velocidad",
-        "Aire y Calefacción",
+        "Heladera con Freezer",
         "Smart TV",
-        "Cocina Completa",
+        "Cocina y Vajilla",
       ],
     },
 
-    // Tarjeta 3 Inferior Media (Cochera y Parrilla)
+    // Tarjeta 3 Inferior Media (Parrilla y Estacionamiento al frente)
     grillCard: {
-      title: "Cochera y Parrilla Propia",
+      badge: "Parrilla Propia",
+      image: "/fotos/parrilla-asado.png",
+      imageCaption: "Parrilla en cada unidad",
+      title: "Parrilla individual y espacio al frente",
       description:
-        "Estacionamiento cerrado dentro del predio y patio con parrilla individual en cada dúplex para disfrutar tus vacaciones en familia.",
+        "Patio con parrilla individual en cada unidad para disfrutar tus asados en familia. En los dúplex se puede estacionar en la puerta de cada unidad al frente (espacio descubierto).",
       buttonText: "Ver Alojamiento",
     },
 
-    // Tarjeta 4 Inferior Derecha (Seña)
+    // Tarjeta 4 Inferior Derecha (Reserva Directa)
     bookingCard: {
+      badge: "100% Directo Dueño",
+      image: "/fotos/trato-directo.jpg",
+      imageCaption: "Trato directo con sus dueños",
       title: "Reserva Directa 30%",
       description:
-        "Congelá tu alquiler de temporada con una seña del 30% vía transferencia o MercadoPago.",
+        "Congelá tu alquiler de temporada con una seña del 30% vía transferencia o MercadoPago. Sin intermediarios ni comisiones.",
+      buttonText: "Reservar Ahora",
     },
   },
 
@@ -145,7 +155,7 @@ export const siteContent = {
       {
         src: "/fotos/FRENTE/DUPLEX1.jpg",
         title: "Frente de los Dúplex",
-        subtitle: "Calle 12 Nº 495 · Estacionamiento propio en el frente",
+        subtitle: "Calle 12 Nº 495 · Espacio para estacionar en la puerta al frente",
       },
       {
         src: "/fotos/DUPLEX/LT DUPLEX 13.jpg",

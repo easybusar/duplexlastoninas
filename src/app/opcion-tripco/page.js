@@ -606,11 +606,11 @@ function ExploreCatalogSection({ onOpenGallery }) {
 
   const amenitiesList = [
     { icon: Wifi, title: "Wi-Fi de Alta Velocidad", desc: "Conexión estable en todas las unidades" },
-    { icon: Flame, title: "Parrilla Individual", desc: "Espacio de asado privado en cada dúplex" },
-    { icon: Car, title: "Cochera Cerrada", desc: "Estacionamiento seguro dentro del predio" },
-    { icon: Utensils, title: "Cocina Equipada", desc: "Vajilla completa, microondas y heladera" },
+    { icon: Flame, title: "Parrilla Individual", desc: "Espacio de asado privado en cada unidad" },
+    { icon: Car, title: "Espacio al Frente", desc: "Estacionamiento en la puerta de cada dúplex" },
+    { icon: Utensils, title: "Cocina Equipada", desc: "Vajilla completa, anafe y horno" },
     { icon: Tv, title: "Smart TV & Streaming", desc: "Entretenimiento para toda la familia" },
-    { icon: Wind, title: "Climatización", desc: "Aire acondicionado y calefacción" },
+    { icon: Sparkles, title: "Heladera & Microondas", desc: "Heladera con freezer y microondas" },
   ];
 
   return (

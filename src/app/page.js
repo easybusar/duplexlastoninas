@@ -26,7 +26,8 @@ import {
   Wifi,
   Utensils,
   Tv,
-  Wind,
+  Refrigerator,
+  Handshake,
   Waves,
   Compass,
   Phone,
@@ -241,7 +242,7 @@ function RivrHeroSection({ heroRef }) {
 
           <p className="max-w-[64ch] text-[clamp(1rem,0.92rem+0.45vw,1.25rem)] leading-[1.58] text-white/95 font-semibold text-pretty drop-shadow-[0_2px_12px_rgba(15,23,42,0.45)]">
             Tu mejor opción de <strong className="font-extrabold text-white underline decoration-white/40 underline-offset-4">alquiler de temporada</strong> a 400 metros del mar.{" "}
-            <strong className="font-extrabold text-white">Alquiler de dúplex</strong> y departamento totalmente equipados con cochera y parrilla propia en la zona de playas más amplias. Reservá con total confianza, trato directo con sus dueños y sin comisiones.
+            <strong className="font-extrabold text-white">Alquiler de dúplex</strong> y departamento totalmente equipados, parrilla propia y espacio para estacionar al frente en la mejor zona de playas amplias. Reservá directo con sus dueños, con total confianza y sin intermediarios ni comisiones.
           </p>
         </div>
 
@@ -442,7 +443,7 @@ function RivrMetricsSection() {
 // ─── 3. BENTO GRID DE LUGAR Y COMODIDADES ───────────────────────────────────
 function RivrFeaturesBentoSection() {
   const { bento } = siteContent;
-  const pillIcons = [Wifi, Wind, Tv, Utensils];
+  const pillIcons = [Wifi, Refrigerator, Tv, Utensils];
 
   return (
     <section
@@ -493,7 +494,7 @@ function RivrFeaturesBentoSection() {
             </div>
 
             {/* Real Aerial Image of the Escolleras & Wide Beach */}
-            <div className="relative h-56 sm:h-64 w-full rounded-[1.25rem] overflow-hidden mb-6 border border-[#D7E0EB]/60">
+            <div className="relative h-60 sm:h-72 w-full rounded-[1.25rem] overflow-hidden mb-6 border border-[#D7E0EB]/60">
               <img
                 src={bento.beachCard.image}
                 alt={bento.beachCard.title}
@@ -516,20 +517,25 @@ function RivrFeaturesBentoSection() {
           </div>
         </div>
 
-        {/* Card 2: Wide Horizontal (2 Columns) — Equipamiento Completo */}
+        {/* Card 2: Wide Horizontal (2 Columns) — Equipamiento Completo con img1 */}
         <div
           id="comodidades"
-          className="group relative overflow-hidden rounded-[1.5rem] bg-white p-7 transition-shadow hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] md:rounded-[2rem] flex min-h-[14rem] flex-col justify-between md:col-span-2 md:p-9"
+          className="group relative overflow-hidden rounded-[1.5rem] bg-white p-6 sm:p-7 transition-shadow hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] md:rounded-[2rem] flex flex-col justify-between md:col-span-2 md:p-8"
         >
           <Layers
             aria-hidden="true"
             className="pointer-events-none absolute -end-6 -bottom-8 size-60 text-[#1E293B] opacity-[0.03] transition-transform duration-500 group-hover:scale-110"
           />
 
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <span className="relative flex size-12 items-center justify-center rounded-2xl bg-[#E7EEF5] text-[#1E293B]">
-              <Layers className="size-6" />
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div className="flex items-center gap-3">
+              <span className="relative flex size-12 items-center justify-center rounded-2xl bg-[#E7EEF5] text-[#1E293B]">
+                <Layers className="size-6" />
+              </span>
+              <span className="rounded-full bg-[#E7EEF5] px-3.5 py-1 text-xs font-bold text-[#1E293B]">
+                {bento.equipmentCard.badge}
+              </span>
+            </div>
 
             <div className="flex flex-wrap gap-2">
               {bento.equipmentCard.pills.map((label, idx) => {
@@ -547,59 +553,109 @@ function RivrFeaturesBentoSection() {
             </div>
           </div>
 
-          <div className="relative mt-6">
-            <h3 className="text-xl font-semibold text-[#1E293B] md:text-2xl">
-              {bento.equipmentCard.title}
-            </h3>
-            <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-[#5A697D] text-pretty">
-              {bento.equipmentCard.description}
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+            {/* Real Kitchen & Appliance Image (img1) adapted to the style of the beach card */}
+            <div className="md:col-span-5 relative h-48 sm:h-52 w-full rounded-[1.25rem] overflow-hidden border border-[#D7E0EB]/60">
+              <img
+                src={bento.equipmentCard.image}
+                alt={bento.equipmentCard.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute bottom-3 left-3 rounded-full bg-white/90 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-[#1E293B] shadow-xs">
+                {bento.equipmentCard.imageCaption}
+              </div>
+            </div>
+
+            <div className="md:col-span-7">
+              <h3 className="text-xl font-semibold text-[#1E293B] md:text-2xl text-balance">
+                {bento.equipmentCard.title}
+              </h3>
+              <p className="mt-2.5 text-sm leading-relaxed text-[#5A697D] text-pretty">
+                {bento.equipmentCard.description}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Card 3: Bottom Middle — Cochera y Parrilla Individual */}
-        <div className="group relative overflow-hidden rounded-[1.5rem] bg-white p-7 transition-shadow hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] md:rounded-[2rem] flex flex-col justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-12 items-center justify-center rounded-2xl bg-[#E7EEF5] text-[#1E293B]">
-              <Car className="size-6" />
-            </span>
-            <span className="flex size-12 items-center justify-center rounded-2xl bg-[#E7EEF5] text-[#1E293B]">
-              <Flame className="size-6" />
-            </span>
-          </div>
+        {/* Card 3: Bottom Middle — Parrilla Individual y Espacio al Frente con img2 */}
+        <div className="group relative overflow-hidden rounded-[1.5rem] bg-white p-6 sm:p-7 transition-shadow hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] md:rounded-[2rem] flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-4">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-[#E7EEF5] text-[#1E293B]">
+                <Flame className="size-6" />
+              </span>
+              <span className="rounded-full bg-[#E7EEF5] px-3.5 py-1 text-xs font-bold text-[#1E293B]">
+                {bento.grillCard.badge}
+              </span>
+            </div>
 
-          <div className="mt-6">
+            {/* Real Asado / Parrilla Image (img2) adapted to beach card style */}
+            <div className="relative h-44 sm:h-48 w-full rounded-[1.25rem] overflow-hidden mb-4 border border-[#D7E0EB]/60">
+              <img
+                src={bento.grillCard.image}
+                alt={bento.grillCard.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute bottom-3 left-3 rounded-full bg-white/90 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-[#1E293B] shadow-xs">
+                {bento.grillCard.imageCaption}
+              </div>
+            </div>
+
             <h3 className="text-xl font-semibold text-[#1E293B]">
               {bento.grillCard.title}
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-[#5A697D] text-pretty">
               {bento.grillCard.description}
             </p>
-            <a
-              href="#unidades"
-              className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-[#D7E0EB] px-4 py-2 text-xs font-semibold text-[#1E293B] transition-colors hover:bg-[#E7EEF5]"
-            >
-              <span>{bento.grillCard.buttonText}</span>
-              <ArrowUpRight className="size-4" />
-            </a>
           </div>
+
+          <a
+            href="#unidades"
+            className="mt-5 inline-flex items-center justify-between gap-2 rounded-full border border-[#D7E0EB] px-4 py-2 text-xs font-semibold text-[#1E293B] transition-colors hover:bg-[#E7EEF5] w-fit"
+          >
+            <span>{bento.grillCard.buttonText}</span>
+            <ArrowUpRight className="size-4" />
+          </a>
         </div>
 
-        {/* Card 4: Bottom Right Interactive Action Card */}
+        {/* Card 4: Bottom Right — Reserva Directa con img3 */}
         <Link
           href="/reservar"
-          className="group relative overflow-hidden rounded-[1.5rem] bg-white p-7 transition-shadow hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] md:rounded-[2rem] flex flex-col items-center justify-center gap-5 text-center"
+          className="group relative overflow-hidden rounded-[1.5rem] bg-white p-6 sm:p-7 transition-shadow hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] md:rounded-[2rem] flex flex-col justify-between cursor-pointer"
         >
-          <span className="flex size-16 items-center justify-center rounded-full bg-[#E7EEF5] text-[#1E293B] transition-transform duration-300 group-hover:scale-110">
-            <ArrowUpRight className="size-7" />
-          </span>
           <div>
+            <div className="flex items-center justify-between gap-2 mb-4">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-[#E7EEF5] text-[#1E293B]">
+                <Handshake className="size-6" />
+              </span>
+              <span className="rounded-full bg-[#E7EEF5] px-3.5 py-1 text-xs font-bold text-[#1E293B]">
+                {bento.bookingCard.badge}
+              </span>
+            </div>
+
+            {/* Real Handshake / Direct with Owner Image (img3) adapted to beach card style */}
+            <div className="relative h-44 sm:h-48 w-full rounded-[1.25rem] overflow-hidden mb-4 border border-[#D7E0EB]/60">
+              <img
+                src={bento.bookingCard.image}
+                alt={bento.bookingCard.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute bottom-3 left-3 rounded-full bg-white/90 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-[#1E293B] shadow-xs">
+                {bento.bookingCard.imageCaption}
+              </div>
+            </div>
+
             <h3 className="text-xl font-semibold text-[#1E293B]">
               {bento.bookingCard.title}
             </h3>
-            <p className="mt-1.5 text-sm text-[#5A697D] max-w-xs text-pretty">
+            <p className="mt-2 text-sm leading-relaxed text-[#5A697D] text-pretty">
               {bento.bookingCard.description}
             </p>
+          </div>
+
+          <div className="mt-5 inline-flex items-center justify-between gap-2 rounded-full bg-[#1E293B] text-white px-4 py-2 text-xs font-semibold transition-colors group-hover:bg-[#0F172A] w-fit shadow-xs">
+            <span>{bento.bookingCard.buttonText}</span>
+            <ArrowUpRight className="size-4" />
           </div>
         </Link>
       </div>

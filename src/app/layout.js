@@ -17,9 +17,9 @@ const outfit = Outfit({
 
 export const metadata = {
   metadataBase: new URL("https://duplexlastoninas.com.ar"),
-  title: "Alquiler de Dúplex en Las Toninas | Alquiler de Temporada Dueño Directo",
+  title: "Alquiler Duplex en Las Toninas | Dueño Directo Alquiler de Temporada",
   description:
-    "Alquiler de Dúplex y Departamento de alquiler por temporada en Las Toninas (Calle 12 Nº 495). A 400 metros de las playas más amplias, con cochera y parrilla propia. Reservá directo con sus dueños sin comisiones.",
+    "Alquiler de Dúplex y Departamento de alquiler por temporada en Las Toninas (Calle 12 Nº 495). A 400 metros de las playas más amplias, con parrilla propia y espacio para estacionar al frente en los dúplex. Trato directo con dueño sin comisiones.",
   keywords: [
     "alquiler duplex",
     "alquiler temporada",
@@ -27,18 +27,19 @@ export const metadata = {
     "alquiler de temporada las toninas",
     "alquiler temporario las toninas",
     "duplex en las toninas dueño directo",
+    "alquiler duplex en las toninas directo dueño",
     "departamentos en las toninas",
     "alojamiento en las toninas cerca del mar",
     "alquiler vacaciones costa atlantica",
-    "duplex con parrilla y cochera las toninas",
+    "duplex con parrilla las toninas",
   ],
   alternates: {
     canonical: "https://duplexlastoninas.com.ar",
   },
   openGraph: {
-    title: "Alquiler de Dúplex en Las Toninas | Alquiler de Temporada Dueño Directo",
+    title: "Alquiler Duplex en Las Toninas | Dueño Directo Alquiler de Temporada",
     description:
-      "Tu alquiler de temporada seguro a 400m del mar en Las Toninas. 4 Dúplex y 1 Departamento equipados con cochera y parrilla. Trato directo con dueños.",
+      "Tu alquiler de temporada seguro a 400m del mar en Las Toninas. 4 Dúplex y 1 Departamento equipados con parrilla propia y espacio para estacionar al frente en los dúplex. Trato directo con dueño.",
     url: "https://duplexlastoninas.com.ar",
     siteName: "Dúplex Las Toninas",
     locale: "es_AR",
@@ -54,9 +55,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Alquiler de Dúplex en Las Toninas | Alquiler de Temporada",
+    title: "Alquiler Duplex en Las Toninas | Alquiler de Temporada Directo Dueño",
     description:
-      "4 Dúplex y 1 Departamento totalmente equipados a 400 metros del mar en Las Toninas. Alquiler directo con sus dueños.",
+      "4 Dúplex y 1 Departamento totalmente equipados a 400 metros del mar en Las Toninas. Alquiler directo con su dueño.",
     images: ["/fotos/FRENTE/DUPLEX1.jpg"],
   },
   icons: {
@@ -103,9 +104,9 @@ export default function RootLayout({ children }) {
     checkoutTime: "10:00",
     amenityFeature: [
       { "@type": "LocationFeatureSpecification", name: "WiFi de alta velocidad", value: true },
-      { "@type": "LocationFeatureSpecification", name: "Aire acondicionado y calefacción", value: true },
-      { "@type": "LocationFeatureSpecification", name: "Cochera / Estacionamiento propio", value: true },
+      { "@type": "LocationFeatureSpecification", name: "Heladera con freezer y microondas", value: true },
       { "@type": "LocationFeatureSpecification", name: "Parrilla individual", value: true },
+      { "@type": "LocationFeatureSpecification", name: "Espacio para estacionar al frente en dúplex", value: true },
       { "@type": "LocationFeatureSpecification", name: "Cocina familiar equipada", value: true },
     ],
     numberOfRooms: 5,
