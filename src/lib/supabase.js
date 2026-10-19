@@ -414,6 +414,42 @@ export async function createBooking(bookingData) {
   return normalized;
 }
 
+export async function updateBooking(bookingId, updatedData) {
+  const current = getStoredBookings();
+  const existing = current.find((b) => b.id === bookingId) || {};
+  const merged = {
+    ...existing,
+    ...updatedData,
+    id: bookingId,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const updated = current.map((b) => (b.id === bookingId ? merged : b));
+  saveStoredBookings(updated);
+
+  try {
+    const supabasePayload = {
+      property_id: merged.propertyId || merged.property_id,
+      guest_name: merged.guestName || merged.guest_name,
+      guest_phone: merged.guestPhone || merged.guest_phone,
+      guest_email: merged.guestResidence || merged.guest_residence || merged.guest_email,
+      check_in: merged.checkIn || merged.check_in,
+      check_out: merged.checkOut || merged.check_out,
+      guests: parseInt(merged.guests || 2, 10),
+      total_amount: parseFloat(merged.totalAmount || merged.total_amount || 0),
+      deposit_paid: parseFloat(merged.depositPaid || merged.deposit_paid || 0),
+      status: merged.status || "confirmed",
+      notes: merged.notes || merged.guest_notes || "",
+      updated_at: new Date().toISOString(),
+    };
+    await supabase.from("bookings").update(supabasePayload).eq("id", bookingId);
+  } catch (err) {
+    console.warn("Error actualizando reserva en Supabase:", err);
+  }
+
+  return merged;
+}
+
 export async function updateBookingStatus(bookingId, status) {
   const current = getStoredBookings();
   const updated = current.map((b) => (b.id === bookingId ? { ...b, status } : b));

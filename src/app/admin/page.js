@@ -26,6 +26,7 @@ import {
   getSiteSettings,
   updateSiteSettings,
   updateBookingStatus,
+  updateBooking,
   deleteBooking,
   createBooking,
 } from "@/lib/supabase";
@@ -53,6 +54,7 @@ import {
   Save,
   Edit3,
   Percent,
+  Sparkles,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -421,6 +423,448 @@ function ManualBookingModal({ isOpen, onClose, onSave, propertiesList, siteSetti
             >
               <Save className="size-4" />
               <span>{saving ? "Guardando..." : "Guardar Reserva"}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal para Editar Reserva Existente ───────────────────────────────────
+function EditBookingModal({ isOpen, onClose, onSave, booking, propertiesList, siteSettings }) {
+  const [propertyId, setPropertyId] = useState("");
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestResidence, setGuestResidence] = useState("");
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [guests, setGuests] = useState(2);
+  const [totalAmount, setTotalAmount] = useState("");
+  const [depositPaid, setDepositPaid] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("Transferencia");
+  const [status, setStatus] = useState("confirmed");
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [collisionWarning, setCollisionWarning] = useState(false);
+  const [recalcNotice, setRecalcNotice] = useState("");
+
+  useEffect(() => {
+    if (booking) {
+      setPropertyId(booking.propertyId || booking.property_id || propertiesList[0]?.id || "duplex-1");
+      setGuestName(booking.guestName || booking.guest_name || "");
+      setGuestPhone(booking.guestPhone || booking.guest_phone || "");
+      setGuestResidence(booking.guestResidence || booking.guest_residence || booking.guestEmail || "Las Toninas");
+      setCheckIn(booking.checkIn || booking.check_in || "");
+      setCheckOut(booking.checkOut || booking.check_out || "");
+      setGuests(booking.guests || 2);
+      setTotalAmount(String(booking.totalAmount || booking.total_amount || 0));
+      setDepositPaid(String(booking.depositPaid || booking.deposit_paid || 0));
+      setPaymentMethod(booking.paymentMethod || booking.payment_method || "Transferencia");
+      setStatus(booking.status || "confirmed");
+      setNotes(booking.notes || booking.guest_notes || "");
+      setCollisionWarning(false);
+      setRecalcNotice("");
+    }
+  }, [booking, propertiesList]);
+
+  const selectedProp = propertiesList.find((p) => p.id === propertyId);
+
+  // Comprobar colisión al cambiar fechas o unidad (excluyendo esta misma reserva)
+  useEffect(() => {
+    if (checkIn && checkOut && propertyId && booking) {
+      const isAvailable = isDateRangeAvailable(propertyId, checkIn, checkOut, booking.id);
+      setCollisionWarning(!isAvailable);
+    } else {
+      setCollisionWarning(false);
+    }
+  }, [propertyId, checkIn, checkOut, booking]);
+
+  if (!isOpen || !booking) return null;
+
+  const handleRecalculate = () => {
+    if (!checkIn || !checkOut || !selectedProp) {
+      alert("Completá las fechas de Check-in y Check-out primero.");
+      return;
+    }
+    if (checkOut <= checkIn) {
+      alert("La fecha de salida debe ser posterior a la de entrada.");
+      return;
+    }
+    const calc = calculateStayPrice(
+      selectedProp,
+      checkIn,
+      checkOut,
+      siteSettings?.depositPercentage || 50
+    );
+    setTotalAmount(calc.total.toString());
+    setDepositPaid(calc.deposit.toString());
+    setRecalcNotice(
+      `Recalculado: ${calc.nights} noches a $${calc.avgPricePerNight.toLocaleString("es-AR")}/noche (${siteSettings?.depositPercentage || 50}% seña)`
+    );
+    setTimeout(() => setRecalcNotice(""), 6000);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!guestName.trim()) {
+      alert("Por favor ingresá el nombre del huésped.");
+      return;
+    }
+    if (!checkIn || !checkOut || checkOut <= checkIn) {
+      alert("La fecha de check-out debe ser posterior al check-in.");
+      return;
+    }
+
+    if (collisionWarning) {
+      const proceed = confirm(
+        "Atención: Las fechas seleccionadas se superponen con otra reserva activa en esta unidad. ¿Deseás guardar de todos modos?"
+      );
+      if (!proceed) return;
+    }
+
+    setSaving(true);
+    try {
+      const updatedData = {
+        propertyId,
+        property_id: propertyId,
+        guestName: guestName.trim(),
+        guest_name: guestName.trim(),
+        guestPhone: guestPhone.trim(),
+        guest_phone: guestPhone.trim(),
+        guestResidence: guestResidence.trim(),
+        guest_residence: guestResidence.trim(),
+        checkIn,
+        check_in: checkIn,
+        checkOut,
+        check_out: checkOut,
+        guests: parseInt(guests, 10),
+        totalAmount: parseFloat(totalAmount) || 0,
+        total_amount: parseFloat(totalAmount) || 0,
+        depositPaid: parseFloat(depositPaid) || 0,
+        deposit_paid: parseFloat(depositPaid) || 0,
+        paymentMethod,
+        payment_method: paymentMethod,
+        status,
+        notes: notes.trim(),
+        guest_notes: notes.trim(),
+      };
+
+      await onSave(booking.id, updatedData);
+      onClose();
+    } catch (err) {
+      alert("Error al actualizar la reserva: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-[#0F172A]/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-2xl w-full border border-[#D7E0EB] shadow-2xl my-8">
+        <div className="flex items-center justify-between pb-4 border-b border-[#EFEFEF] mb-5">
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-[#1E293B] text-white">
+              <Edit3 className="size-5" />
+            </span>
+            <div>
+              <h2 className="text-xl font-bold text-[#1E293B]">
+                Editar Reserva
+              </h2>
+              <p className="text-xs text-[#5A697D]">
+                Modificá fechas, unidad, datos del huésped, montos o estado
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar modal"
+            className="size-8 rounded-full bg-[#EFEFEF] flex items-center justify-center text-[#5A697D] hover:text-[#1E293B] cursor-pointer"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="edit-property"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
+              >
+                Unidad *
+              </label>
+              <select
+                id="edit-property"
+                value={propertyId}
+                onChange={(e) => setPropertyId(e.target.value)}
+                required
+                className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-semibold text-[#1E293B]"
+              >
+                {propertiesList.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} (Hasta {p.capacity} pers.) — ${(p.price_per_night || p.pricePerNight).toLocaleString("es-AR")}/noche
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="edit-guests"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
+              >
+                Cantidad de Personas *
+              </label>
+              <input
+                id="edit-guests"
+                type="number"
+                min={1}
+                max={selectedProp?.capacity || 6}
+                value={guests}
+                onChange={(e) => setGuests(e.target.value)}
+                required
+                className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-semibold text-[#1E293B]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label
+                htmlFor="edit-name"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
+              >
+                Nombre Huésped *
+              </label>
+              <input
+                id="edit-name"
+                type="text"
+                placeholder="Ej: Juan Pérez"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                required
+                className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-medium text-[#1E293B]"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="edit-phone"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
+              >
+                Teléfono / WhatsApp *
+              </label>
+              <input
+                id="edit-phone"
+                type="tel"
+                placeholder="+54 9 11 ..."
+                value={guestPhone}
+                onChange={(e) => setGuestPhone(e.target.value)}
+                required
+                className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-medium text-[#1E293B]"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="edit-residence"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
+              >
+                Lugar de Residencia *
+              </label>
+              <input
+                id="edit-residence"
+                type="text"
+                placeholder="Ej: Rosario, Santa Fe"
+                value={guestResidence}
+                onChange={(e) => setGuestResidence(e.target.value)}
+                required
+                className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-medium text-[#1E293B]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="edit-checkin"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
+              >
+                Llegada (Check-in 14:00 hs) *
+              </label>
+              <input
+                id="edit-checkin"
+                type="date"
+                value={checkIn}
+                onChange={(e) => setCheckIn(e.target.value)}
+                required
+                className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-semibold text-[#1E293B]"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="edit-checkout"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
+              >
+                Salida (Check-out 10:00 hs) *
+              </label>
+              <input
+                id="edit-checkout"
+                type="date"
+                min={checkIn}
+                value={checkOut}
+                onChange={(e) => setCheckOut(e.target.value)}
+                required
+                className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-semibold text-[#1E293B]"
+              />
+            </div>
+          </div>
+
+          {collisionWarning && (
+            <div className="rounded-xl bg-amber-50 border border-amber-300 p-3 text-xs font-semibold text-amber-900 flex items-center gap-2">
+              <AlertCircle className="size-4 shrink-0 text-amber-700" />
+              <span>
+                Atención: Ya existe otra reserva activa para esas fechas en esta unidad. Podés guardar si se trata de un ajuste administrativo deliberado.
+              </span>
+            </div>
+          )}
+
+          {/* Botón para recalcular automáticamente montos */}
+          <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-[#E7EEF5]/60 border border-[#D7E0EB]">
+            <div>
+              <span className="text-xs font-bold text-[#1E293B] block">
+                Tarifas del Sistema
+              </span>
+              <span className="text-[11px] text-[#5A697D]">
+                Recalculá el Total y la Seña ({siteSettings?.depositPercentage || 50}%) según las noches y tarifas configuradas.
+              </span>
+              {recalcNotice && (
+                <span className="text-xs font-bold text-emerald-700 block mt-1">
+                  ✓ {recalcNotice}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleRecalculate}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-[#D7E0EB] hover:bg-[#D7E0EB] text-[#1E293B] text-xs font-semibold cursor-pointer shadow-2xs transition-all shrink-0"
+            >
+              <Sparkles className="size-3.5 text-amber-600" />
+              <span>Recalcular Montos</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div>
+              <label
+                htmlFor="edit-total"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
+              >
+                Monto Total (ARS) *
+              </label>
+              <input
+                id="edit-total"
+                type="number"
+                value={totalAmount}
+                onChange={(e) => setTotalAmount(e.target.value)}
+                required
+                className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-bold text-[#1E293B]"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="edit-deposit"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
+              >
+                Seña Cobrada (ARS)
+              </label>
+              <input
+                id="edit-deposit"
+                type="number"
+                value={depositPaid}
+                onChange={(e) => setDepositPaid(e.target.value)}
+                className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-bold text-emerald-700"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="edit-method"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
+              >
+                Medio de Pago
+              </label>
+              <select
+                id="edit-method"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-semibold text-[#1E293B]"
+              >
+                <option value="Transferencia">Transferencia</option>
+                <option value="MercadoPago">MercadoPago</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Tarjeta">Tarjeta</option>
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="edit-status"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
+              >
+                Estado
+              </label>
+              <select
+                id="edit-status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-semibold text-[#1E293B]"
+              >
+                <option value="confirmed">Confirmada</option>
+                <option value="pending">Pendiente de seña</option>
+                <option value="checked_in">En Estadía</option>
+                <option value="completed">Completada</option>
+                <option value="cancelled">Cancelada</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="edit-notes"
+              className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
+            >
+              Observaciones internas
+            </label>
+            <input
+              id="edit-notes"
+              type="text"
+              placeholder="Ej: Viene con auto mediano, solicitó cuna para bebé..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2 text-sm text-[#1E293B]"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-[#EFEFEF]">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-xl border border-[#D7E0EB] bg-white text-xs font-semibold text-[#5A697D] cursor-pointer hover:bg-[#EFEFEF]"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white text-xs font-semibold cursor-pointer shadow-sm"
+            >
+              <Save className="size-4" />
+              <span>{saving ? "Guardando..." : "Guardar Cambios"}</span>
             </button>
           </div>
         </form>
@@ -1087,6 +1531,7 @@ function ReservasSection({
   onStatusChange,
   onDelete,
   onOpenManualModal,
+  onEditBooking,
 }) {
   const [filterStatus, setFilterStatus] = useState("all");
   const filtered =
@@ -1242,6 +1687,18 @@ function ReservasSection({
                     >
                       <Check className="size-3.5" />
                       <span>Confirmar</span>
+                    </button>
+                  )}
+
+                  {onEditBooking && (
+                    <button
+                      type="button"
+                      onClick={() => onEditBooking(b)}
+                      aria-label="Editar reserva"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-[#D7E0EB] bg-white hover:bg-[#E7EEF5] text-[#1E293B] px-3.5 py-2 text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
+                    >
+                      <Edit3 className="size-3.5 text-[#1E293B]" />
+                      <span>Editar</span>
                     </button>
                   )}
 
@@ -1670,6 +2127,7 @@ export default function AdminPage() {
   const [propertiesList, setPropertiesList] = useState(getStoredProperties);
   const [siteSettings, setSiteSettings] = useState(getStoredSiteSettings);
   const [manualModalOpen, setManualModalOpen] = useState(false);
+  const [editingBooking, setEditingBooking] = useState(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -1746,6 +2204,17 @@ export default function AdminPage() {
     setBookingsList((prev) => [newBooking, ...prev.filter((b) => b.id !== newBooking.id)]);
   };
 
+  const handleUpdateBooking = async (bookingId, updatedData) => {
+    try {
+      const saved = await updateBooking(bookingId, updatedData);
+      setBookingsList((prev) =>
+        prev.map((b) => (b.id === bookingId ? { ...b, ...saved } : b))
+      );
+    } catch (err) {
+      console.error("Error al actualizar reserva:", err);
+    }
+  };
+
   return (
     <div className="min-h-dvh bg-[#EFEFEF] text-[#1E293B] p-3 md:p-5 antialiased">
       <div className="mx-auto max-w-[1536px] flex flex-col lg:flex-row gap-6">
@@ -1773,6 +2242,7 @@ export default function AdminPage() {
               onStatusChange={handleStatusChange}
               onDelete={handleDeleteBooking}
               onOpenManualModal={() => setManualModalOpen(true)}
+              onEditBooking={(b) => setEditingBooking(b)}
             />
           )}
           {activeSection === "pagos" && (
@@ -1787,6 +2257,7 @@ export default function AdminPage() {
                 bookings={bookingsList}
                 onDeleteBooking={handleDeleteBooking}
                 onStatusUpdateBooking={handleStatusChange}
+                onEditBooking={(b) => setEditingBooking(b)}
               />
             </div>
           )}
@@ -1805,6 +2276,17 @@ export default function AdminPage() {
           isOpen={manualModalOpen}
           onClose={() => setManualModalOpen(false)}
           onSave={handleManualBookingSaved}
+          propertiesList={propertiesList}
+          siteSettings={siteSettings}
+        />
+      )}
+
+      {editingBooking && (
+        <EditBookingModal
+          isOpen={Boolean(editingBooking)}
+          onClose={() => setEditingBooking(null)}
+          onSave={handleUpdateBooking}
+          booking={editingBooking}
           propertiesList={propertiesList}
           siteSettings={siteSettings}
         />

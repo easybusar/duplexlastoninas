@@ -13,6 +13,7 @@ import {
   MapPin,
   Clock,
   Sparkles,
+  Edit3,
 } from "lucide-react";
 
 const STATUS_THEME = {
@@ -59,7 +60,7 @@ function dateStr(year, month, day) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-function BookingModal({ booking, onClose, onDelete, onStatusUpdate, bookingColor }) {
+function BookingModal({ booking, onClose, onDelete, onStatusUpdate, onEditBooking, bookingColor }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -224,6 +225,20 @@ function BookingModal({ booking, onClose, onDelete, onStatusUpdate, bookingColor
             </a>
           )}
 
+          {onEditBooking && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onEditBooking(booking);
+              }}
+              className="w-full py-2.5 rounded-xl border border-[#D7E0EB] bg-[#F8FAFC] hover:bg-[#E7EEF5] text-[#1E293B] text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-colors"
+            >
+              <Edit3 className="size-4 text-[#1E293B]" />
+              <span>Editar Reserva</span>
+            </button>
+          )}
+
           {!confirmDelete ? (
             <button
               type="button"
@@ -267,6 +282,7 @@ export default function BookingCalendar({
   bookings = [],
   onDeleteBooking,
   onStatusUpdateBooking,
+  onEditBooking,
 }) {
   const [propertiesList, setPropertiesList] = useState(getStoredProperties);
 
@@ -303,9 +319,11 @@ export default function BookingCalendar({
   };
 
   // Asignación de colores contrastantes por reserva correlativa dentro de cada unidad
+  // - Offset por propiedad para que columnas adyacentes no compartan color
+  // - Salto de 2 posiciones para alternancia extrema entre reservas correlativas
   const bookingColorMap = useMemo(() => {
     const map = {};
-    propertiesList.forEach((prop) => {
+    propertiesList.forEach((prop, propIdx) => {
       const propBookings = (bookings || [])
         .filter((b) => {
           const pid = b.propertyId || b.property_id;
@@ -317,12 +335,57 @@ export default function BookingCalendar({
           return aIn.localeCompare(bIn);
         });
 
+      const propOffset = (propIdx * 3) % CONTRAST_PALETTE.length;
+
       propBookings.forEach((b, idx) => {
-        map[b.id] = CONTRAST_PALETTE[idx % CONTRAST_PALETTE.length];
+        if (b.color && typeof b.color === "object" && b.color.bg) {
+          map[b.id] = b.color;
+        } else {
+          const paletteIndex = (propOffset + idx * 2) % CONTRAST_PALETTE.length;
+          map[b.id] = CONTRAST_PALETTE[paletteIndex];
+        }
       });
     });
     return map;
   }, [bookings, propertiesList]);
+
+  // Asignación de día para mostrar el nombre: EXACTAMENTE UNA VEZ por cinta continua
+  // Ubicado preferentemente en el centro de los días de estadía completa del mes
+  const bookingNameDayMap = useMemo(() => {
+    const map = {};
+    const activeBookings = (bookings || []).filter((b) => b.status !== "cancelled");
+
+    activeBookings.forEach((b) => {
+      const inDate = b.checkIn || b.check_in || "";
+      const outDate = b.checkOut || b.check_out || "";
+      if (!inDate || !outDate) return;
+
+      const daysInCurrentMonth = [];
+      for (let d = 1; d <= daysInMonth; d++) {
+        const cur = dateStr(year, month, d);
+        if (cur >= inDate && cur <= outDate) {
+          daysInCurrentMonth.push(d);
+        }
+      }
+
+      if (daysInCurrentMonth.length === 0) return;
+
+      const stayingDays = daysInCurrentMonth.filter((d) => {
+        const cur = dateStr(year, month, d);
+        return cur > inDate && cur < outDate;
+      });
+
+      if (stayingDays.length > 0) {
+        const midIndex = Math.floor(stayingDays.length / 2);
+        map[b.id] = stayingDays[midIndex];
+      } else {
+        const arrDay = daysInCurrentMonth.find((d) => dateStr(year, month, d) === inDate);
+        map[b.id] = arrDay || daysInCurrentMonth[0];
+      }
+    });
+
+    return map;
+  }, [bookings, year, month, daysInMonth]);
 
   // Cuadrícula que gestiona check-in (14:00), check-out (10:00) y superposiciones 50/50
   const cellGrid = useMemo(() => {
@@ -531,8 +594,10 @@ export default function BookingCalendar({
                     if (info.type === "overlap") {
                       const colDep = bookingColorMap[info.departing.id] || CONTRAST_PALETTE[0];
                       const colArr = bookingColorMap[info.arriving.id] || CONTRAST_PALETTE[1];
-                      const nameDep = (info.departing.guestName || info.departing.guest_name || "").split(" ")[0];
-                      const nameArr = (info.arriving.guestName || info.arriving.guest_name || "").split(" ")[0];
+                      const isDepNameDay = bookingNameDayMap[info.departing.id] === day;
+                      const isArrNameDay = bookingNameDayMap[info.arriving.id] === day;
+                      const nameDep = (info.departing.guestName || info.departing.guest_name || "").trim().split(" ")[0];
+                      const nameArr = (info.arriving.guestName || info.arriving.guest_name || "").trim().split(" ")[0];
                       const continuesToTomorrow = day < daysInMonth;
 
                       return (
@@ -549,10 +614,18 @@ export default function BookingCalendar({
                               className="h-[21px] w-full cursor-pointer flex items-center justify-between px-2 rounded-t-none rounded-b-lg hover:brightness-110 transition-all text-white font-bold text-[11px] shadow-2xs select-none"
                               title={`${info.departing.guestName || info.departing.guest_name} - Sale hoy a las 10:00 hs`}
                             >
-                              <span className="truncate">{nameDep}</span>
-                              <span className="text-[9px] font-semibold opacity-95 shrink-0 ml-1 bg-black/25 px-1 py-0.2 rounded">
-                                Sale 10h
-                              </span>
+                              {isDepNameDay ? (
+                                <>
+                                  <span className="truncate text-xs font-black uppercase tracking-wide">{nameDep}</span>
+                                  <span className="text-[9px] font-semibold opacity-95 shrink-0 ml-1 bg-black/30 px-1 py-0.2 rounded">
+                                    Sale 10h
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-[9px] font-bold text-white/95 uppercase mx-auto">
+                                  Sale 10:00 hs
+                                </span>
+                              )}
                             </div>
 
                             {/* Mitad Inferior: Huésped entrante desde 14:00 hs (Empieza redondeado y conecta abajo) */}
@@ -562,10 +635,18 @@ export default function BookingCalendar({
                               className="h-[23px] w-full cursor-pointer flex items-center justify-between px-2 rounded-t-lg rounded-b-none hover:brightness-110 transition-all text-white font-bold text-[11px] shadow-2xs select-none"
                               title={`${info.arriving.guestName || info.arriving.guest_name} - Entra hoy a las 14:00 hs`}
                             >
-                              <span className="truncate">{nameArr}</span>
-                              <span className="text-[9px] font-semibold opacity-95 shrink-0 ml-1 bg-black/25 px-1 py-0.2 rounded">
-                                Entra 14h
-                              </span>
+                              {isArrNameDay ? (
+                                <>
+                                  <span className="truncate text-xs font-black uppercase tracking-wide">{nameArr}</span>
+                                  <span className="text-[9px] font-semibold opacity-95 shrink-0 ml-1 bg-black/30 px-1 py-0.2 rounded">
+                                    Entra 14h
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-[9px] font-bold text-white/95 uppercase mx-auto">
+                                  Entra 14:00 hs
+                                </span>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -575,7 +656,8 @@ export default function BookingCalendar({
                     // 3. SOLO EGRESO: Huésped sale a las 10:00 hs, tarde disponible
                     if (info.type === "departure_only") {
                       const colDep = bookingColorMap[info.departing.id] || CONTRAST_PALETTE[0];
-                      const nameDep = (info.departing.guestName || info.departing.guest_name || "").split(" ")[0];
+                      const isDepNameDay = bookingNameDayMap[info.departing.id] === day;
+                      const nameDep = (info.departing.guestName || info.departing.guest_name || "").trim().split(" ")[0];
 
                       return (
                         <td
@@ -590,10 +672,18 @@ export default function BookingCalendar({
                               className="h-[21px] w-full cursor-pointer flex items-center justify-between px-2 rounded-t-none rounded-b-lg hover:brightness-110 transition-all text-white font-bold text-[11px] shadow-2xs select-none"
                               title={`${info.departing.guestName || info.departing.guest_name} - Sale hoy a las 10:00 hs`}
                             >
-                              <span className="truncate">{nameDep}</span>
-                              <span className="text-[9px] font-semibold opacity-95 shrink-0 ml-1 bg-black/25 px-1 py-0.2 rounded">
-                                Sale 10h
-                              </span>
+                              {isDepNameDay ? (
+                                <>
+                                  <span className="truncate text-xs font-black uppercase tracking-wide">{nameDep}</span>
+                                  <span className="text-[9px] font-semibold opacity-95 shrink-0 ml-1 bg-black/30 px-1 py-0.2 rounded">
+                                    Sale 10h
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-[9px] font-bold text-white/95 uppercase mx-auto">
+                                  Sale 10:00 hs
+                                </span>
+                              )}
                             </div>
 
                             <div className="h-[20px] w-full flex items-center justify-center px-1 text-[9px] font-medium text-emerald-800/80 bg-emerald-50/60 border border-dashed border-emerald-200/80 rounded-md select-none">
@@ -607,7 +697,8 @@ export default function BookingCalendar({
                     // 4. SOLO INGRESO: Huésped entra a las 14:00 hs, mañana disponible
                     if (info.type === "arrival_only") {
                       const colArr = bookingColorMap[info.arriving.id] || CONTRAST_PALETTE[0];
-                      const nameArr = (info.arriving.guestName || info.arriving.guest_name || "").split(" ")[0];
+                      const isArrNameDay = bookingNameDayMap[info.arriving.id] === day;
+                      const nameArr = (info.arriving.guestName || info.arriving.guest_name || "").trim().split(" ")[0];
                       const continuesToTomorrow = day < daysInMonth;
 
                       return (
@@ -628,10 +719,18 @@ export default function BookingCalendar({
                               className="h-[24px] w-full cursor-pointer flex items-center justify-between px-2 rounded-t-lg rounded-b-none hover:brightness-110 transition-all text-white font-bold text-[11px] shadow-2xs select-none"
                               title={`${info.arriving.guestName || info.arriving.guest_name} - Entra hoy a las 14:00 hs`}
                             >
-                              <span className="truncate">{nameArr}</span>
-                              <span className="text-[9px] font-semibold opacity-95 shrink-0 ml-1 bg-black/25 px-1 py-0.2 rounded">
-                                Entra 14h
-                              </span>
+                              {isArrNameDay ? (
+                                <>
+                                  <span className="truncate text-xs font-black uppercase tracking-wide">{nameArr}</span>
+                                  <span className="text-[9px] font-semibold opacity-95 shrink-0 ml-1 bg-black/30 px-1 py-0.2 rounded">
+                                    Entra 14h
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-[9px] font-bold text-white/95 uppercase mx-auto">
+                                  Entra 14:00 hs
+                                </span>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -641,7 +740,8 @@ export default function BookingCalendar({
                     // 5. ESTADÍA COMPLETA: Bloque continuo de día completo sin cortes
                     if (info.type === "staying") {
                       const color = bookingColorMap[info.booking.id] || CONTRAST_PALETTE[0];
-                      const guestName = (info.booking.guestName || info.booking.guest_name || "").split(" ")[0];
+                      const isNameDay = bookingNameDayMap[info.booking.id] === day;
+                      const guestName = (info.booking.guestName || info.booking.guest_name || "").trim().split(" ")[0];
                       const continuesToTomorrow = day < daysInMonth;
                       const continuesFromYesterday = day > 1;
 
@@ -654,16 +754,18 @@ export default function BookingCalendar({
                           <div
                             onClick={() => setSelectedBooking(info.booking)}
                             style={{ backgroundColor: color.bg }}
-                            className={`h-full w-[calc(100%-8px)] mx-auto cursor-pointer flex items-center justify-center px-2 hover:brightness-110 transition-all text-white font-bold text-xs select-none ${
+                            className={`h-full w-[calc(100%-8px)] mx-auto cursor-pointer flex items-center justify-center px-2 hover:brightness-110 transition-all text-white font-bold select-none ${
                               !continuesFromYesterday ? "rounded-t-lg" : "rounded-t-none"
                             } ${
                               !continuesToTomorrow ? "rounded-b-lg" : "rounded-b-none"
                             }`}
                             title={`${info.booking.guestName || info.booking.guest_name} - En estadía (${formatDateDDMMAAAA(info.booking.checkIn || info.booking.check_in)} al ${formatDateDDMMAAAA(info.booking.checkOut || info.booking.check_out)})`}
                           >
-                            <span className="text-white text-xs font-bold truncate">
-                              {guestName}
-                            </span>
+                            {isNameDay && (
+                              <span className="text-sm sm:text-base font-black tracking-wider uppercase text-white drop-shadow-md select-none truncate px-1">
+                                {guestName}
+                              </span>
+                            )}
                           </div>
                         </td>
                       );
@@ -690,6 +792,7 @@ export default function BookingCalendar({
           onClose={() => setSelectedBooking(null)}
           onDelete={onDeleteBooking}
           onStatusUpdate={onStatusUpdateBooking}
+          onEditBooking={onEditBooking}
         />
       )}
     </div>
