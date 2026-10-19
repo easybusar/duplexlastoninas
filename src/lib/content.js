@@ -24,7 +24,7 @@ export const siteContent = {
     googleMapsUrl:
       "https://www.google.com/maps/search/?api=1&query=Calle+12+495+Las+Toninas+Buenos+Aires",
     paymentAlias: "DUPLEX.TONINAS.MP",
-    depositPercentage: 30,
+    depositPercentage: 50,
   },
 
   // ─── 2. BARRA DE NAVEGACIÓN ─────────────────────────────────────────────────
@@ -124,9 +124,9 @@ export const siteContent = {
       badge: "100% Directo Dueño",
       image: "/fotos/trato-directo.jpg",
       imageCaption: "Trato directo con sus dueños",
-      title: "Reserva Directa 30%",
+      title: "Reserva Directa",
       description:
-        "Congelá tu alquiler de temporada con una seña del 30% vía transferencia o MercadoPago. Sin intermediarios ni comisiones.",
+        "Congelá tu alquiler de temporada abonando tu seña vía transferencia o MercadoPago. Sin intermediarios ni comisiones.",
       buttonText: "Reservar Ahora",
     },
   },

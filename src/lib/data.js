@@ -381,18 +381,26 @@ export function isDateRangeAvailable(propertyId, checkIn, checkOut, excludeBooki
  * Calcula el monto de la estadía contemplando tarifas por temporada / rangos de alta demanda.
  * Acepta tanto un objeto property completo como un número de tarifa base.
  */
-export function calculateStayPrice(propertyOrPrice, checkIn, checkOut) {
+export function calculateStayPrice(propertyOrPrice, checkIn, checkOut, customDepositPct = null) {
   const prop = typeof propertyOrPrice === "object" && propertyOrPrice !== null ? propertyOrPrice : null;
   const basePrice = prop
     ? Number(prop.price_per_night || prop.pricePerNight || 45000)
     : Number(propertyOrPrice) || 45000;
   const seasonalRates = prop?.seasonalRates || prop?.seasonal_rates || [];
 
+  const storedSettings = getStoredSiteSettings();
+  const pct =
+    customDepositPct !== null && customDepositPct !== undefined
+      ? Number(customDepositPct)
+      : Number(storedSettings?.depositPercentage || 50);
+  const depositRatio = (pct > 0 ? pct : 50) / 100;
+
   if (!checkIn || !checkOut) {
     return {
       days: 1,
       total: basePrice,
-      deposit: Math.round(basePrice * 0.3),
+      deposit: Math.round(basePrice * depositRatio),
+      depositPercentage: pct,
       avgPerNight: basePrice,
       hasSeasonalRate: false,
       breakdown: [
@@ -462,13 +470,14 @@ export function calculateStayPrice(propertyOrPrice, checkIn, checkOut) {
   }
 
   const breakdown = Object.values(ratesMap);
-  const deposit = Math.round(totalAmount * 0.3);
+  const deposit = Math.round(totalAmount * depositRatio);
   const avgPerNight = Math.round(totalAmount / totalNights);
 
   return {
     days: totalNights,
     total: totalAmount,
     deposit,
+    depositPercentage: pct,
     avgPerNight,
     hasSeasonalRate,
     breakdown,
@@ -501,6 +510,7 @@ export const defaultSiteSettings = {
   paymentAlias: "DUPLEX.TONINAS.MP",
   googleAdsId: "",
   googleAdsConversionLabel: "",
+  depositPercentage: 50,
 };
 
 export function normalizeWhatsAppNumber(rawPhone) {

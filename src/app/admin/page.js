@@ -51,6 +51,8 @@ import {
   MapPin,
   AlertCircle,
   Save,
+  Edit3,
+  Percent,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -63,7 +65,7 @@ const NAV_ITEMS = [
 ];
 
 // ─── Modal para Cargar Reserva Manual ───────────────────────────────────────
-function ManualBookingModal({ isOpen, onClose, onSave, propertiesList }) {
+function ManualBookingModal({ isOpen, onClose, onSave, propertiesList, siteSettings }) {
   const [propertyId, setPropertyId] = useState(propertiesList[0]?.id || "duplex-1");
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
@@ -88,7 +90,8 @@ function ManualBookingModal({ isOpen, onClose, onSave, propertiesList }) {
       const calc = calculateStayPrice(
         selectedProp,
         checkIn,
-        checkOut
+        checkOut,
+        siteSettings?.depositPercentage || 50
       );
       setTotalAmount(calc.total.toString());
       setDepositPaid(calc.deposit.toString());
@@ -335,7 +338,7 @@ function ManualBookingModal({ isOpen, onClose, onSave, propertiesList }) {
                 htmlFor="manual-deposit"
                 className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1"
               >
-                Seña Cobrada (ARS)
+                Seña Cobrada ({siteSettings?.depositPercentage || 50}% sugerido - ARS)
               </label>
               <input
                 id="manual-deposit"
@@ -568,11 +571,42 @@ function DashboardSection({
   const [savingPhone, setSavingPhone] = useState(false);
   const [savedPhoneOk, setSavedPhoneOk] = useState(false);
 
+  const [editingDepositModal, setEditingDepositModal] = useState(false);
+  const [depositInput, setDepositInput] = useState(siteSettings?.depositPercentage || 50);
+  const [savingDeposit, setSavingDeposit] = useState(false);
+  const [savedDepositOk, setSavedDepositOk] = useState(false);
+
   useEffect(() => {
     if (siteSettings?.whatsappNumber) {
       setQuickPhone(siteSettings.whatsappNumber);
     }
   }, [siteSettings?.whatsappNumber]);
+
+  useEffect(() => {
+    if (siteSettings?.depositPercentage) {
+      setDepositInput(siteSettings.depositPercentage);
+    }
+  }, [siteSettings?.depositPercentage]);
+
+  const handleSaveDeposit = async (newPct) => {
+    const val = Number(newPct);
+    if (!val || val <= 0 || val > 100) return;
+    setSavingDeposit(true);
+    try {
+      await onSaveSiteSettings({
+        ...siteSettings,
+        depositPercentage: val,
+      });
+      setDepositInput(val);
+      setSavedDepositOk(true);
+      setTimeout(() => {
+        setSavedDepositOk(false);
+        setEditingDepositModal(false);
+      }, 1200);
+    } finally {
+      setSavingDeposit(false);
+    }
+  };
 
   const handleQuickPhoneSave = async (e) => {
     e.preventDefault();
@@ -671,20 +705,35 @@ function DashboardSection({
             },
             {
               icon: CreditCard,
-              value: "30%",
+              value: `${siteSettings?.depositPercentage || 50}%`,
               label: "Seña Base",
-              sub: "Reserva directa",
+              sub: "Click para editar %",
+              isEditable: true,
+              onClick: () => setEditingDepositModal(true),
             },
           ].map((stat) => {
             const Icon = stat.icon;
             return (
               <div
                 key={stat.label}
-                className="rounded-[1.5rem] bg-white p-5 border border-[#D7E0EB] flex flex-col justify-between"
+                onClick={stat.onClick}
+                className={`rounded-[1.5rem] bg-white p-5 border flex flex-col justify-between transition-all ${
+                  stat.isEditable
+                    ? "border-[#1E293B]/40 hover:border-[#1E293B] shadow-2xs hover:shadow-md cursor-pointer group bg-gradient-to-br from-white to-[#E7EEF5]/25"
+                    : "border-[#D7E0EB]"
+                }`}
               >
-                <span className="flex size-10 items-center justify-center rounded-xl bg-[#E7EEF5] text-[#1E293B]">
-                  <Icon className="size-5" />
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-[#E7EEF5] text-[#1E293B]">
+                    <Icon className="size-5" />
+                  </span>
+                  {stat.isEditable && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#1E293B] text-white px-2 py-0.5 text-[10px] font-bold shadow-2xs group-hover:bg-[#0F172A] transition-all">
+                      <Edit3 className="size-3" />
+                      <span>Editar</span>
+                    </span>
+                  )}
+                </div>
                 <div className="mt-4">
                   <div className="text-2xl sm:text-3xl font-semibold text-[#1E293B] tabular-nums">
                     {stat.value}
@@ -905,6 +954,128 @@ function DashboardSection({
           </table>
         </div>
       </div>
+
+      {/* Modal para Editar Porcentaje de Seña Base */}
+      {editingDepositModal && (
+        <div className="fixed inset-0 z-50 bg-[#0F172A]/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full border border-[#D7E0EB] shadow-2xl my-8">
+            <div className="flex items-center justify-between pb-4 border-b border-[#EFEFEF] mb-5">
+              <div className="flex items-center gap-3">
+                <span className="flex size-10 items-center justify-center rounded-xl bg-[#E7EEF5] text-[#1E293B]">
+                  <Percent className="size-5" />
+                </span>
+                <div>
+                  <h3 className="text-lg font-bold text-[#1E293B]">
+                    Editar Porcentaje de Seña
+                  </h3>
+                  <p className="text-xs text-[#5A697D]">
+                    Seña requerida para congelar la tarifa
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingDepositModal(false)}
+                className="size-8 rounded-full bg-[#EFEFEF] hover:bg-[#D7E0EB] flex items-center justify-center text-[#5A697D] cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-xs sm:text-sm text-[#5A697D] leading-relaxed">
+                Seleccioná o escribí el porcentaje de seña. Este valor se aplicará de forma automática en <strong>todo el sitio</strong>: cálculos de reservas, textos explicativos, resumen y saldo al ingresar.
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-2">
+                  Valores sugeridos
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[30, 40, 50, 60].map((pct) => (
+                    <button
+                      key={pct}
+                      type="button"
+                      onClick={() => setDepositInput(pct)}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                        Number(depositInput) === pct
+                          ? "bg-[#1E293B] text-white border-[#1E293B] shadow-xs"
+                          : "bg-[#EFEFEF]/70 text-[#1E293B] border-[#D7E0EB] hover:bg-[#D7E0EB]"
+                      }`}
+                    >
+                      {pct}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="deposit-custom-input"
+                  className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+                >
+                  Porcentaje personalizado (%)
+                </label>
+                <div className="relative">
+                  <input
+                    id="deposit-custom-input"
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={depositInput}
+                    onChange={(e) => setDepositInput(e.target.value)}
+                    className="w-full rounded-xl bg-[#EFEFEF]/60 border border-[#D7E0EB] px-4 py-2.5 text-base font-bold text-[#1E293B] outline-none focus:border-[#1E293B] focus:bg-white transition-all"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[#5A697D]">
+                    %
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-[#E7EEF5] p-3 text-xs text-[#1E293B] space-y-1">
+                <div className="font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="size-3.5 text-emerald-600" />
+                  <span>Distribución calculada:</span>
+                </div>
+                <div className="flex justify-between text-[#5A697D]">
+                  <span>Seña para reservar:</span>
+                  <strong className="text-[#1E293B]">{depositInput || 0}%</strong>
+                </div>
+                <div className="flex justify-between text-[#5A697D]">
+                  <span>Saldo a pagar al ingresar:</span>
+                  <strong className="text-[#1E293B]">{100 - (Number(depositInput) || 0)}%</strong>
+                </div>
+              </div>
+
+              {savedDepositOk && (
+                <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-bold text-emerald-900 flex items-center gap-2">
+                  <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
+                  <span>¡Porcentaje actualizado y aplicado a todo el sitio!</span>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingDepositModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-[#5A697D] hover:bg-[#EFEFEF] cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={savingDeposit}
+                  onClick={() => handleSaveDeposit(depositInput)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] disabled:opacity-50 text-white px-5 py-2.5 text-xs font-bold cursor-pointer transition-all shadow-xs"
+                >
+                  <Save className="size-3.5" />
+                  <span>{savingDeposit ? "Guardando..." : "Guardar Porcentaje"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1109,7 +1280,7 @@ function ReservasSection({
 }
 
 // ─── Pagos Section ─────────────────────────────────────────────────────────
-function PagosSection({ bookings }) {
+function PagosSection({ bookings, siteSettings }) {
   const totalRevenue = bookings.reduce(
     (s, b) => s + (b.totalAmount || b.total_amount || 0),
     0
@@ -1124,7 +1295,7 @@ function PagosSection({ bookings }) {
     <div className="space-y-6">
       <div>
         <span className="text-xs font-bold uppercase tracking-widest text-[#5A697D]">
-          Finanzas y Señas (30%)
+          Finanzas y Señas ({siteSettings?.depositPercentage || 50}%)
         </span>
         <h2 className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-[#1E293B]">
           Control de Pagos y Saldos
@@ -1234,6 +1405,9 @@ function ConfiguracionSection({ siteSettings, onSave }) {
     siteSettings?.paymentAlias || "DUPLEX.TONINAS.MP"
   );
   const [googleAdsId, setGoogleAdsId] = useState(siteSettings?.googleAdsId || "");
+  const [depositPercentage, setDepositPercentage] = useState(
+    siteSettings?.depositPercentage || 50
+  );
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -1246,6 +1420,7 @@ function ConfiguracionSection({ siteSettings, onSave }) {
       );
       setPaymentAlias(siteSettings.paymentAlias || "DUPLEX.TONINAS.MP");
       setGoogleAdsId(siteSettings.googleAdsId || "");
+      setDepositPercentage(siteSettings.depositPercentage || 50);
     }
   }, [siteSettings]);
 
@@ -1261,6 +1436,7 @@ function ConfiguracionSection({ siteSettings, onSave }) {
         whatsappDefaultMessage: whatsappDefaultMessage.trim(),
         paymentAlias: paymentAlias.trim(),
         googleAdsId: googleAdsId.trim(),
+        depositPercentage: Number(depositPercentage) || 50,
       });
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 4000);
@@ -1402,6 +1578,66 @@ function ConfiguracionSection({ siteSettings, onSave }) {
           </div>
         </div>
 
+        {/* Porcentaje de Seña Base */}
+        <div className="rounded-2xl bg-[#EFEFEF]/60 p-5 border border-[#D7E0EB] space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-[#1E293B] text-white">
+              <Percent className="size-5" />
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-[#1E293B]">
+                Porcentaje de Seña Requerido ({depositPercentage}%)
+              </h3>
+              <p className="text-xs text-[#5A697D]">
+                Porcentaje del total de la estadía que el huésped abona para congelar su reserva
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-[#5A697D]">Accesos rápidos:</span>
+              {[30, 40, 50, 60, 70].map((pct) => (
+                <button
+                  key={pct}
+                  type="button"
+                  onClick={() => setDepositPercentage(pct)}
+                  className={`py-1.5 px-3 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                    Number(depositPercentage) === pct
+                      ? "bg-[#1E293B] text-white border-[#1E293B]"
+                      : "bg-white text-[#1E293B] border-[#D7E0EB] hover:bg-[#D7E0EB]"
+                  }`}
+                >
+                  {pct}%
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3 max-w-xs">
+              <div className="relative flex-1">
+                <input
+                  id="config-deposit-pct"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={depositPercentage}
+                  onChange={(e) => setDepositPercentage(e.target.value)}
+                  className="w-full rounded-xl bg-white border border-[#D7E0EB] px-4 py-2 text-sm font-bold text-[#1E293B]"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[#5A697D]">
+                  %
+                </span>
+              </div>
+              <span className="text-xs text-[#5A697D]">
+                Saldo al entrar: <strong>{100 - (Number(depositPercentage) || 0)}%</strong>
+              </span>
+            </div>
+            <p className="text-xs text-[#5A697D]">
+              Este porcentaje se aplica de forma automática a todo el sitio web: cálculo de señas en el proceso de reserva, textos explicativos, resumen de condiciones y saldo al ingresar.
+            </p>
+          </div>
+        </div>
+
         {savedSuccess && (
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3.5 text-xs font-bold text-emerald-900 flex items-center gap-2">
             <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
@@ -1539,7 +1775,12 @@ export default function AdminPage() {
               onOpenManualModal={() => setManualModalOpen(true)}
             />
           )}
-          {activeSection === "pagos" && <PagosSection bookings={bookingsList} />}
+          {activeSection === "pagos" && (
+            <PagosSection
+              bookings={bookingsList}
+              siteSettings={siteSettings}
+            />
+          )}
           {activeSection === "calendario" && (
             <div className="rounded-[1.75rem] md:rounded-[2.25rem] bg-white p-5 sm:p-8 border border-[#D7E0EB]">
               <BookingCalendar
@@ -1565,6 +1806,7 @@ export default function AdminPage() {
           onClose={() => setManualModalOpen(false)}
           onSave={handleManualBookingSaved}
           propertiesList={propertiesList}
+          siteSettings={siteSettings}
         />
       )}
     </div>

@@ -83,6 +83,10 @@ function ReservarContent() {
     siteSettings?.whatsappNumber || brand.whatsappNumber;
   const activePaymentAlias =
     siteSettings?.paymentAlias || brand.paymentAlias;
+  const activeDepositPercentage =
+    Number(siteSettings?.depositPercentage) ||
+    Number(brand?.depositPercentage) ||
+    50;
 
   const hasDates = Boolean(searchParams.get("checkIn") && searchParams.get("checkOut"));
   const [step, setStep] = useState(hasDates ? 2 : 1);
@@ -116,7 +120,7 @@ function ReservarContent() {
   const selectedPropertyData = propertiesList.find((p) => p.id === selectedProperty);
   const pricing =
     selectedPropertyData && selectedCheckIn && selectedCheckOut
-      ? calculateStayPrice(selectedPropertyData, selectedCheckIn, selectedCheckOut)
+      ? calculateStayPrice(selectedPropertyData, selectedCheckIn, selectedCheckOut, activeDepositPercentage)
       : null;
 
   const handleStep1 = (e) => {
@@ -171,7 +175,7 @@ function ReservarContent() {
   const steps = [
     { n: 1, label: "1. Fechas y Personas" },
     { n: 2, label: "2. Elegí tu Unidad" },
-    { n: 3, label: "3. Datos y Seña (30%)" },
+    { n: 3, label: `3. Datos y Seña (${activeDepositPercentage}%)` },
     { n: 4, label: "4. Confirmación" },
   ];
 
@@ -213,7 +217,7 @@ function ReservarContent() {
             Duplex Las Toninas
           </h1>
           <p className="mt-3 text-sm sm:text-base text-white/80">
-            Congelá la tarifa abonando el {brand.depositPercentage}% de seña y el saldo al ingresar.
+            Congelá la tarifa abonando el {activeDepositPercentage}% de seña y el saldo al ingresar.
           </p>
 
           {/* Rivr Step Indicator Pills */}
@@ -450,7 +454,8 @@ function ReservarContent() {
                   const calc = calculateStayPrice(
                     prop,
                     selectedCheckIn,
-                    selectedCheckOut
+                    selectedCheckOut,
+                    activeDepositPercentage
                   );
                   const isSelected = selectedProperty === prop.id;
 
@@ -516,7 +521,7 @@ function ReservarContent() {
                               </strong>
                             </div>
                             <div className="flex justify-between text-[#1E293B] font-bold pt-1 border-t border-[#D7E0EB]">
-                              <span>Seña para reservar (30%)</span>
+                              <span>Seña para reservar ({calc.depositPercentage || activeDepositPercentage}%)</span>
                               <span>${calc.deposit.toLocaleString("es-AR")}</span>
                             </div>
                           </div>
@@ -562,7 +567,7 @@ function ReservarContent() {
           </div>
         )}
 
-        {/* STEP 3: DATOS DE CONTACTO (CON LUGAR DE RESIDENCIA) Y SEÑA 30% */}
+        {/* STEP 3: DATOS DE CONTACTO (CON LUGAR DE RESIDENCIA) Y SEÑA */}
         {step === 3 && (
           <form
             onSubmit={handleSubmit}
@@ -667,7 +672,7 @@ function ReservarContent() {
               {/* Payment Method Card */}
               <div className="rounded-[1.75rem] md:rounded-[2.25rem] bg-white p-6 sm:p-9 border border-[#D7E0EB]">
                 <h2 className="text-2xl font-semibold text-[#1E293B]">
-                  Método de pago de la seña ({brand.depositPercentage}%)
+                  Método de pago de la seña ({activeDepositPercentage}%)
                 </h2>
                 <p className="mt-1 text-sm text-[#5A697D]">
                   Monto de seña a abonar:{" "}
@@ -744,7 +749,7 @@ function ReservarContent() {
                 {paymentMethod === "mercadopago" && (
                   <div className="mt-5 rounded-2xl bg-[#E7EEF5]/70 p-5 border border-[#D7E0EB]">
                     <p className="text-xs sm:text-sm text-[#1E293B] font-medium leading-relaxed">
-                      Al confirmar tu reserva te compartiremos el link oficial de MercadoPago por WhatsApp para abonar la seña del 30% con tarjeta o dinero en cuenta.
+                      Al confirmar tu reserva te compartiremos el link oficial de MercadoPago por WhatsApp para abonar la seña del {activeDepositPercentage}% con tarjeta o dinero en cuenta.
                     </p>
                   </div>
                 )}
@@ -760,7 +765,7 @@ function ReservarContent() {
                         Aviso Importante sobre la Confirmación de tu Reserva:
                       </strong>
                       <p className="text-amber-900">
-                        La reserva quedará <strong>definitivamente confirmada</strong> una vez recibido el comprobante de pago de la seña ({brand.depositPercentage}%).
+                        La reserva quedará <strong>definitivamente confirmada</strong> una vez recibido el comprobante de pago de la seña ({activeDepositPercentage}%).
                         Disponés de un plazo de <strong>24 horas</strong> para enviar el comprobante; cumplido ese tiempo sin acreditarse el pago, las fechas se liberarán y volverán a quedar <strong>disponibles automáticamente</strong> para otros huéspedes.
                       </p>
                     </div>
@@ -857,7 +862,7 @@ function ReservarContent() {
                     </strong>
                   </div>
                   <div className="flex justify-between text-base font-bold text-[#1E293B] pt-2 border-t border-[#D7E0EB]">
-                    <span>Seña a abonar (30%)</span>
+                    <span>Seña a abonar ({pricing.depositPercentage || activeDepositPercentage}%)</span>
                     <span>${pricing.deposit.toLocaleString("es-AR")}</span>
                   </div>
                 </div>
@@ -894,7 +899,7 @@ function ReservarContent() {
             {pricing && (
               <div className="mt-6 rounded-2xl bg-[#EFEFEF]/80 p-5 border border-[#D7E0EB] text-left space-y-2 text-sm">
                 <div className="flex justify-between font-bold text-[#1E293B]">
-                  <span>Seña (30%) para congelar tarifa:</span>
+                  <span>Seña ({pricing.depositPercentage || activeDepositPercentage}%) para congelar tarifa:</span>
                   <span>${pricing.deposit.toLocaleString("es-AR")}</span>
                 </div>
                 <div className="flex justify-between text-xs text-[#5A697D]">
@@ -925,14 +930,14 @@ function ReservarContent() {
                   <strong className="block text-[#1E293B] font-bold mb-1">
                     ⏳ Confirmación y Plazo 24hs
                   </strong>
-                  La reserva se confirma al enviar el comprobante de la seña (30%). Disponés de <strong>24 horas</strong> antes de que las fechas vuelvan a estar disponibles.
+                  La reserva se confirma al enviar el comprobante de la seña ({pricing?.depositPercentage || activeDepositPercentage}%). Disponés de <strong>24 horas</strong> antes de que las fechas vuelvan a estar disponibles.
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-[#D7E0EB]/70">
                   <strong className="block text-[#1E293B] font-bold mb-1">
                     💵 Saldo al Ingresar
                   </strong>
-                  El saldo restante (70%) se abona al momento del check-in al recibir la unidad.
+                  El saldo restante ({100 - (pricing?.depositPercentage || activeDepositPercentage)}%) se abona al momento del check-in al recibir la unidad.
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-[#D7E0EB]/70">
@@ -946,7 +951,7 @@ function ReservarContent() {
                   <strong className="block text-[#1E293B] font-bold mb-1">
                     🧺 Ropa Blanca y Servicios
                   </strong>
-                  Cada huésped debe traer sus propias sábanas y toallas. Gas, agua corriente y wifi incluidos. Prohibido fumar en interiores.
+                  Cada huésped debe traer sus propias sábanas y toallas. Gas 1º Garrafa, Wi-Fi Incluidos.
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-[#D7E0EB]/70">

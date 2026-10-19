@@ -62,11 +62,11 @@ export const metadata = {
   },
   icons: {
     icon: [
-      { url: "/logo.png", sizes: "any", type: "image/png" },
-      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/logo.png?v=3", sizes: "any", type: "image/png" },
+      { url: "/favicon.ico?v=3", sizes: "32x32" },
     ],
-    shortcut: "/logo.png",
-    apple: "/logo.png",
+    shortcut: "/logo.png?v=3",
+    apple: "/logo.png?v=3",
   },
   robots: {
     index: true,
@@ -119,10 +119,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es-AR" className={`${plusJakarta.variable} ${outfit.variable} scroll-smooth`}>
       <head>
-        <link rel="icon" type="image/png" sizes="32x32" href="/logo.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/logo.png" />
-        <link rel="apple-touch-icon" href="/logo.png" />
-        <link rel="shortcut icon" href="/logo.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/logo.png?v=3" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/logo.png?v=3" />
+        <link rel="apple-touch-icon" href="/logo.png?v=3" />
+        <link rel="shortcut icon" href="/logo.png?v=3" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script
