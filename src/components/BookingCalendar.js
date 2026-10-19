@@ -14,6 +14,7 @@ import {
   Clock,
   Sparkles,
   Edit3,
+  MessageCircle,
 } from "lucide-react";
 
 const STATUS_THEME = {
@@ -79,6 +80,7 @@ function BookingModal({ booking, onClose, onDelete, onStatusUpdate, onEditBookin
   const totalAmount = booking.totalAmount || booking.total_amount || 0;
   const depositPaid = booking.depositPaid || booking.deposit_paid || 0;
   const pendingAmount = totalAmount - depositPaid;
+  const notes = booking.notes || booking.guest_notes || booking.guestNotes || "";
 
   const handleDelete = async () => {
     setLoading(true);
@@ -104,12 +106,22 @@ function BookingModal({ booking, onClose, onDelete, onStatusUpdate, onEditBookin
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span
-              style={{ backgroundColor: status.bg }}
-              className="rounded-full px-3.5 py-1 text-xs font-bold text-white shadow-2xs"
-            >
-              {status.label}
-            </span>
+            {booking.status === "confirmed" ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/90 shadow-2xs">
+                <span className="relative flex size-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
+                </span>
+                <span>Confirmada</span>
+              </span>
+            ) : (
+              <span
+                style={{ backgroundColor: status.bg }}
+                className="rounded-full px-3.5 py-1 text-xs font-bold text-white shadow-2xs"
+              >
+                {status.label}
+              </span>
+            )}
             {bookingColor && (
               <span
                 style={{ backgroundColor: bookingColor.bg }}
@@ -161,26 +173,44 @@ function BookingModal({ booking, onClose, onDelete, onStatusUpdate, onEditBookin
           </div>
         </div>
 
-        <div className="rounded-2xl bg-[#E7EEF5]/70 p-4 border border-[#D7E0EB] flex items-center justify-between mb-5">
+        {/* Desglose de Pagos: Total, Seña Abonada y Saldo */}
+        <div className="rounded-2xl bg-[#E7EEF5]/70 p-4 border border-[#D7E0EB] grid grid-cols-3 gap-2 items-center mb-5">
           <div>
-            <span className="text-xs text-[#5A697D] block">Total Estadía</span>
-            <strong className="text-lg font-bold text-[#1E293B]">
+            <span className="text-[11px] text-[#5A697D] block font-medium">Total Estadía</span>
+            <strong className="text-base sm:text-lg font-bold text-[#1E293B] block mt-0.5">
               ${totalAmount.toLocaleString("es-AR")}
             </strong>
           </div>
+          <div>
+            <span className="text-[11px] text-[#5A697D] block font-medium">Seña Abonada</span>
+            <strong className="text-base sm:text-lg font-bold text-emerald-700 block mt-0.5">
+              ${depositPaid.toLocaleString("es-AR")}
+            </strong>
+          </div>
           <div className="text-right">
-            <span className="text-xs text-[#5A697D] block">Saldo Pendiente</span>
+            <span className="text-[11px] text-[#5A697D] block font-medium">Saldo Pendiente</span>
             <strong
-              className={`text-lg font-bold ${
+              className={`text-base sm:text-lg font-bold block mt-0.5 ${
                 pendingAmount > 0 ? "text-amber-700" : "text-emerald-700"
               }`}
             >
               {pendingAmount > 0
                 ? `$${pendingAmount.toLocaleString("es-AR")}`
-                : "Pagado"}
+                : "Pagado ✓"}
             </strong>
           </div>
         </div>
+
+        {/* Observaciones / Comentarios Internos */}
+        {notes && (
+          <div className="rounded-2xl bg-amber-50/90 border border-amber-200/90 p-3.5 mb-5 text-xs">
+            <span className="font-bold text-amber-900 block uppercase tracking-wider text-[11px] mb-1 flex items-center gap-1.5">
+              <Sparkles className="size-3.5 text-amber-700" />
+              Observaciones / Comentarios:
+            </span>
+            <p className="text-amber-950 font-medium whitespace-pre-wrap">{notes}</p>
+          </div>
+        )}
 
         {/* Status switcher */}
         <div className="mb-5">
@@ -215,12 +245,14 @@ function BookingModal({ booking, onClose, onDelete, onStatusUpdate, onEditBookin
         <div className="space-y-2.5">
           {guestPhone && (
             <a
-              href={`https://wa.me/${guestPhone.replace(/\D/g, "")}`}
+              href={`https://wa.me/${guestPhone.replace(/\D/g, "")}?text=${encodeURIComponent(
+                `¡Hola ${(guestName || "").trim()}! Te escribo desde Dúplex Las Toninas por tu reserva en ${prop?.name || "el complejo"}.`
+              )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-3 rounded-xl bg-[#1E293B] text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs"
             >
-              <Phone className="size-4" />
+              <MessageCircle className="size-4" />
               <span>Contactar por WhatsApp</span>
             </a>
           )}

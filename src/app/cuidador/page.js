@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getBookings, recordPayment, updateBookingStatus, deleteBooking } from "@/lib/supabase";
-import { mockBookings, formatDateDDMMAAAA } from "@/lib/data";
+import { mockBookings, formatDateDDMMAAAA, normalizeWhatsAppNumber } from "@/lib/data";
 import { siteContent } from "@/lib/content";
 import BookingCalendar from "@/components/BookingCalendar";
 import {
@@ -22,6 +22,8 @@ import {
   ListFilter,
   Moon,
   MapPin,
+  MessageCircle,
+  Sparkles,
 } from "lucide-react";
 
 const STATUS_CONFIG = {
@@ -64,6 +66,12 @@ function GuestCard({ booking, onCheckin, onPayment, isArrival }) {
     booking.guestResidence || booking.guest_residence || booking.guestEmail || "Las Toninas";
   const checkIn = booking.checkIn || booking.check_in;
   const checkOut = booking.checkOut || booking.check_out;
+  const notes = booking.notes || booking.guest_notes || booking.guestNotes || "";
+  const propName = booking.property?.name || booking.propertyId || "Dúplex";
+  const cleanPhone = normalizeWhatsAppNumber(guestPhone);
+  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
+    `¡Hola ${(guestName || "").trim()}! Te escribo desde Dúplex Las Toninas por tu reserva en ${propName}.`
+  )}`;
 
   const handlePayment = async () => {
     if (!payAmount || parseFloat(payAmount) <= 0) return;
@@ -167,15 +175,39 @@ function GuestCard({ booking, onCheckin, onPayment, isArrival }) {
         </div>
       </div>
 
-      {/* Large Phone Call Button */}
+      {/* Observaciones / Comentarios Internos */}
+      {notes && (
+        <div className="rounded-2xl bg-amber-50/90 border border-amber-200/90 p-4 mb-4 text-xs">
+          <span className="font-bold text-amber-900 block uppercase tracking-wider text-[11px] mb-1.5 flex items-center gap-1.5">
+            <Sparkles className="size-4 text-amber-700" />
+            Observaciones / Comentarios:
+          </span>
+          <p className="text-amber-950 font-semibold text-sm whitespace-pre-wrap">{notes}</p>
+        </div>
+      )}
+
+      {/* Botones de Comunicación: WhatsApp Rápido y Llamada */}
       {guestPhone && (
-        <a
-          href={`tel:${guestPhone}`}
-          className="flex items-center justify-center gap-2.5 w-full py-3.5 px-4 rounded-2xl bg-[#E7EEF5] hover:bg-[#D7E0EB] text-[#1E293B] font-bold text-base transition-colors mb-4"
-        >
-          <Phone className="size-4" />
-          <span>Llamar: {guestPhone}</span>
-        </a>
+        <div className="flex flex-col sm:flex-row gap-2.5 mb-4">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-base transition-all shadow-xs cursor-pointer"
+          >
+            <MessageCircle className="size-5" />
+            <span>Enviar WhatsApp Rápido</span>
+          </a>
+
+          <a
+            href={`tel:${guestPhone}`}
+            className="flex items-center justify-center gap-2 py-3.5 px-5 rounded-2xl bg-[#E7EEF5] hover:bg-[#D7E0EB] text-[#1E293B] font-bold text-sm transition-colors"
+            title="Llamada telefónica directa"
+          >
+            <Phone className="size-4" />
+            <span>Llamar</span>
+          </a>
+        </div>
       )}
 
       {/* Balance Box */}
