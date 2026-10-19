@@ -55,7 +55,7 @@ export default function Footer() {
               {[
                 { icon: "📘", label: "Facebook", href: "#" },
                 { icon: "📸", label: "Instagram", href: "#" },
-                { icon: "💬", label: "WhatsApp", href: "https://wa.me/5491112345678" },
+                { icon: "💬", label: "WhatsApp", href: "https://wa.me/5491134610085" },
               ].map((s) => (
                 <a
                   key={s.label}

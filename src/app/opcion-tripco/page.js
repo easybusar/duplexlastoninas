@@ -84,7 +84,7 @@ function TripcoNavbar() {
         {/* Right Actions (Desktop) */}
         <div className="hidden md:flex items-center gap-4">
           <a
-            href="https://wa.me/5491155551111?text=Hola!%20Quiero%20consultar%20disponibilidad%20en%20D%C3%BAplex%20Las%20Toninas"
+            href="https://wa.me/5491134610085?text=Hola!%20Quiero%20consultar%20disponibilidad%20en%20D%C3%BAplex%20Las%20Toninas"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-semibold text-slate-600 hover:text-slate-900 px-3 py-2 transition-colors"
@@ -132,7 +132,7 @@ function TripcoNavbar() {
               Reservar Online
             </Link>
             <a
-              href="https://wa.me/5491155551111"
+              href="https://wa.me/5491134610085"
               target="_blank"
               rel="noopener noreferrer"
               className="w-full border border-slate-200 text-slate-700 text-center font-semibold py-2.5 rounded-full"
@@ -893,7 +893,7 @@ function VideoBannerSection() {
 
         <div className="flex items-center gap-3">
           <a
-            href="https://wa.me/5491155551111?text=Hola!%20Quiero%20consultar%20disponibilidad%20en%20Las%20Toninas"
+            href="https://wa.me/5491134610085?text=Hola!%20Quiero%20consultar%20disponibilidad%20en%20Las%20Toninas"
             target="_blank"
             rel="noopener noreferrer"
             className="px-5 py-2.5 rounded-full border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-bold transition-all"
@@ -1006,7 +1006,7 @@ function TripcoFooter() {
                 Atención inmediata por WhatsApp
               </span>
               <a
-                href="https://wa.me/5491155551111?text=Hola!%20Quiero%20consultar%20disponibilidad"
+                href="https://wa.me/5491134610085?text=Hola!%20Quiero%20consultar%20disponibilidad"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Contactar por WhatsApp"

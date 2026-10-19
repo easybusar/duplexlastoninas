@@ -65,7 +65,7 @@ function RivrRingLogo({ className = "size-6" }) {
 }
 
 // ─── 1. HERO SECTION RIVR (Framed Canvas + Video + Cutout Corner Dock) ──────
-function RivrHeroSection({ heroRef }) {
+function RivrHeroSection({ heroRef, whatsappNumber }) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [checkIn, setCheckIn] = useState("");
@@ -226,9 +226,25 @@ function RivrHeroSection({ heroRef }) {
             <a
               href="#ubicacion"
               onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-bold text-[#1E293B]"
+              className="block py-2 text-sm font-bold text-[#1E293B] border-b border-slate-100"
             >
               {navigation?.ubicacion || "Ubicación"}
+            </a>
+            <a
+              href={buildWhatsAppUrl(
+                whatsappNumber,
+                "Hola! Vengo desde la portada de la web de Dúplex Las Toninas y quiero consultar disponibilidad."
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                trackAdsConversion("whatsapp_click", { source: "mobile_menu" });
+                setMobileMenuOpen(false);
+              }}
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#25D366] text-white font-bold text-sm"
+            >
+              <WhatsAppIcon className="size-4" />
+              <span>Consultar por WhatsApp</span>
             </a>
           </div>
         )}
@@ -237,12 +253,15 @@ function RivrHeroSection({ heroRef }) {
         <div className="relative z-10 my-auto flex flex-col items-center justify-center px-5 py-10 text-center max-w-5xl mx-auto">
           <h1
             data-slot="hero-title"
-            className="mb-5 text-[clamp(2.35rem,1.35rem+4.5vw,5.25rem)] leading-[1.03] font-extrabold tracking-[-0.035em] text-white text-balance drop-shadow-[0_4px_24px_rgba(15,23,42,0.5)]"
+            className="hero-anim-title mb-5 text-[clamp(2.35rem,1.35rem+4.5vw,5.25rem)] leading-[1.03] font-extrabold tracking-[-0.035em] text-white text-balance drop-shadow-[0_4px_24px_rgba(15,23,42,0.5)]"
           >
             {hero.title}
           </h1>
 
-          <p className="max-w-[64ch] text-[clamp(1rem,0.92rem+0.45vw,1.25rem)] leading-[1.58] text-white/95 font-semibold text-pretty drop-shadow-[0_2px_12px_rgba(15,23,42,0.45)]">
+          <p
+            data-slot="hero-desc"
+            className="hero-anim-desc max-w-[64ch] text-[clamp(1rem,0.92rem+0.45vw,1.25rem)] leading-[1.58] text-white/95 font-semibold text-pretty drop-shadow-[0_2px_12px_rgba(15,23,42,0.45)]"
+          >
             Tu mejor opción de <strong className="font-extrabold text-white underline decoration-white/40 underline-offset-4">alquiler de temporada</strong> a 400 metros del mar.{" "}
             <strong className="font-extrabold text-white">Alquiler de dúplex</strong> y departamento totalmente equipados, parrilla propia y espacio para estacionar al frente en la mejor zona de playas amplias. Reservá directo con sus dueños, con total confianza y sin intermediarios ni comisiones.
           </p>
@@ -279,7 +298,7 @@ function RivrHeroSection({ heroRef }) {
           {/* Bottom-Right Cutout Dock with Interactive Booking Search */}
           <div
             data-slot="hero-docs"
-            className="relative flex w-full lg:w-auto lg:ms-auto items-center rounded-[1.5rem] lg:rounded-none lg:rounded-ss-[3rem] bg-[#EFEFEF] p-4 sm:p-5 md:p-6 md:ps-10 md:pt-7"
+            className="hero-anim-dates-mobile relative flex w-full lg:w-auto lg:ms-auto items-center rounded-[1.5rem] lg:rounded-none lg:rounded-ss-[3rem] bg-[#EFEFEF] p-4 sm:p-5 md:p-6 md:ps-10 md:pt-7"
           >
             {/* Rivr Inverted Corner Cutout SVG Masks (Desktop) */}
             <div className="hidden lg:block pointer-events-none absolute end-0 -top-[3rem] size-[3rem] text-[#EFEFEF]">
@@ -1571,7 +1590,7 @@ export default function HomePage() {
       } relative min-h-svh bg-[#EFEFEF] text-[#1E293B] antialiased`}
     >
       <div className="scroll-sentinel" aria-hidden="true" />
-      <RivrHeroSection heroRef={heroRef} />
+      <RivrHeroSection heroRef={heroRef} whatsappNumber={activePhone} />
       <RivrMetricsSection />
       <RivrFeaturesBentoSection />
       <RivrUnitsCatalogSection

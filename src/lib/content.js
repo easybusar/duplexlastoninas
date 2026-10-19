@@ -18,9 +18,9 @@ export const siteContent = {
     city: "Las Toninas",
     region: "Partido de La Costa, Buenos Aires",
     distanceToSea: "400m",
-    whatsappNumber: "5491155551111", // Editable desde el Panel Administrador (/admin)
+    whatsappNumber: "5491134610085", // Editable desde el Panel Administrador (/admin)
     whatsappDefaultMessage:
-      "Hola! Estoy visitando la web de Dúplex Las Toninas y quiero consultar disponibilidad y tarifas de alquiler de temporada.",
+      "Hola! Vengo desde la web de Dúplex Las Toninas y quiero consultar disponibilidad.",
     googleMapsUrl:
       "https://www.google.com/maps/search/?api=1&query=Calle+12+495+Las+Toninas+Buenos+Aires",
     paymentAlias: "DUPLEX.TONINAS.MP",
@@ -134,7 +134,7 @@ export const siteContent = {
   // ─── 6. CATÁLOGO DE ALOJAMIENTO (UNIDADES) ──────────────────────────────────
   unitsSection: {
     eyebrow: "Alquiler de Dúplex y Departamento en Las Toninas",
-    title: "Elegí tu alojamiento ideal para esta temporada",
+    title: "Elegí tu alojamiento ideal",
     filters: {
       all: "Todas (5 Unidades)",
       duplex: "4 Dúplex (Hasta 6 pers.)",

@@ -564,7 +564,7 @@ function DashboardSection({
   onOpenManualModal,
   onGoToConfig,
 }) {
-  const [quickPhone, setQuickPhone] = useState(siteSettings?.whatsappNumber || "5491100000000");
+  const [quickPhone, setQuickPhone] = useState(siteSettings?.whatsappNumber || "5491134610085");
   const [savingPhone, setSavingPhone] = useState(false);
   const [savedPhoneOk, setSavedPhoneOk] = useState(false);
 
@@ -1224,14 +1224,14 @@ function PagosSection({ bookings }) {
 // ─── Configuración General (WhatsApp, Alias, Google Ads) ──────────────────
 function ConfiguracionSection({ siteSettings, onSave }) {
   const [whatsappNumber, setWhatsappNumber] = useState(
-    siteSettings?.whatsappNumber || "5491100000000"
+    siteSettings?.whatsappNumber || "5491134610085"
   );
   const [whatsappDefaultMessage, setWhatsappDefaultMessage] = useState(
     siteSettings?.whatsappDefaultMessage ||
-      "Hola! Vengo desde la web de Complejo Las Toninas. Quisiera consultar disponibilidad y tarifas de alquiler para esta temporada."
+      "Hola! Vengo desde la web de Dúplex Las Toninas y quiero consultar disponibilidad."
   );
   const [paymentAlias, setPaymentAlias] = useState(
-    siteSettings?.paymentAlias || "complejo.toninas.mp"
+    siteSettings?.paymentAlias || "DUPLEX.TONINAS.MP"
   );
   const [googleAdsId, setGoogleAdsId] = useState(siteSettings?.googleAdsId || "");
   const [saving, setSaving] = useState(false);
@@ -1239,12 +1239,12 @@ function ConfiguracionSection({ siteSettings, onSave }) {
 
   useEffect(() => {
     if (siteSettings) {
-      setWhatsappNumber(siteSettings.whatsappNumber || "5491100000000");
+      setWhatsappNumber(siteSettings.whatsappNumber || "5491134610085");
       setWhatsappDefaultMessage(
         siteSettings.whatsappDefaultMessage ||
-          "Hola! Vengo desde la web de Complejo Las Toninas. Quisiera consultar disponibilidad y tarifas de alquiler para esta temporada."
+          "Hola! Vengo desde la web de Dúplex Las Toninas y quiero consultar disponibilidad."
       );
-      setPaymentAlias(siteSettings.paymentAlias || "complejo.toninas.mp");
+      setPaymentAlias(siteSettings.paymentAlias || "DUPLEX.TONINAS.MP");
       setGoogleAdsId(siteSettings.googleAdsId || "");
     }
   }, [siteSettings]);

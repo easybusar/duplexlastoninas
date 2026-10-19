@@ -487,9 +487,9 @@ export function getStatusLabel(status) {
 export const STORAGE_KEY_SETTINGS = "toninas_site_settings_v1";
 
 export const defaultSiteSettings = {
-  whatsappNumber: "5491155551111",
+  whatsappNumber: "5491134610085",
   whatsappDefaultMessage:
-    "Hola! Estoy visitando la web de Dúplex Las Toninas y quiero consultar disponibilidad y tarifas de alquiler de temporada.",
+    "Hola! Vengo desde la web de Dúplex Las Toninas y quiero consultar disponibilidad.",
   paymentAlias: "DUPLEX.TONINAS.MP",
   googleAdsId: "",
   googleAdsConversionLabel: "",
@@ -516,6 +516,14 @@ export function getStoredSiteSettings() {
     const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
     if (!raw) return defaultSiteSettings;
     const parsed = JSON.parse(raw);
+    // Si en localStorage había quedado un número viejo de prueba o default, reemplazarlo
+    if (
+      parsed.whatsappNumber === "5491155551111" ||
+      parsed.whatsappNumber === "5491100000000" ||
+      parsed.whatsappNumber === "5491112345678"
+    ) {
+      parsed.whatsappNumber = defaultSiteSettings.whatsappNumber;
+    }
     return {
       ...defaultSiteSettings,
       ...parsed,

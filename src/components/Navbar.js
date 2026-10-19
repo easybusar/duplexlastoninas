@@ -117,7 +117,7 @@ export default function Navbar() {
         {/* CTA */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Link
-            href="https://wa.me/5491112345678?text=Hola!%20Me%20gustar%C3%ADa%20consultar%20sobre%20disponibilidad"
+            href="https://wa.me/5491134610085?text=Hola!%20Me%20gustar%C3%ADa%20consultar%20sobre%20disponibilidad"
             target="_blank"
             rel="noopener noreferrer"
             style={{
