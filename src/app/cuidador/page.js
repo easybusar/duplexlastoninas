@@ -31,7 +31,7 @@ const STATUS_CONFIG = {
   },
   confirmed: {
     label: "Confirmada",
-    bg: "bg-[#E7EEF5] text-[#1E293B] border-[#D7E0EB]",
+    bg: "bg-emerald-50 text-emerald-800 border-emerald-200",
   },
   checked_in: {
     label: "En Estadía",
@@ -108,9 +108,15 @@ function GuestCard({ booking, onCheckin, onPayment, isArrival }) {
         </div>
 
         <span
-          className={`rounded-full border px-3.5 py-1 text-xs font-bold whitespace-nowrap ${status.bg}`}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1 text-xs font-bold whitespace-nowrap transition-colors shadow-2xs ${status.bg}`}
         >
-          {status.label}
+          {booking.status === "confirmed" && (
+            <span className="relative flex size-2 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
+            </span>
+          )}
+          <span>{status.label}</span>
         </span>
       </div>
 
@@ -174,7 +180,7 @@ function GuestCard({ booking, onCheckin, onPayment, isArrival }) {
 
       {/* Balance Box */}
       <div
-        className={`rounded-2xl p-4 border mb-5 flex items-center justify-between ${
+        className={`rounded-2xl p-4 border mb-5 grid grid-cols-2 sm:grid-cols-3 gap-3 items-center ${
           remaining > 0
             ? "bg-amber-50/80 border-amber-200"
             : "bg-emerald-50/80 border-emerald-200"
@@ -188,7 +194,15 @@ function GuestCard({ booking, onCheckin, onPayment, isArrival }) {
             ${totalAmount.toLocaleString("es-AR")}
           </span>
         </div>
-        <div className="text-right">
+        <div>
+          <span className="block text-xs font-medium text-[#5A697D]">
+            Seña / Abonado
+          </span>
+          <span className="text-lg font-bold text-emerald-700">
+            ${depositPaid.toLocaleString("es-AR")}
+          </span>
+        </div>
+        <div className="col-span-2 sm:col-span-1 sm:text-right">
           <span className="block text-xs font-medium text-[#5A697D]">
             {remaining > 0 ? "Saldo a Cobrar" : "Estado de Pago"}
           </span>
@@ -197,7 +211,7 @@ function GuestCard({ booking, onCheckin, onPayment, isArrival }) {
               remaining > 0 ? "text-amber-800" : "text-emerald-700"
             }`}
           >
-            {remaining > 0 ? `$${remaining.toLocaleString("es-AR")}` : "Completo"}
+            {remaining > 0 ? `$${remaining.toLocaleString("es-AR")}` : "Completo ✓"}
           </span>
         </div>
       </div>
@@ -341,9 +355,16 @@ export default function CuidadorPage() {
     };
     window.addEventListener("toninas_bookings_changed", handleStorageChange);
     window.addEventListener("storage", handleStorageChange);
+
+    // Sincronización automática periódica (15s) para reflejar cambios hechos desde otros dispositivos
+    const pollInterval = setInterval(() => {
+      loadBookings();
+    }, 15000);
+
     return () => {
       window.removeEventListener("toninas_bookings_changed", handleStorageChange);
       window.removeEventListener("storage", handleStorageChange);
+      clearInterval(pollInterval);
     };
   }, [router, loadBookings]);
 

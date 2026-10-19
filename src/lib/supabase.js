@@ -417,10 +417,22 @@ export async function createBooking(bookingData) {
 export async function updateBooking(bookingId, updatedData) {
   const current = getStoredBookings();
   const existing = current.find((b) => b.id === bookingId) || {};
+
+  const totalVal = parseFloat(
+    updatedData.totalAmount ?? updatedData.total_amount ?? existing.totalAmount ?? existing.total_amount ?? 0
+  );
+  const depositVal = parseFloat(
+    updatedData.depositPaid ?? updatedData.deposit_paid ?? existing.depositPaid ?? existing.deposit_paid ?? 0
+  );
+
   const merged = {
     ...existing,
     ...updatedData,
     id: bookingId,
+    totalAmount: totalVal,
+    total_amount: totalVal,
+    depositPaid: depositVal,
+    deposit_paid: depositVal,
     updatedAt: new Date().toISOString(),
   };
 
@@ -432,17 +444,21 @@ export async function updateBooking(bookingId, updatedData) {
       property_id: merged.propertyId || merged.property_id,
       guest_name: merged.guestName || merged.guest_name,
       guest_phone: merged.guestPhone || merged.guest_phone,
-      guest_email: merged.guestResidence || merged.guest_residence || merged.guest_email,
+      guest_email: merged.guestResidence || merged.guest_residence || merged.guest_email || "No especificado",
       check_in: merged.checkIn || merged.check_in,
       check_out: merged.checkOut || merged.check_out,
       guests: parseInt(merged.guests || 2, 10),
-      total_amount: parseFloat(merged.totalAmount || merged.total_amount || 0),
-      deposit_paid: parseFloat(merged.depositPaid || merged.deposit_paid || 0),
+      total_amount: totalVal,
+      deposit_paid: depositVal,
       status: merged.status || "confirmed",
-      notes: merged.notes || merged.guest_notes || "",
+      guest_notes: merged.notes || merged.guest_notes || "",
+      source: `${(merged.source || "admin").split("|")[0]}|${merged.paymentMethod || merged.payment_method || "Transferencia"}`,
       updated_at: new Date().toISOString(),
     };
-    await supabase.from("bookings").update(supabasePayload).eq("id", bookingId);
+    const { error } = await supabase.from("bookings").update(supabasePayload).eq("id", bookingId);
+    if (error) {
+      console.error("Error actualizando reserva en Supabase:", error);
+    }
   } catch (err) {
     console.warn("Error actualizando reserva en Supabase:", err);
   }
