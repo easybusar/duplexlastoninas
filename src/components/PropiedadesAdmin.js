@@ -6,8 +6,9 @@ import {
   saveStoredProperties,
   updateStoredProperty,
   formatDateDDMMAAAA,
+  sanitizeAmenities,
 } from "@/lib/data";
-import { updateProperty, getProperties } from "@/lib/supabase";
+import { updateProperty, updateAllDuplexes, getProperties } from "@/lib/supabase";
 import {
   Users,
   Pencil,
@@ -26,17 +27,17 @@ import {
 
 const AMENITY_OPTIONS = [
   "WiFi",
-  "Aire Acondicionado",
-  "Calefacción",
   "Cocina Equipada",
+  "Microondas",
+  "Heladera con Freezer",
   "Smart TV",
-  "Estacionamiento",
-  "Parrilla",
+  "Parrilla Individual",
+  "Espacio al frente",
   "Patio/Jardín",
+  "Vajilla Completa",
+  "Ventilador",
   "Ropa de Cama",
   "Toallas",
-  "Microondas",
-  "Lavarropas",
 ];
 
 function ImageUrlRow({ url, index, onChange, onRemove }) {
@@ -81,13 +82,33 @@ function PropertyEditForm({ property, onSave, onCancel }) {
     description: property.description || "",
     notes: property.notes || "",
     capacity: property.capacity || 6,
-    price_per_night: property.price_per_night || property.pricePerNight || 45000,
+    price_per_night: property.price_per_night || property.pricePerNight || 80000,
     images: property.images?.length ? [...property.images] : [""],
-    amenities: property.amenities || [],
+    amenities: sanitizeAmenities(property.amenities || [], property.type || "duplex"),
     seasonalRates: Array.isArray(property.seasonalRates || property.seasonal_rates)
       ? [...(property.seasonalRates || property.seasonal_rates)]
       : [],
   });
+
+  const [customAmenity, setCustomAmenity] = useState("");
+
+  useEffect(() => {
+    setForm({
+      name: property.name || "",
+      type: property.type || "duplex",
+      description: property.description || "",
+      notes: property.notes || "",
+      capacity: property.capacity || 6,
+      price_per_night: property.price_per_night || property.pricePerNight || 80000,
+      images: property.images?.length ? [...property.images] : [""],
+      amenities: sanitizeAmenities(property.amenities || [], property.type || "duplex"),
+      seasonalRates: Array.isArray(property.seasonalRates || property.seasonal_rates)
+        ? [...(property.seasonalRates || property.seasonal_rates)]
+        : [],
+    });
+    setError("");
+    setSuccessMsg("");
+  }, [property]);
 
   // Estado para cargar una nueva tarifa de temporada
   const [newSeason, setNewSeason] = useState({
@@ -122,6 +143,18 @@ function PropertyEditForm({ property, onSave, onCancel }) {
       "amenities",
       cur.includes(a) ? cur.filter((x) => x !== a) : [...cur, a]
     );
+  };
+
+  const handleAddCustomAmenity = () => {
+    const clean = sanitizeAmenities([customAmenity], form.type)[0];
+    if (!clean) {
+      setCustomAmenity("");
+      return;
+    }
+    if (!form.amenities.includes(clean)) {
+      set("amenities", [...form.amenities, clean]);
+    }
+    setCustomAmenity("");
   };
 
   // Manejadores de Tarifas por Temporada
@@ -181,6 +214,8 @@ function PropertyEditForm({ property, onSave, onCancel }) {
       return;
     }
 
+    const cleanAmenities = sanitizeAmenities(form.amenities, form.type);
+
     const payload = {
       name: form.name,
       type: form.type,
@@ -189,36 +224,28 @@ function PropertyEditForm({ property, onSave, onCancel }) {
       price_per_night: basePriceNum,
       pricePerNight: basePriceNum,
       images: form.images.filter(Boolean),
-      amenities: form.amenities,
+      amenities: cleanAmenities,
       seasonalRates: form.seasonalRates,
       updated_at: new Date().toISOString(),
     };
 
     try {
-      // Si el usuario marcó aplicar a todos los dúplex y la unidad es dúplex
+      // Guardar siempre la unidad actual en LocalStorage y Supabase
+      await updateProperty(property.id, payload);
+
+      // Si el usuario marcó aplicar tarifas y etiquetas a todos los dúplex
       if (applyToAllDuplexes && property.type === "duplex") {
-        const allProps = getStoredProperties();
-        const updatedList = allProps.map((p) => {
-          if (p.type === "duplex") {
-            return {
-              ...p,
-              price_per_night: basePriceNum,
-              pricePerNight: basePriceNum,
-              seasonalRates: form.seasonalRates,
-            };
-          }
-          return p;
+        await updateAllDuplexes({
+          price_per_night: basePriceNum,
+          seasonalRates: form.seasonalRates,
+          amenities: cleanAmenities,
         });
-        saveStoredProperties(updatedList);
-      } else {
-        // Guardar la unidad actual
-        await updateProperty(property.id, payload);
       }
 
-      setSuccessMsg("¡Tarifas y datos guardados con éxito! Actualizado en toda la web.");
+      setSuccessMsg("¡Tarifas, etiquetas y datos guardados con éxito en Supabase y en la web!");
       setTimeout(() => {
         onSave({ ...property, ...payload });
-      }, 700);
+      }, 600);
     } catch (err) {
       setError("Error al guardar: " + (err.message || "desconocido"));
     } finally {
@@ -519,10 +546,10 @@ function PropertyEditForm({ property, onSave, onCancel }) {
       {/* Comodidades */}
       <div>
         <span className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-2">
-          Comodidades Incluidas
+          Etiquetas y Comodidades Incluidas (se reflejan en la portada)
         </span>
         <div className="flex flex-wrap gap-2">
-          {AMENITY_OPTIONS.map((a) => {
+          {Array.from(new Set([...AMENITY_OPTIONS, ...form.amenities])).map((a) => {
             const active = form.amenities.includes(a);
             return (
               <button
@@ -540,6 +567,31 @@ function PropertyEditForm({ property, onSave, onCancel }) {
               </button>
             );
           })}
+        </div>
+
+        {/* Agregar etiqueta personalizada */}
+        <div className="mt-3 flex items-center gap-2 max-w-md">
+          <input
+            type="text"
+            value={customAmenity}
+            onChange={(e) => setCustomAmenity(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleAddCustomAmenity();
+              }
+            }}
+            placeholder="Agregar otra etiqueta..."
+            className="flex-1 rounded-xl bg-[#EFEFEF]/60 border border-[#D7E0EB] px-3 py-2 text-xs font-medium text-[#1E293B] outline-none focus:border-[#1E293B] focus:bg-white"
+          />
+          <button
+            type="button"
+            onClick={handleAddCustomAmenity}
+            className="inline-flex items-center gap-1 rounded-xl bg-[#E7EEF5] hover:bg-[#D7E0EB] text-[#1E293B] px-3.5 py-2 text-xs font-bold cursor-pointer transition-colors"
+          >
+            <Plus className="size-3.5" />
+            <span>Sumar</span>
+          </button>
         </div>
       </div>
 
@@ -582,6 +634,7 @@ function PropertyCard({ property, onEdit }) {
   const price = property.price_per_night || property.pricePerNight || 0;
   const img = property.images?.[0];
   const seasonalList = property.seasonalRates || property.seasonal_rates || [];
+  const amenitiesList = sanitizeAmenities(property.amenities || [], property.type || "duplex");
 
   return (
     <div className="rounded-[1.75rem] bg-white p-4 border border-[#D7E0EB] flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow">
@@ -611,7 +664,7 @@ function PropertyCard({ property, onEdit }) {
 
         <div className="px-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="text-lg font-semibold text-[#1E293B]">
+            <h3 className="text-lg font-bold text-[#1E293B]">
               {property.name}
             </h3>
             <div className="text-right">
@@ -625,6 +678,20 @@ function PropertyCard({ property, onEdit }) {
           <p className="mt-2 text-xs text-[#5A697D] leading-relaxed line-clamp-2">
             {property.description}
           </p>
+
+          {/* Etiquetas activas */}
+          {amenitiesList.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1">
+              {amenitiesList.map((am) => (
+                <span
+                  key={am}
+                  className="rounded-full bg-[#EFEFEF] border border-[#D7E0EB] px-2.5 py-0.5 text-[10px] font-semibold text-[#1E293B]"
+                >
+                  {am}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Listado rápido de temporadas */}
           {seasonalList.length > 0 && (
@@ -659,7 +726,7 @@ function PropertyCard({ property, onEdit }) {
           className="inline-flex items-center gap-1.5 rounded-xl bg-[#E7EEF5] hover:bg-[#1E293B] text-[#1E293B] hover:text-white px-3.5 py-2 text-xs font-semibold transition-colors cursor-pointer"
         >
           <Pencil className="size-3.5" />
-          <span>Editar Tarifas</span>
+          <span>Editar Unidad y Tarifas</span>
         </button>
       </div>
     </div>
@@ -691,7 +758,7 @@ export default function PropiedadesAdmin() {
     };
   }, [reloadProperties]);
 
-  const handleSave = (updated) => {
+  const handleSave = () => {
     setProps(getStoredProperties());
     setEditing(null);
   };
@@ -701,13 +768,13 @@ export default function PropiedadesAdmin() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-widest text-[#5A697D]">
-            Catálogo y Tarifas
+            Catálogo, Etiquetas y Tarifas
           </span>
-          <h2 className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-[#1E293B]">
-            Unidades, Precios y Temporadas
+          <h2 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#1E293B]">
+            Unidades, Precios, Etiquetas y Temporadas
           </h2>
           <p className="text-xs sm:text-sm text-[#5A697D] mt-1">
-            Modificá precios base y asigná tarifas por rango de fechas para alta demanda (Enero, Febrero, Feriados). Los cambios se guardan y reflejan inmediatamente en toda la web.
+            Modificá precios base, etiquetas de comodidades y tarifas por rango de fechas. Los cambios se sincronizan en Supabase y se reflejan de inmediato en la portada.
           </p>
         </div>
       </div>
@@ -733,6 +800,7 @@ export default function PropiedadesAdmin() {
             </button>
           </div>
           <PropertyEditForm
+            key={editing.id}
             property={editing}
             onSave={handleSave}
             onCancel={() => setEditing(null)}

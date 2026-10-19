@@ -15,7 +15,7 @@ import {
   formatDateDDMMAAAA,
 } from "@/lib/data";
 import { siteContent } from "@/lib/content";
-import { createBooking, getProperties, getSiteSettings } from "@/lib/supabase";
+import { createBooking, getBookings, getProperties, getSiteSettings } from "@/lib/supabase";
 import {
   ArrowUpRight,
   ArrowLeft,
@@ -40,6 +40,7 @@ function ReservarContent() {
 
   const [propertiesList, setPropertiesList] = useState(properties);
   const [siteSettings, setSiteSettings] = useState(getStoredSiteSettings);
+  const [, setBookingsVersion] = useState(0);
 
   useEffect(() => {
     setPropertiesList(getStoredProperties());
@@ -55,17 +56,25 @@ function ReservarContent() {
         if (s) setSiteSettings(s);
       })
       .catch(() => {});
+    getBookings()
+      .then(() => {
+        setBookingsVersion((v) => v + 1);
+      })
+      .catch(() => {});
 
     const handleSync = () => {
       setPropertiesList(getStoredProperties());
       setSiteSettings(getStoredSiteSettings());
+      setBookingsVersion((v) => v + 1);
     };
     window.addEventListener("toninas_properties_changed", handleSync);
     window.addEventListener("toninas_settings_changed", handleSync);
+    window.addEventListener("toninas_bookings_changed", handleSync);
     window.addEventListener("storage", handleSync);
     return () => {
       window.removeEventListener("toninas_properties_changed", handleSync);
       window.removeEventListener("toninas_settings_changed", handleSync);
+      window.removeEventListener("toninas_bookings_changed", handleSync);
       window.removeEventListener("storage", handleSync);
     };
   }, []);
@@ -136,6 +145,7 @@ function ReservarContent() {
         total_amount: total,
         deposit_paid: 0,
         status: "pending",
+        payment_method: paymentMethod === "mercadopago" ? "MercadoPago" : "Transferencia",
         source: "web",
       });
       trackAdsConversion("purchase_reservation", {

@@ -7,6 +7,7 @@ import {
   updateStoredProperty,
   getStoredSiteSettings,
   saveStoredSiteSettings,
+  sanitizeAmenities,
 } from "./data";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -48,7 +49,7 @@ export async function getSiteSettings() {
   const localSettings = getStoredSiteSettings();
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
     const { data, error } = await supabase
       .from("properties")
       .select("*")
@@ -89,11 +90,11 @@ export async function getProperties() {
   const localProps = getStoredProperties();
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
     const { data, error } = await supabase
       .from("properties")
       .select("*")
-      .order("name")
+      .order("id")
       .abortSignal(controller.signal);
     clearTimeout(timeoutId);
 
@@ -107,19 +108,31 @@ export async function getProperties() {
       }
 
       const unitRows = data.filter((r) => r.id !== "site-settings" && r.type !== "config");
-      // Cruzar con seasonalRates locales
+      // Cruzar con seasonalRates locales y sincronizar comodidades (amenities) e imágenes desde Supabase
       const merged = localProps
         .filter((lp) => lp.id !== "site-settings" && lp.type !== "config")
         .map((lp) => {
           const remote = unitRows.find((r) => r.id === lp.id);
           if (!remote) return lp;
+          const unitType = remote.type || lp.type || "duplex";
+          const remoteAmenities =
+            Array.isArray(remote.amenities) && remote.amenities.length > 0
+              ? sanitizeAmenities(remote.amenities, unitType)
+              : sanitizeAmenities(lp.amenities || [], unitType);
+          const hasValidRemoteImages =
+            Array.isArray(remote.images) &&
+            remote.images.length > 0 &&
+            remote.images.every((img) => typeof img === "string" && !img.includes("unsplash.com"));
           return {
             ...lp,
             name: remote.name || lp.name,
-            pricePerNight: remote.price_per_night || lp.pricePerNight,
-            price_per_night: remote.price_per_night || lp.price_per_night,
+            type: unitType,
+            pricePerNight: Number(remote.price_per_night || lp.pricePerNight || 80000),
+            price_per_night: Number(remote.price_per_night || lp.price_per_night || 80000),
             description: remote.description || lp.description,
-            capacity: remote.capacity || lp.capacity,
+            capacity: Number(remote.capacity || lp.capacity || 6),
+            amenities: remoteAmenities,
+            images: hasValidRemoteImages ? remote.images : lp.images,
           };
         });
       saveStoredProperties(merged);
@@ -131,23 +144,79 @@ export async function getProperties() {
 
 export async function updateProperty(propertyId, updates) {
   // 1. Guardar localmente de inmediato (persistencia garantizada)
-  const updated = updateStoredProperty(propertyId, updates);
+  const sanitizedUpdates = { ...updates };
+  if (sanitizedUpdates.amenities !== undefined) {
+    sanitizedUpdates.amenities = sanitizeAmenities(
+      sanitizedUpdates.amenities,
+      sanitizedUpdates.type || (propertyId === "depto-1" ? "departamento" : "duplex")
+    );
+  }
+  const updated = updateStoredProperty(propertyId, sanitizedUpdates);
 
-  // 2. Intentar en segundo plano con Supabase
+  // 2. Sincronizar en la nube con Supabase (incluyendo amenities e images)
   try {
     const payload = {};
-    if (updates.name !== undefined) payload.name = updates.name;
-    if (updates.price_per_night !== undefined || updates.pricePerNight !== undefined) {
-      payload.price_per_night = updates.price_per_night || updates.pricePerNight;
+    if (sanitizedUpdates.name !== undefined) payload.name = sanitizedUpdates.name;
+    if (sanitizedUpdates.price_per_night !== undefined || sanitizedUpdates.pricePerNight !== undefined) {
+      payload.price_per_night = Number(sanitizedUpdates.price_per_night || sanitizedUpdates.pricePerNight);
     }
-    if (updates.capacity !== undefined) payload.capacity = updates.capacity;
-    if (updates.description !== undefined) payload.description = updates.description;
+    if (sanitizedUpdates.capacity !== undefined) payload.capacity = Number(sanitizedUpdates.capacity);
+    if (sanitizedUpdates.description !== undefined) payload.description = sanitizedUpdates.description;
+    if (sanitizedUpdates.amenities !== undefined) payload.amenities = sanitizedUpdates.amenities;
+    if (sanitizedUpdates.images !== undefined) payload.images = sanitizedUpdates.images;
     payload.updated_at = new Date().toISOString();
 
     await supabase.from("properties").update(payload).eq("id", propertyId);
-  } catch {}
+  } catch (err) {
+    console.warn("Supabase updateProperty warning:", err);
+  }
 
   return updated;
+}
+
+export async function updateAllDuplexes(sharedUpdates) {
+  const allProps = getStoredProperties();
+  const cleanAmenities =
+    sharedUpdates.amenities !== undefined
+      ? sanitizeAmenities(sharedUpdates.amenities, "duplex")
+      : undefined;
+
+  const updatedList = allProps.map((p) => {
+    if (p.type === "duplex") {
+      return {
+        ...p,
+        ...(sharedUpdates.price_per_night !== undefined
+          ? {
+              price_per_night: Number(sharedUpdates.price_per_night),
+              pricePerNight: Number(sharedUpdates.price_per_night),
+            }
+          : {}),
+        ...(sharedUpdates.seasonalRates !== undefined
+          ? { seasonalRates: sharedUpdates.seasonalRates }
+          : {}),
+        ...(cleanAmenities !== undefined ? { amenities: cleanAmenities } : {}),
+      };
+    }
+    return p;
+  });
+  saveStoredProperties(updatedList);
+
+  try {
+    const payload = {
+      updated_at: new Date().toISOString(),
+    };
+    if (sharedUpdates.price_per_night !== undefined) {
+      payload.price_per_night = Number(sharedUpdates.price_per_night);
+    }
+    if (cleanAmenities !== undefined) {
+      payload.amenities = cleanAmenities;
+    }
+    await supabase.from("properties").update(payload).eq("type", "duplex");
+  } catch (err) {
+    console.warn("Supabase updateAllDuplexes warning:", err);
+  }
+
+  return updatedList;
 }
 
 export async function updatePropertyPrice(propertyId, pricePerNight) {
@@ -160,7 +229,7 @@ export async function getBookings(filters = {}) {
   // 1. Intentamos leer de Supabase si responde
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
 
     let query = supabase
       .from("bookings")
@@ -179,25 +248,35 @@ export async function getBookings(filters = {}) {
     const { data, error } = await query;
     clearTimeout(timeoutId);
 
-    if (!error && Array.isArray(data) && data.length > 0) {
-      // Normalizamos y guardamos copia local
-      const normalized = data.map((b) => ({
-        id: b.id,
-        propertyId: b.property_id || b.propertyId,
-        guestName: b.guest_name || b.guestName,
-        guestPhone: b.guest_phone || b.guestPhone,
-        guestResidence: b.guest_residence || b.guestResidence || b.guest_email || "Las Toninas",
-        checkIn: b.check_in || b.checkIn,
-        checkOut: b.check_out || b.checkOut,
-        guests: b.guests || 1,
-        totalAmount: b.total_amount || b.totalAmount || 0,
-        depositPaid: b.deposit_paid || b.depositPaid || 0,
-        status: b.status || "confirmed",
-        paymentMethod: b.payment_method || b.paymentMethod || "Transferencia",
-        notes: b.guest_notes || b.notes || "",
-        createdAt: b.created_at || new Date().toISOString(),
-      }));
-      saveStoredBookings(normalized);
+    if (!error && Array.isArray(data)) {
+      // Normalizamos y guardamos copia local (incluso cuando está vacío)
+      const normalized = data.map((b) => {
+        const rawSource = String(b.source || "web");
+        const [cleanSource, encodedMethod] = rawSource.includes("|")
+          ? rawSource.split("|")
+          : [rawSource, null];
+        return {
+          id: b.id,
+          propertyId: b.property_id || b.propertyId,
+          property: b.property || null,
+          guestName: b.guest_name || b.guestName,
+          guestPhone: b.guest_phone || b.guestPhone,
+          guestResidence: b.guest_residence || b.guestResidence || b.guest_email || "Buenos Aires",
+          checkIn: b.check_in || b.checkIn,
+          checkOut: b.check_out || b.checkOut,
+          guests: Number(b.guests || 1),
+          totalAmount: Number(b.total_amount || b.totalAmount || 0),
+          depositPaid: Number(b.deposit_paid || b.depositPaid || 0),
+          status: b.status || "confirmed",
+          paymentMethod: encodedMethod || b.payment_method || b.paymentMethod || "Transferencia",
+          source: cleanSource || "web",
+          notes: b.guest_notes || b.notes || "",
+          createdAt: b.created_at || new Date().toISOString(),
+        };
+      });
+      if (!filters.status && !filters.propertyId && !filters.fromDate && !filters.toDate) {
+        saveStoredBookings(normalized);
+      }
       return normalized;
     }
   } catch {
@@ -262,24 +341,26 @@ export async function createBooking(bookingData) {
   const updated = [normalized, ...current.filter((b) => b.id !== newId)];
   saveStoredBookings(updated);
 
-  // Sincronizamos con Supabase en la nube
+  // Sincronizamos con Supabase en la nube (codificando medio de pago en source por esquema de tabla)
   try {
-    await supabase.from("bookings").insert([{
+    const { error } = await supabase.from("bookings").insert([{
       id: normalized.id,
       property_id: normalized.propertyId,
       guest_name: normalized.guestName,
       guest_phone: normalized.guestPhone,
-      guest_email: normalized.guestResidence, // almacena residencia
+      guest_email: normalized.guestResidence,
       check_in: normalized.checkIn,
       check_out: normalized.checkOut,
       guests: normalized.guests,
       total_amount: normalized.totalAmount,
       deposit_paid: normalized.depositPaid,
       status: normalized.status,
-      payment_method: normalized.paymentMethod,
       guest_notes: normalized.notes,
-      source: normalized.source,
+      source: `${normalized.source}|${normalized.paymentMethod}`,
     }]);
+    if (error) {
+      console.warn("Supabase insert warning:", error.message);
+    }
   } catch (e) {
     console.warn("Supabase insert warning:", e);
   }

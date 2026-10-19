@@ -314,7 +314,7 @@ export default function CuidadorPage() {
   const loadBookings = useCallback(async () => {
     try {
       const data = await getBookings();
-      if (data && data.length > 0) {
+      if (Array.isArray(data)) {
         setAllBookings(data);
       } else {
         setAllBookings(mockBookings);

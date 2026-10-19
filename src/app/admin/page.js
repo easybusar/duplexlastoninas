@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   mockBookings,
+  getStoredBookings,
   properties as staticProperties,
   getStoredProperties,
   getStoredSiteSettings,
@@ -1429,7 +1430,7 @@ function ConfiguracionSection({ siteSettings, onSave }) {
 export default function AdminPage() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState("dashboard");
-  const [bookingsList, setBookingsList] = useState(mockBookings);
+  const [bookingsList, setBookingsList] = useState(getStoredBookings);
   const [propertiesList, setPropertiesList] = useState(getStoredProperties);
   const [siteSettings, setSiteSettings] = useState(getStoredSiteSettings);
   const [manualModalOpen, setManualModalOpen] = useState(false);
@@ -1442,7 +1443,7 @@ export default function AdminPage() {
         getSiteSettings().catch(() => null),
       ]);
 
-      if (bData && bData.length > 0) {
+      if (Array.isArray(bData)) {
         setBookingsList(bData);
       }
 

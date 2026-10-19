@@ -9,6 +9,7 @@ import {
   getStoredSiteSettings,
   buildWhatsAppUrl,
   trackAdsConversion,
+  sanitizeAmenities,
 } from "@/lib/data";
 import { getProperties, getSiteSettings } from "@/lib/supabase";
 import { siteContent } from "@/lib/content";
@@ -35,6 +36,7 @@ import {
   X,
   Menu,
   ShieldCheck,
+  Play,
 } from "lucide-react";
 
 // ─── Official WhatsApp Logo SVG ─────────────────────────────────────────────
@@ -426,10 +428,10 @@ function RivrMetricsSection() {
                   : ""
               }`}
             >
-              <dt className="text-3xl font-semibold tracking-tight text-[#1E293B] tabular-nums sm:text-4xl md:text-5xl">
+              <dt className="text-3xl font-extrabold tracking-tight text-[#1E293B] tabular-nums sm:text-4xl md:text-5xl">
                 {stat.value}
               </dt>
-              <dd className="text-xs sm:text-sm font-medium text-[#5A697D]">
+              <dd className="text-xs sm:text-sm font-bold text-[#5A697D]">
                 {stat.label}
               </dd>
             </div>
@@ -452,20 +454,20 @@ function RivrFeaturesBentoSection() {
       className="mx-auto w-full max-w-[1536px] px-3 py-6 md:px-5 md:py-12"
     >
       {/* Section Header */}
-      <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between md:mb-12">
-        <div>
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#5A697D] mb-2">
-            <MapPin className="size-3.5 text-[#1E293B]" />
+      <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between md:mb-12">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold uppercase tracking-widest text-[#5A697D] mb-2">
+            <MapPin className="size-4 text-[#1E293B]" />
             {bento.eyebrow}
           </span>
-          <h2 className="max-w-2xl text-3xl leading-tight font-semibold tracking-tight text-[#1E293B] text-balance sm:text-4xl md:text-5xl">
+          <h2 className="text-[clamp(1.85rem,1.2rem+2.5vw,3.45rem)] leading-[1.08] font-extrabold tracking-tight text-[#1E293B] text-balance lg:whitespace-nowrap">
             {bento.sectionTitle}
           </h2>
         </div>
 
         <Link
           href="/reservar"
-          className="inline-flex items-center justify-center gap-2.5 rounded-xl border border-[#D7E0EB] bg-white px-4 py-2.5 text-sm font-semibold text-[#1E293B] shadow-2xs hover:bg-[#E7EEF5] transition-all shrink-0 w-fit"
+          className="inline-flex items-center justify-center gap-2.5 rounded-xl border border-[#D7E0EB] bg-white px-4 py-2.5 text-sm font-bold text-[#1E293B] shadow-2xs hover:bg-[#E7EEF5] transition-all shrink-0 w-fit"
         >
           <span>{bento.ctaButton}</span>
           <span className="flex size-7 items-center justify-center rounded-full bg-[#1E293B]/10">
@@ -475,26 +477,26 @@ function RivrFeaturesBentoSection() {
       </div>
 
       {/* Asymmetrical Rivr Bento Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:grid-rows-2 md:gap-5">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:grid-rows-[auto_1fr] md:gap-5">
         {/* Card 1: Dominant Vertical (2 Rows) — Playas Amplias con Escolleras */}
-        <div className="group relative overflow-hidden rounded-[1.5rem] bg-white p-7 transition-shadow hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] md:rounded-[2rem] flex min-h-[30rem] flex-col justify-between md:row-span-2 md:p-9">
+        <div className="group relative overflow-hidden rounded-[1.5rem] bg-white p-6 sm:p-7 transition-shadow hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] md:rounded-[2rem] flex min-h-[28rem] flex-col justify-between md:row-span-2 md:p-9">
           <Waves
             aria-hidden="true"
             className="pointer-events-none absolute -end-10 -bottom-10 size-72 text-[#1E293B] opacity-[0.03] transition-transform duration-500 group-hover:scale-110"
           />
 
-          <div>
+          <div className="flex flex-col flex-1">
             <div className="flex items-center justify-between gap-2 mb-5">
               <span className="relative flex size-12 items-center justify-center rounded-2xl bg-[#E7EEF5] text-[#1E293B]">
                 <Waves className="size-6" />
               </span>
-              <span className="rounded-full bg-[#E7EEF5] px-3.5 py-1 text-xs font-bold text-[#1E293B]">
+              <span className="rounded-full bg-[#E7EEF5] px-3.5 py-1 text-xs font-extrabold text-[#1E293B]">
                 {bento.beachCard.badge}
               </span>
             </div>
 
             {/* Real Aerial Image of the Escolleras & Wide Beach */}
-            <div className="relative h-60 sm:h-72 w-full rounded-[1.25rem] overflow-hidden mb-6 border border-[#D7E0EB]/60">
+            <div className="relative h-60 sm:h-72 md:flex-1 md:min-h-[16rem] w-full rounded-[1.25rem] overflow-hidden mb-6 border border-[#D7E0EB]/60">
               <img
                 src={bento.beachCard.image}
                 alt={bento.beachCard.title}
@@ -508,31 +510,31 @@ function RivrFeaturesBentoSection() {
           </div>
 
           <div className="relative">
-            <h3 className="text-2xl leading-snug font-semibold text-[#1E293B] md:text-3xl text-balance">
+            <h3 className="text-2xl leading-snug font-extrabold tracking-tight text-[#1E293B] md:text-3xl text-balance">
               {bento.beachCard.title}
             </h3>
-            <p className="mt-3 text-sm leading-relaxed text-[#5A697D] text-pretty">
+            <p className="mt-3 text-sm sm:text-base font-medium leading-relaxed text-[#5A697D] text-pretty">
               {bento.beachCard.description}
             </p>
           </div>
         </div>
 
-        {/* Card 2: Wide Horizontal (2 Columns) — Equipamiento Completo con img1 */}
+        {/* Card 2: Wide Horizontal (2 Columns) — Equipamiento Completo (Sin Foto) */}
         <div
           id="comodidades"
-          className="group relative overflow-hidden rounded-[1.5rem] bg-white p-6 sm:p-7 transition-shadow hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] md:rounded-[2rem] flex flex-col justify-between md:col-span-2 md:p-8"
+          className="group relative overflow-hidden rounded-[1.5rem] bg-white p-6 sm:p-7 transition-shadow hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] md:rounded-[2rem] flex flex-col justify-between gap-5 md:col-span-2 md:p-8"
         >
           <Layers
             aria-hidden="true"
             className="pointer-events-none absolute -end-6 -bottom-8 size-60 text-[#1E293B] opacity-[0.03] transition-transform duration-500 group-hover:scale-110"
           />
 
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="relative flex size-12 items-center justify-center rounded-2xl bg-[#E7EEF5] text-[#1E293B]">
                 <Layers className="size-6" />
               </span>
-              <span className="rounded-full bg-[#E7EEF5] px-3.5 py-1 text-xs font-bold text-[#1E293B]">
+              <span className="rounded-full bg-[#E7EEF5] px-3.5 py-1 text-xs font-extrabold text-[#1E293B]">
                 {bento.equipmentCard.badge}
               </span>
             </div>
@@ -543,7 +545,7 @@ function RivrFeaturesBentoSection() {
                 return (
                   <span
                     key={label}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#E7EEF5]/80 px-3 py-1 text-xs font-semibold text-[#1E293B]"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#E7EEF5]/80 px-3 py-1 text-xs font-bold text-[#1E293B]"
                   >
                     <Icon className="size-3.5" />
                     {label}
@@ -553,27 +555,13 @@ function RivrFeaturesBentoSection() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-            {/* Real Kitchen & Appliance Image (img1) adapted to the style of the beach card */}
-            <div className="md:col-span-5 relative h-48 sm:h-52 w-full rounded-[1.25rem] overflow-hidden border border-[#D7E0EB]/60">
-              <img
-                src={bento.equipmentCard.image}
-                alt={bento.equipmentCard.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute bottom-3 left-3 rounded-full bg-white/90 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-[#1E293B] shadow-xs">
-                {bento.equipmentCard.imageCaption}
-              </div>
-            </div>
-
-            <div className="md:col-span-7">
-              <h3 className="text-xl font-semibold text-[#1E293B] md:text-2xl text-balance">
-                {bento.equipmentCard.title}
-              </h3>
-              <p className="mt-2.5 text-sm leading-relaxed text-[#5A697D] text-pretty">
-                {bento.equipmentCard.description}
-              </p>
-            </div>
+          <div className="relative">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-[#1E293B] text-balance">
+              {bento.equipmentCard.title}
+            </h3>
+            <p className="mt-2.5 text-sm sm:text-base font-medium leading-relaxed text-[#5A697D] text-pretty max-w-3xl">
+              {bento.equipmentCard.description}
+            </p>
           </div>
         </div>
 
@@ -584,7 +572,7 @@ function RivrFeaturesBentoSection() {
               <span className="flex size-12 items-center justify-center rounded-2xl bg-[#E7EEF5] text-[#1E293B]">
                 <Flame className="size-6" />
               </span>
-              <span className="rounded-full bg-[#E7EEF5] px-3.5 py-1 text-xs font-bold text-[#1E293B]">
+              <span className="rounded-full bg-[#E7EEF5] px-3.5 py-1 text-xs font-extrabold text-[#1E293B]">
                 {bento.grillCard.badge}
               </span>
             </div>
@@ -601,17 +589,17 @@ function RivrFeaturesBentoSection() {
               </div>
             </div>
 
-            <h3 className="text-xl font-semibold text-[#1E293B]">
+            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#1E293B]">
               {bento.grillCard.title}
             </h3>
-            <p className="mt-2 text-sm leading-relaxed text-[#5A697D] text-pretty">
+            <p className="mt-2 text-sm font-medium leading-relaxed text-[#5A697D] text-pretty">
               {bento.grillCard.description}
             </p>
           </div>
 
           <a
             href="#unidades"
-            className="mt-5 inline-flex items-center justify-between gap-2 rounded-full border border-[#D7E0EB] px-4 py-2 text-xs font-semibold text-[#1E293B] transition-colors hover:bg-[#E7EEF5] w-fit"
+            className="mt-5 inline-flex items-center justify-between gap-2 rounded-full border border-[#D7E0EB] px-4 py-2 text-xs font-bold text-[#1E293B] transition-colors hover:bg-[#E7EEF5] w-fit"
           >
             <span>{bento.grillCard.buttonText}</span>
             <ArrowUpRight className="size-4" />
@@ -628,7 +616,7 @@ function RivrFeaturesBentoSection() {
               <span className="flex size-12 items-center justify-center rounded-2xl bg-[#E7EEF5] text-[#1E293B]">
                 <Handshake className="size-6" />
               </span>
-              <span className="rounded-full bg-[#E7EEF5] px-3.5 py-1 text-xs font-bold text-[#1E293B]">
+              <span className="rounded-full bg-[#E7EEF5] px-3.5 py-1 text-xs font-extrabold text-[#1E293B]">
                 {bento.bookingCard.badge}
               </span>
             </div>
@@ -645,15 +633,15 @@ function RivrFeaturesBentoSection() {
               </div>
             </div>
 
-            <h3 className="text-xl font-semibold text-[#1E293B]">
+            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#1E293B]">
               {bento.bookingCard.title}
             </h3>
-            <p className="mt-2 text-sm leading-relaxed text-[#5A697D] text-pretty">
+            <p className="mt-2 text-sm font-medium leading-relaxed text-[#5A697D] text-pretty">
               {bento.bookingCard.description}
             </p>
           </div>
 
-          <div className="mt-5 inline-flex items-center justify-between gap-2 rounded-full bg-[#1E293B] text-white px-4 py-2 text-xs font-semibold transition-colors group-hover:bg-[#0F172A] w-fit shadow-xs">
+          <div className="mt-5 inline-flex items-center justify-between gap-2 rounded-full bg-[#1E293B] text-white px-4 py-2 text-xs font-bold transition-colors group-hover:bg-[#0F172A] w-fit shadow-xs">
             <span>{bento.bookingCard.buttonText}</span>
             <ArrowUpRight className="size-4" />
           </div>
@@ -663,8 +651,36 @@ function RivrFeaturesBentoSection() {
   );
 }
 
-// ─── 4. CATÁLOGO DE ALOJAMIENTO (4 Dúplex y 1 Departamento) ─────────────────
-function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
+// ─── Videos de Recorrido de Alojamientos ────────────────────────────────────
+const UNIT_VIDEOS = [
+  {
+    id: "video-duplex",
+    unitType: "duplex",
+    title: "Video Recorrido · Dúplex",
+    badge: "Hasta 6 pers.",
+    subtitle: "Recorrido real por dentro de los dúplex de 2 plantas con cocina equipada y parrilla propia.",
+    videoUrl: "/videos/DUPLEX.mp4",
+    poster: "/fotos/FRENTE/DUPLEX1.jpg",
+    reserveHref: "/reservar?property=duplex-1",
+    whatsappText:
+      "Hola! Acabo de ver el video recorrido de los Dúplex (hasta 6 personas) en la web de Dúplex Las Toninas y quiero consultar disponibilidad y tarifas.",
+  },
+  {
+    id: "video-departamento",
+    unitType: "departamento",
+    title: "Video Recorrido · Departamento",
+    badge: "Hasta 5 pers.",
+    subtitle: "Conocé por dentro el departamento en 1° piso totalmente equipado a 400m del mar.",
+    videoUrl: "/videos/DEPARTAMENTO.mp4",
+    poster: "/fotos/FRENTE/DEPARTAMENTO.jpg",
+    reserveHref: "/reservar?property=depto-1",
+    whatsappText:
+      "Hola! Acabo de ver el video recorrido del Departamento (hasta 5 personas) en la web de Dúplex Las Toninas y quiero consultar disponibilidad y tarifas.",
+  },
+];
+
+// ─── 4. CATÁLOGO DE ALOJAMIENTO (4 Dúplex, 1 Departamento y 2 Tarjetas de Video) ──
+function RivrUnitsCatalogSection({ onOpenGallery, onOpenVideo, whatsappNumber }) {
   const [filter, setFilter] = useState("todos");
   const [items, setItems] = useState(properties);
   const { brand, unitsSection } = siteContent;
@@ -691,6 +707,11 @@ function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
       ? items
       : items.filter((p) => p.type === filter);
 
+  const visibleVideos =
+    filter === "todos"
+      ? UNIT_VIDEOS
+      : UNIT_VIDEOS.filter((v) => v.unitType === filter);
+
   return (
     <section
       id="unidades"
@@ -700,10 +721,10 @@ function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
         {/* Header & Filter Pills */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-[#5A697D]">
+            <span className="text-xs sm:text-sm font-extrabold uppercase tracking-widest text-[#5A697D]">
               {unitsSection.eyebrow}
             </span>
-            <h2 className="mt-1 text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-[#1E293B] text-balance">
+            <h2 className="mt-1 text-[clamp(1.85rem,1.2rem+2.4vw,3.35rem)] leading-[1.08] font-extrabold tracking-tight text-[#1E293B] text-balance">
               {unitsSection.title}
             </h2>
           </div>
@@ -718,7 +739,7 @@ function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
                 key={tab.id}
                 type="button"
                 onClick={() => setFilter(tab.id)}
-                className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                   filter === tab.id
                     ? "bg-[#1E293B] text-white"
                     : "bg-[#E7EEF5] text-[#1E293B] hover:bg-[#D7E0EB]"
@@ -731,10 +752,11 @@ function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
         </div>
 
         {/* Units Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {filtered.map((prop) => {
-            const currentPrice = Number(prop.price_per_night || prop.pricePerNight || 45000);
+            const currentPrice = Number(prop.price_per_night || prop.pricePerNight || 80000);
             const hasSeasons = (prop.seasonalRates || prop.seasonal_rates || []).length > 0;
+            const cleanAmenities = sanitizeAmenities(prop.amenities || [], prop.type || "duplex");
             const unitWaUrl = buildWhatsAppUrl(
               whatsappNumber,
               `Hola! Estoy viendo la web de Dúplex Las Toninas y quiero consultar disponibilidad y precio por el ${prop.name} (hasta ${prop.capacity} personas).`
@@ -757,7 +779,7 @@ function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
                       loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute top-3 right-3 rounded-full bg-white/95 backdrop-blur-md px-3.5 py-1 text-xs font-bold text-[#1E293B] shadow-xs">
+                    <div className="absolute top-3 right-3 rounded-full bg-white/95 backdrop-blur-md px-3.5 py-1 text-xs font-extrabold text-[#1E293B] shadow-xs">
                       ${currentPrice.toLocaleString("es-AR")} / noche
                     </div>
                     {hasSeasons && (
@@ -766,7 +788,7 @@ function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
                         <span>Temporadas</span>
                       </div>
                     )}
-                    <div className="absolute bottom-3 left-3 rounded-full bg-[#1E293B]/80 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-white">
+                    <div className="absolute bottom-3 left-3 rounded-full bg-[#1E293B]/80 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-white">
                       Ver {prop.images.length} fotos reales
                     </div>
                   </div>
@@ -774,31 +796,31 @@ function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
                   {/* Info */}
                   <div className="px-1">
                     <div className="flex items-center justify-between gap-2">
-                      <h3 className="text-xl font-semibold text-[#1E293B]">
+                      <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#1E293B]">
                         {prop.name}
                       </h3>
-                      <span className="text-xs font-bold text-[#1E293B] bg-[#E7EEF5] px-2.5 py-1 rounded-full">
+                      <span className="text-xs font-extrabold text-[#1E293B] bg-[#E7EEF5] px-2.5 py-1 rounded-full shrink-0">
                         Hasta {prop.capacity} pers.
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-[#5A697D] mt-1.5">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#5A697D] mt-1.5">
                       <MapPin className="size-3.5 text-[#1E293B] shrink-0" />
                       <span>
                         {brand.address}, {brand.city} · A {brand.distanceToSea} del mar
                       </span>
                     </div>
 
-                    <p className="mt-3 text-xs sm:text-sm text-[#5A697D] leading-relaxed text-pretty">
+                    <p className="mt-3 text-xs sm:text-sm font-medium text-[#5A697D] leading-relaxed text-pretty">
                       {prop.description}
                     </p>
 
                     {/* Amenity Tags */}
                     <div className="flex flex-wrap gap-1.5 mt-4">
-                      {prop.amenities.map((am) => (
+                      {cleanAmenities.map((am) => (
                         <span
                           key={am}
-                          className="rounded-full bg-white border border-[#D7E0EB] px-2.5 py-0.5 text-[11px] font-medium text-[#1E293B]"
+                          className="rounded-full bg-white border border-[#D7E0EB] px-2.5 py-0.5 text-[11px] font-bold text-[#1E293B]"
                         >
                           {am}
                         </span>
@@ -812,7 +834,7 @@ function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
                   <button
                     type="button"
                     onClick={() => onOpenGallery(prop)}
-                    className="py-2.5 px-3 rounded-xl border border-[#D7E0EB] bg-white text-xs font-semibold text-[#1E293B] hover:bg-[#E7EEF5] transition-colors cursor-pointer"
+                    className="py-2.5 px-3 rounded-xl border border-[#D7E0EB] bg-white text-xs font-bold text-[#1E293B] hover:bg-[#E7EEF5] transition-colors cursor-pointer"
                   >
                     Fotos ({prop.images.length})
                   </button>
@@ -827,7 +849,7 @@ function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
                       })
                     }
                     aria-label={`Consultar por WhatsApp sobre ${prop.name}`}
-                    className="py-2.5 px-3 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    className="py-2.5 px-3 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <WhatsAppIcon className="size-3.5 text-emerald-600 shrink-0" />
                     <span>WhatsApp</span>
@@ -837,7 +859,7 @@ function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
                     onClick={() =>
                       trackAdsConversion("begin_checkout", { unit: prop.name })
                     }
-                    className="flex-1 py-2 px-3 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                    className="flex-1 py-2 px-3 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
                   >
                     <span>Reservar</span>
                     <span className="flex size-5 items-center justify-center rounded-full bg-white/20">
@@ -848,6 +870,88 @@ function RivrUnitsCatalogSection({ onOpenGallery, whatsappNumber }) {
               </div>
             );
           })}
+
+          {/* 6th Grid Slot (next to Departamento): 2 Stacked Video Preview Cards */}
+          {visibleVideos.length > 0 && (
+            <div className="flex flex-col justify-between gap-4 h-full">
+              {visibleVideos.map((vid) => (
+                <div
+                  key={vid.id}
+                  onClick={() => onOpenVideo(vid)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onOpenVideo(vid);
+                    }
+                  }}
+                  className="group flex-1 rounded-[1.75rem] bg-[#EFEFEF]/60 p-4 border border-[#D7E0EB]/80 hover:bg-white hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] transition-all flex flex-col justify-between cursor-pointer"
+                >
+                  <div>
+                    {/* Autoplaying Muted Video Preview */}
+                    <div className="relative h-36 sm:h-40 w-full rounded-[1.25rem] overflow-hidden mb-3 bg-slate-900 border border-[#D7E0EB]/60">
+                      <video
+                        src={vid.videoUrl}
+                        poster={vid.poster}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="block w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/70 via-transparent to-[#0F172A]/25 pointer-events-none" />
+                      <div className="absolute top-2.5 right-2.5 rounded-full bg-white/95 backdrop-blur-md px-3 py-1 text-[11px] font-extrabold text-[#1E293B] shadow-xs">
+                        {vid.badge}
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="flex size-11 items-center justify-center rounded-full bg-white/90 text-[#1E293B] shadow-lg transition-transform duration-300 group-hover:scale-110">
+                          <Play className="size-5 fill-[#1E293B] ms-0.5" />
+                        </span>
+                      </div>
+                      <div className="absolute bottom-2.5 left-2.5 rounded-full bg-[#1E293B]/85 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-white flex items-center gap-1.5">
+                        <Play className="size-3 fill-white" />
+                        <span>Clic para ver video en grande</span>
+                      </div>
+                    </div>
+
+                    <div className="px-1">
+                      <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-[#1E293B]">
+                        {vid.title}
+                      </h3>
+                      <p className="mt-1 text-xs font-medium text-[#5A697D] leading-relaxed line-clamp-2">
+                        {vid.subtitle}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 pt-2.5 border-t border-[#D7E0EB]/80 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenVideo(vid);
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-white border border-[#D7E0EB] hover:bg-[#E7EEF5] px-3 py-1.5 text-xs font-bold text-[#1E293B] transition-colors cursor-pointer"
+                    >
+                      <Play className="size-3.5 fill-[#1E293B]" />
+                      <span>Ampliar Video</span>
+                    </button>
+
+                    <Link
+                      href={vid.reserveHref}
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white px-3.5 py-1.5 text-xs font-bold transition-all"
+                    >
+                      <span>Reservar</span>
+                      <ArrowUpRight className="size-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
@@ -866,11 +970,11 @@ function RivrGallerySection() {
     >
       <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#5A697D] mb-2">
-            <Camera className="size-3.5 text-[#1E293B]" />
+          <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold uppercase tracking-widest text-[#5A697D] mb-2">
+            <Camera className="size-4 text-[#1E293B]" />
             {gallerySection.eyebrow}
           </span>
-          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[#1E293B]">
+          <h2 className="text-[clamp(1.85rem,1.2rem+2.4vw,3.25rem)] leading-[1.08] font-extrabold tracking-tight text-[#1E293B]">
             {gallerySection.title}
           </h2>
         </div>
@@ -889,11 +993,11 @@ function RivrGallerySection() {
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/85 via-[#0F172A]/20 to-transparent flex flex-col justify-end p-5">
-              <h3 className="text-base font-semibold text-white leading-snug">
+              <h3 className="text-base sm:text-lg font-extrabold text-white leading-snug">
                 {item.title}
               </h3>
               {item.subtitle && (
-                <p className="mt-1 text-xs text-white/80 leading-relaxed">
+                <p className="mt-1 text-xs font-medium text-white/85 leading-relaxed">
                   {item.subtitle}
                 </p>
               )}
@@ -918,28 +1022,28 @@ function RivrLocationSection() {
         {/* Location Highlight Card */}
         <div className="lg:col-span-5 rounded-[1.5rem] md:rounded-[2.5rem] bg-[#1E293B] text-white p-8 md:p-10 flex flex-col justify-between">
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-semibold text-white/90 mb-4">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-extrabold text-white/95 mb-4">
               <Compass className="size-3.5" />
               {locationSection.badge}
             </span>
-            <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight leading-snug">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight leading-snug">
               {locationSection.title}
             </h3>
-            <p className="mt-3 text-sm text-white/80 leading-relaxed text-pretty">
+            <p className="mt-3 text-sm sm:text-base font-medium text-white/85 leading-relaxed text-pretty">
               {locationSection.description}
             </p>
           </div>
 
           <div className="mt-8 pt-6 border-t border-white/15 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs text-white/60 uppercase tracking-wider">Región</p>
-              <p className="text-sm font-semibold">{brand.region}</p>
+              <p className="text-xs text-white/60 uppercase tracking-wider font-bold">Región</p>
+              <p className="text-sm font-bold">{brand.region}</p>
             </div>
             <a
               href={brand.googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-white py-1.5 ps-4 pe-1.5 text-xs font-semibold text-[#1E293B] hover:bg-white/90 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full bg-white py-1.5 ps-4 pe-1.5 text-xs font-bold text-[#1E293B] hover:bg-white/90 transition-colors"
             >
               <span>Abrir en Google Maps</span>
               <span className="flex size-6 items-center justify-center rounded-full bg-[#1E293B]/10">
@@ -957,7 +1061,7 @@ function RivrLocationSection() {
               className="rounded-[1.5rem] md:rounded-[2rem] bg-white p-6 border border-[#D7E0EB]/60 flex flex-col justify-between"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#5A697D]">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-[#5A697D]">
                   {item.place}
                 </span>
                 <span className="flex size-8 items-center justify-center rounded-full bg-[#E7EEF5] text-[#1E293B]">
@@ -965,8 +1069,8 @@ function RivrLocationSection() {
                 </span>
               </div>
               <div className="mt-4">
-                <p className="text-2xl font-semibold text-[#1E293B]">{item.dist}</p>
-                <p className="mt-1 text-xs text-[#5A697D] leading-relaxed">{item.detail}</p>
+                <p className="text-2xl sm:text-3xl font-extrabold text-[#1E293B]">{item.dist}</p>
+                <p className="mt-1 text-xs sm:text-sm font-medium text-[#5A697D] leading-relaxed">{item.detail}</p>
               </div>
             </div>
           ))}
@@ -1006,16 +1110,16 @@ function RivrCtaBannerSection({ whatsappNumber }) {
         />
 
         <div className="relative z-10 flex max-w-2xl flex-col items-center gap-7 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur-md">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-xs font-extrabold text-white backdrop-blur-md">
             <Sparkles className="size-3.5" />
             {ctaBanner.badge}
           </span>
 
-          <h2 className="text-4xl leading-[1.05] font-semibold tracking-tight text-white text-balance sm:text-5xl md:text-6xl">
+          <h2 className="text-3xl leading-[1.05] font-extrabold tracking-tight text-white text-balance sm:text-5xl md:text-6xl">
             {ctaBanner.title}
           </h2>
 
-          <p className="text-sm sm:text-base text-white/85 max-w-lg leading-relaxed text-pretty">
+          <p className="text-sm sm:text-base font-medium text-white/90 max-w-lg leading-relaxed text-pretty">
             {ctaBanner.subtitle}
           </p>
 
@@ -1023,7 +1127,7 @@ function RivrCtaBannerSection({ whatsappNumber }) {
             <Link
               href="/reservar"
               onClick={() => trackAdsConversion("click_reservar_cta_banner")}
-              className="group inline-flex items-center gap-2.5 rounded-full bg-white py-2.5 ps-5 pe-2 text-sm font-semibold text-[#1E293B] transition-colors hover:bg-white/90 shadow-md"
+              className="group inline-flex items-center gap-2.5 rounded-full bg-white py-2.5 ps-5 pe-2 text-sm font-bold text-[#1E293B] transition-colors hover:bg-white/90 shadow-md"
             >
               <span>{ctaBanner.primaryButton}</span>
               <span className="flex size-7 items-center justify-center rounded-full bg-[#1E293B]/10">
@@ -1071,11 +1175,11 @@ function RivrFooter({ whatsappNumber }) {
               className="flex w-fit items-center gap-2.5 text-[#1E293B]"
             >
               <RivrRingLogo className="size-6 text-[#1E293B]" />
-              <span className="text-lg font-bold tracking-tight uppercase">
+              <span className="text-lg font-extrabold tracking-tight uppercase">
                 {brand.fullName}
               </span>
             </Link>
-            <p className="mt-4 text-sm text-[#5A697D] leading-relaxed text-pretty">
+            <p className="mt-4 text-sm font-medium text-[#5A697D] leading-relaxed text-pretty">
               Alquiler de Dúplex y Departamento de temporada en {brand.address}, {brand.city}. A {brand.distanceToSea} de las mejores playas amplias con escolleras.
             </p>
           </div>
@@ -1085,27 +1189,27 @@ function RivrFooter({ whatsappNumber }) {
             className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:gap-16"
           >
             <div>
-              <h3 className="text-sm font-semibold text-[#1E293B]">
+              <h3 className="text-sm font-extrabold text-[#1E293B]">
                 {navigation?.alojamiento || "Alojamiento"}
               </h3>
               <ul className="mt-4 flex flex-col gap-3">
                 <li>
-                  <a href="#unidades" className="text-sm text-[#5A697D] hover:text-[#1E293B]">
+                  <a href="#unidades" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
                     Dúplex 1 al 4 (6 pers.)
                   </a>
                 </li>
                 <li>
-                  <a href="#unidades" className="text-sm text-[#5A697D] hover:text-[#1E293B]">
+                  <a href="#unidades" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
                     Departamento 1° Piso (5 pers.)
                   </a>
                 </li>
                 <li>
-                  <a href="#escolleras" className="text-sm text-[#5A697D] hover:text-[#1E293B]">
+                  <a href="#escolleras" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
                     {navigation?.lugar || "Lugar"}
                   </a>
                 </li>
                 <li>
-                  <a href="#galeria" className="text-sm text-[#5A697D] hover:text-[#1E293B]">
+                  <a href="#galeria" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
                     {navigation?.galeria || "Galería"}
                   </a>
                 </li>
@@ -1113,20 +1217,20 @@ function RivrFooter({ whatsappNumber }) {
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-[#1E293B]">Plataforma</h3>
+              <h3 className="text-sm font-extrabold text-[#1E293B]">Plataforma</h3>
               <ul className="mt-4 flex flex-col gap-3">
                 <li>
-                  <Link href="/reservar" className="text-sm text-[#5A697D] hover:text-[#1E293B]">
+                  <Link href="/reservar" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
                     Reservar Online
                   </Link>
                 </li>
                 <li>
-                  <Link href="/cuidador" className="text-sm text-[#5A697D] hover:text-[#1E293B]">
+                  <Link href="/cuidador" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
                     Panel Cuidador
                   </Link>
                 </li>
                 <li>
-                  <Link href="/admin" className="text-sm text-[#5A697D] hover:text-[#1E293B]">
+                  <Link href="/admin" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
                     Panel Administración
                   </Link>
                 </li>
@@ -1134,10 +1238,10 @@ function RivrFooter({ whatsappNumber }) {
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-[#1E293B]">
+              <h3 className="text-sm font-extrabold text-[#1E293B]">
                 {navigation?.ubicacion || "Ubicación"}
               </h3>
-              <ul className="mt-4 flex flex-col gap-3 text-sm text-[#5A697D]">
+              <ul className="mt-4 flex flex-col gap-3 text-sm font-medium text-[#5A697D]">
                 <li>{brand.address}</li>
                 <li>{brand.city}, Buenos Aires</li>
                 <li>A {brand.distanceToSea} del mar</li>
@@ -1149,7 +1253,7 @@ function RivrFooter({ whatsappNumber }) {
                     onClick={() =>
                       trackAdsConversion("whatsapp_click", { source: "footer" })
                     }
-                    className="inline-flex items-center gap-1.5 text-[#1E293B] font-semibold hover:underline"
+                    className="inline-flex items-center gap-1.5 text-[#1E293B] font-bold hover:underline"
                   >
                     <WhatsAppIcon className="size-4 text-[#25D366]" />
                     <span>Contacto WhatsApp ↗</span>
@@ -1161,7 +1265,7 @@ function RivrFooter({ whatsappNumber }) {
         </div>
 
         <div className="mt-12 border-t border-[#D7E0EB] pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-[#5A697D]">
+          <p className="text-sm font-medium text-[#5A697D]">
             © {new Date().getFullYear()} {brand.fullName} · {brand.address}, Costa Atlántica Argentina.
           </p>
         </div>
@@ -1189,7 +1293,7 @@ function PhotoGalleryModal({ property, onClose, whatsappNumber }) {
       <div className="relative bg-white rounded-[2rem] max-w-3xl w-full overflow-hidden shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <div>
-            <h3 className="text-base font-bold text-[#1E293B]">{property.name}</h3>
+            <h3 className="text-base font-extrabold text-[#1E293B]">{property.name}</h3>
             <p className="text-xs text-[#5A697D]">
               Foto {index + 1} de {images.length} · {siteContent.brand.address}, {siteContent.brand.city}
             </p>
@@ -1273,7 +1377,7 @@ function PhotoGalleryModal({ property, onClose, whatsappNumber }) {
             </a>
             <Link
               href={`/reservar?property=${property.id}`}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-full bg-[#1E293B] hover:bg-[#0F172A] px-5 py-2.5 text-xs font-semibold text-white"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-full bg-[#1E293B] hover:bg-[#0F172A] px-5 py-2.5 text-xs font-bold text-white"
             >
               <span>Reservar {property.name}</span>
               <ArrowUpRight className="size-3.5" />
@@ -1282,6 +1386,99 @@ function PhotoGalleryModal({ property, onClose, whatsappNumber }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Native <dialog> Modal for Unit Video Tour ──────────────────────────────
+function VideoPreviewModal({ videoItem, onClose, whatsappNumber }) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    const dialogNode = dialogRef.current;
+    if (!dialogNode) return;
+    if (videoItem && !dialogNode.open) {
+      dialogNode.showModal();
+    }
+    const handleCancel = (e) => {
+      e.preventDefault();
+      onClose();
+    };
+    dialogNode.addEventListener("cancel", handleCancel);
+    return () => dialogNode.removeEventListener("cancel", handleCancel);
+  }, [videoItem, onClose]);
+
+  if (!videoItem) return null;
+
+  const videoWaUrl = buildWhatsAppUrl(whatsappNumber, videoItem.whatsappText);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      onClick={(e) => {
+        if (e.target === dialogRef.current) onClose();
+      }}
+      className="m-auto w-full max-w-3xl rounded-[2rem] bg-white p-0 text-[#1E293B] shadow-2xl backdrop:bg-[#0F172A]/85 backdrop:backdrop-blur-md open:flex open:flex-col overflow-hidden border border-[#D7E0EB]"
+    >
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div>
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#5A697D] block">
+            Recorrido en Video · {videoItem.badge}
+          </span>
+          <h3 className="text-lg font-extrabold text-[#1E293B]">{videoItem.title}</h3>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar video"
+          className="p-2 rounded-full hover:bg-slate-100 text-[#5A697D] cursor-pointer"
+        >
+          <X className="size-5" />
+        </button>
+      </div>
+
+      <div className="relative bg-slate-950 flex items-center justify-center max-h-[70dvh]">
+        <video
+          key={videoItem.videoUrl}
+          src={videoItem.videoUrl}
+          poster={videoItem.poster}
+          controls
+          autoPlay
+          playsInline
+          className="block w-full max-h-[68dvh] object-contain"
+        />
+      </div>
+
+      <div className="p-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#EFEFEF]">
+        <p className="text-xs sm:text-sm font-medium text-[#5A697D]">
+          {videoItem.subtitle}
+        </p>
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+          <a
+            href={videoWaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() =>
+              trackAdsConversion("whatsapp_click", {
+                source: "video_modal",
+                unit: videoItem.title,
+              })
+            }
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] hover:bg-[#1ebe5d] px-4 py-2.5 text-xs font-bold text-white"
+          >
+            <WhatsAppIcon className="size-4" />
+            <span>Consultar por WhatsApp</span>
+          </a>
+          <Link
+            href={videoItem.reserveHref}
+            onClick={onClose}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-full bg-[#1E293B] hover:bg-[#0F172A] px-5 py-2.5 text-xs font-bold text-white"
+          >
+            <span>Reservar Ahora</span>
+            <ArrowUpRight className="size-3.5" />
+          </Link>
+        </div>
+      </div>
+    </dialog>
   );
 }
 
@@ -1324,6 +1521,7 @@ function FloatingWhatsAppButton({ isVisible, whatsappNumber, defaultMessage }) {
 // ─── Main Rivr Landing Page ─────────────────────────────────────────────────
 export default function HomePage() {
   const [galleryProperty, setGalleryProperty] = useState(null);
+  const [activeVideoModal, setActiveVideoModal] = useState(null);
   const [siteSettings, setSiteSettings] = useState(getStoredSiteSettings);
   const [showFloatingWa, setShowFloatingWa] = useState(false);
   const heroRef = useRef(null);
@@ -1378,6 +1576,7 @@ export default function HomePage() {
       <RivrFeaturesBentoSection />
       <RivrUnitsCatalogSection
         onOpenGallery={(prop) => setGalleryProperty(prop)}
+        onOpenVideo={(vid) => setActiveVideoModal(vid)}
         whatsappNumber={activePhone}
       />
       <RivrGallerySection />
@@ -1395,6 +1594,14 @@ export default function HomePage() {
         <PhotoGalleryModal
           property={galleryProperty}
           onClose={() => setGalleryProperty(null)}
+          whatsappNumber={activePhone}
+        />
+      )}
+
+      {activeVideoModal && (
+        <VideoPreviewModal
+          videoItem={activeVideoModal}
+          onClose={() => setActiveVideoModal(null)}
           whatsappNumber={activePhone}
         />
       )}

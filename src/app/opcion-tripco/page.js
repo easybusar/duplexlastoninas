@@ -435,7 +435,7 @@ function FeaturedUnitsSection({ onOpenGallery }) {
                       <span>·</span>
                       <span className="inline-flex items-center gap-1">
                         <Car className="w-3.5 h-3.5 text-[#0284C7]" />
-                        Cochera
+                        Espacio al frente
                       </span>
                       <span>·</span>
                       <span className="inline-flex items-center gap-1">
@@ -488,8 +488,8 @@ function FamilyComfortSection() {
     {
       num: "03",
       badgeClass: "bg-emerald-100 text-emerald-600",
-      title: "Espacio propio y seguro",
-      desc: "Cochera cerrada individual y patio privado con parrilla propia en cada dúplex para tus asados.",
+      title: "Parrilla individual y espacio al frente",
+      desc: "Espacio para estacionar el vehículo en la puerta al frente y patio privado con parrilla propia en cada dúplex para tus asados.",
     },
   ];
 
@@ -578,7 +578,7 @@ function FamilyComfortSection() {
                 </div>
                 <div>
                   <p className="text-xs font-extrabold text-slate-900">Equipamiento Total</p>
-                  <p className="text-[11px] text-slate-500 font-medium">Wi-Fi · Parrilla · Cochera</p>
+                  <p className="text-[11px] text-slate-500 font-medium">Wi-Fi · Parrilla · Cocina Completa</p>
                 </div>
               </div>
             </div>
@@ -607,7 +607,7 @@ function ExploreCatalogSection({ onOpenGallery }) {
   const amenitiesList = [
     { icon: Wifi, title: "Wi-Fi de Alta Velocidad", desc: "Conexión estable en todas las unidades" },
     { icon: Flame, title: "Parrilla Individual", desc: "Espacio de asado privado en cada unidad" },
-    { icon: Car, title: "Espacio al Frente", desc: "Estacionamiento en la puerta de cada dúplex" },
+    { icon: Car, title: "Espacio al Frente", desc: "Espacio para estacionar en la puerta de cada dúplex" },
     { icon: Utensils, title: "Cocina Equipada", desc: "Vajilla completa, anafe y horno" },
     { icon: Tv, title: "Smart TV & Streaming", desc: "Entretenimiento para toda la familia" },
     { icon: Sparkles, title: "Heladera & Microondas", desc: "Heladera con freezer y microondas" },

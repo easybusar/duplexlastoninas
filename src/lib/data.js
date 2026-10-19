@@ -2,28 +2,62 @@
 // CATÁLOGO DE UNIDADES (4 DÚPLEX Y 1 DEPARTAMENTO)
 // ═══════════════════════════════════════════════════════════════════════════════
 
+export const FORBIDDEN_AMENITY_PATTERNS = [
+  /aire\s*acondicionado/i,
+  /calefacci[oó]n/i,
+  /cochera/i,
+  /estacionamiento\s*cubierto/i,
+  /estacionamiento\s*propio/i,
+];
+
+export function sanitizeAmenities(list, unitType = "duplex") {
+  if (!Array.isArray(list)) return [];
+  const cleaned = [];
+  for (const raw of list) {
+    const item = String(raw || "").trim();
+    if (!item) continue;
+    if (FORBIDDEN_AMENITY_PATTERNS.some((rx) => rx.test(item))) continue;
+    if (/^estacionamiento$/i.test(item)) {
+      if (unitType === "duplex" && !cleaned.includes("Espacio al frente")) {
+        cleaned.push("Espacio al frente");
+      }
+      continue;
+    }
+    if (/^parrilla$/i.test(item) && unitType === "duplex") {
+      if (!cleaned.includes("Parrilla Individual")) {
+        cleaned.push("Parrilla Individual");
+      }
+      continue;
+    }
+    if (!cleaned.includes(item)) {
+      cleaned.push(item);
+    }
+  }
+  return cleaned;
+}
+
 export const properties = [
   {
     id: "duplex-1",
     name: "Dúplex 1",
     type: "duplex",
     capacity: 6,
-    pricePerNight: 45000,
-    price_per_night: 45000,
+    pricePerNight: 80000,
+    price_per_night: 80000,
     seasonalRates: [
       {
         id: "rate-d1-ene",
         name: "Temporada Alta Enero",
         startDate: "2025-01-01",
         endDate: "2025-01-31",
-        pricePerNight: 70000,
+        pricePerNight: 95000,
       },
       {
         id: "rate-d1-feb",
         name: "Temporada Alta Febrero",
         startDate: "2025-02-01",
         endDate: "2025-02-28",
-        pricePerNight: 60000,
+        pricePerNight: 85000,
       },
     ],
     images: [
@@ -42,22 +76,22 @@ export const properties = [
     name: "Dúplex 2",
     type: "duplex",
     capacity: 6,
-    pricePerNight: 45000,
-    price_per_night: 45000,
+    pricePerNight: 80000,
+    price_per_night: 80000,
     seasonalRates: [
       {
         id: "rate-d2-ene",
         name: "Temporada Alta Enero",
         startDate: "2025-01-01",
         endDate: "2025-01-31",
-        pricePerNight: 70000,
+        pricePerNight: 95000,
       },
       {
         id: "rate-d2-feb",
         name: "Temporada Alta Febrero",
         startDate: "2025-02-01",
         endDate: "2025-02-28",
-        pricePerNight: 60000,
+        pricePerNight: 85000,
       },
     ],
     images: [
@@ -76,22 +110,22 @@ export const properties = [
     name: "Dúplex 3",
     type: "duplex",
     capacity: 6,
-    pricePerNight: 45000,
-    price_per_night: 45000,
+    pricePerNight: 80000,
+    price_per_night: 80000,
     seasonalRates: [
       {
         id: "rate-d3-ene",
         name: "Temporada Alta Enero",
         startDate: "2025-01-01",
         endDate: "2025-01-31",
-        pricePerNight: 70000,
+        pricePerNight: 95000,
       },
       {
         id: "rate-d3-feb",
         name: "Temporada Alta Febrero",
         startDate: "2025-02-01",
         endDate: "2025-02-28",
-        pricePerNight: 60000,
+        pricePerNight: 85000,
       },
     ],
     images: [
@@ -109,22 +143,22 @@ export const properties = [
     name: "Dúplex 4",
     type: "duplex",
     capacity: 6,
-    pricePerNight: 45000,
-    price_per_night: 45000,
+    pricePerNight: 80000,
+    price_per_night: 80000,
     seasonalRates: [
       {
         id: "rate-d4-ene",
         name: "Temporada Alta Enero",
         startDate: "2025-01-01",
         endDate: "2025-01-31",
-        pricePerNight: 70000,
+        pricePerNight: 95000,
       },
       {
         id: "rate-d4-feb",
         name: "Temporada Alta Febrero",
         startDate: "2025-02-01",
         endDate: "2025-02-28",
-        pricePerNight: 60000,
+        pricePerNight: 85000,
       },
     ],
     images: [
@@ -142,22 +176,22 @@ export const properties = [
     name: "Departamento",
     type: "departamento",
     capacity: 5,
-    pricePerNight: 35000,
-    price_per_night: 35000,
+    pricePerNight: 70000,
+    price_per_night: 70000,
     seasonalRates: [
       {
         id: "rate-dep-ene",
         name: "Temporada Alta Enero",
         startDate: "2025-01-01",
         endDate: "2025-01-31",
-        pricePerNight: 55000,
+        pricePerNight: 85000,
       },
       {
         id: "rate-dep-feb",
         name: "Temporada Alta Febrero",
         startDate: "2025-02-01",
         endDate: "2025-02-28",
-        pricePerNight: 48000,
+        pricePerNight: 75000,
       },
     ],
     images: [
@@ -174,87 +208,11 @@ export const properties = [
   },
 ];
 
-// ─── Mock bookings con Residencia (Semilla inicial) ──────────────────────────
-export const mockBookings = [
-  {
-    id: "bk001",
-    propertyId: "duplex-1",
-    guestName: "Carlos Rodríguez",
-    guestPhone: "+54 9 11 5555-1111",
-    guestResidence: "CABA, Buenos Aires",
-    checkIn: "2025-01-10",
-    checkOut: "2025-01-17",
-    guests: 5,
-    totalAmount: 315000,
-    depositPaid: 94500,
-    status: "confirmed",
-    paymentMethod: "MercadoPago",
-    createdAt: "2024-12-20",
-  },
-  {
-    id: "bk002",
-    propertyId: "duplex-2",
-    guestName: "Ana González",
-    guestPhone: "+54 9 11 5555-2222",
-    guestResidence: "Rosario, Santa Fe",
-    checkIn: "2025-01-10",
-    checkOut: "2025-01-14",
-    guests: 4,
-    totalAmount: 180000,
-    depositPaid: 54000,
-    status: "confirmed",
-    paymentMethod: "Transferencia",
-    createdAt: "2024-12-18",
-  },
-  {
-    id: "bk003",
-    propertyId: "duplex-3",
-    guestName: "Laura Martínez",
-    guestPhone: "+54 9 11 5555-3333",
-    guestResidence: "La Plata, Buenos Aires",
-    checkIn: "2025-01-17",
-    checkOut: "2025-01-24",
-    guests: 6,
-    totalAmount: 315000,
-    depositPaid: 0,
-    status: "pending",
-    paymentMethod: "Transferencia",
-    createdAt: "2024-12-22",
-  },
-  {
-    id: "bk004",
-    propertyId: "depto-1",
-    guestName: "Martín López",
-    guestPhone: "+54 9 11 5555-4444",
-    guestResidence: "Córdoba Capital",
-    checkIn: "2025-02-01",
-    checkOut: "2025-02-08",
-    guests: 3,
-    totalAmount: 245000,
-    depositPaid: 73500,
-    status: "confirmed",
-    paymentMethod: "MercadoPago",
-    createdAt: "2025-01-02",
-  },
-  {
-    id: "bk005",
-    propertyId: "duplex-4",
-    guestName: "Sofía Pérez",
-    guestPhone: "+54 9 11 5555-5555",
-    guestResidence: "Mar del Plata",
-    checkIn: "2025-02-14",
-    checkOut: "2025-02-21",
-    guests: 5,
-    totalAmount: 315000,
-    depositPaid: 315000,
-    status: "completed",
-    paymentMethod: "MercadoPago",
-    createdAt: "2025-01-10",
-  },
-];
+// ─── Reservas iniciales (vacío para reflejar estado real de Supabase) ────────
+export const mockBookings = [];
 
 // ─── LocalStorage Persistence Layer ─────────────────────────────────────────
-export const STORAGE_KEY_BOOKINGS = "toninas_bookings_persistent_v1";
+export const STORAGE_KEY_BOOKINGS = "toninas_bookings_persistent_v2";
 
 export function getStoredBookings() {
   if (typeof window === "undefined") return mockBookings;
@@ -307,7 +265,7 @@ export function formatDateDDMMAAAA(dateStr) {
 }
 
 // ─── LocalStorage Persistence Layer for Properties ─────────────────────────
-export const STORAGE_KEY_PROPERTIES = "toninas_properties_persistent_v1";
+export const STORAGE_KEY_PROPERTIES = "toninas_properties_persistent_v3";
 
 export function getStoredProperties() {
   if (typeof window === "undefined") return properties;
@@ -319,14 +277,24 @@ export function getStoredProperties() {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.map((p) => ({
-        ...p,
-        pricePerNight: Number(p.price_per_night || p.pricePerNight || 45000),
-        price_per_night: Number(p.price_per_night || p.pricePerNight || 45000),
-        seasonalRates: Array.isArray(p.seasonalRates || p.seasonal_rates)
-          ? (p.seasonalRates || p.seasonal_rates)
-          : [],
-      }));
+      return parsed.map((p) => {
+        const baseFallback = properties.find((base) => base.id === p.id);
+        const unitType = p.type || baseFallback?.type || "duplex";
+        const rawAmenities =
+          Array.isArray(p.amenities) && p.amenities.length > 0
+            ? p.amenities
+            : baseFallback?.amenities || [];
+        return {
+          ...baseFallback,
+          ...p,
+          amenities: sanitizeAmenities(rawAmenities, unitType),
+          pricePerNight: Number(p.price_per_night || p.pricePerNight || baseFallback?.pricePerNight || 80000),
+          price_per_night: Number(p.price_per_night || p.pricePerNight || baseFallback?.price_per_night || 80000),
+          seasonalRates: Array.isArray(p.seasonalRates || p.seasonal_rates)
+            ? (p.seasonalRates || p.seasonal_rates)
+            : baseFallback?.seasonalRates || [],
+        };
+      });
     }
     return properties;
   } catch (e) {
@@ -338,7 +306,11 @@ export function getStoredProperties() {
 export function saveStoredProperties(propsList) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY_PROPERTIES, JSON.stringify(propsList));
+    const sanitized = (propsList || []).map((p) => ({
+      ...p,
+      amenities: sanitizeAmenities(p.amenities || [], p.type || "duplex"),
+    }));
+    localStorage.setItem(STORAGE_KEY_PROPERTIES, JSON.stringify(sanitized));
     window.dispatchEvent(new Event("toninas_properties_changed"));
   } catch (e) {
     console.warn("Error guardando propiedades locales:", e);
@@ -350,6 +322,9 @@ export function updateStoredProperty(propertyId, updates) {
   const next = current.map((p) => {
     if (p.id === propertyId) {
       const updated = { ...p, ...updates };
+      if (updates.amenities !== undefined) {
+        updated.amenities = sanitizeAmenities(updates.amenities, updated.type || "duplex");
+      }
       if (updates.price_per_night !== undefined) {
         updated.pricePerNight = Number(updates.price_per_night);
         updated.price_per_night = Number(updates.price_per_night);
