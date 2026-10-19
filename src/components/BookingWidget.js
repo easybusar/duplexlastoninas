@@ -55,7 +55,7 @@ export default function BookingWidget() {
             marginBottom: 4,
           }}
         >
-          Llegada
+          Llegada (14:00 hs)
         </label>
         <input
           id="checkin"
@@ -102,7 +102,7 @@ export default function BookingWidget() {
             marginBottom: 4,
           }}
         >
-          Salida
+          Salida (10:00 hs)
         </label>
         <input
           id="checkout"

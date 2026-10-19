@@ -209,8 +209,8 @@ function ReservarContent() {
             <Sparkles className="size-3.5" />
             Reserva Directa con Dueños · {brand.address}, {brand.city}
           </span>
-          <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight leading-[1.08]">
-            Asegurá tu estadía a 400 metros del mar
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.04]">
+            Duplex Las Toninas
           </h1>
           <p className="mt-3 text-sm sm:text-base text-white/80">
             Congelá la tarifa abonando el {brand.depositPercentage}% de seña y el saldo al ingresar.
@@ -270,7 +270,7 @@ function ReservarContent() {
                   htmlFor="res-checkin"
                   className="block text-xs font-bold uppercase tracking-wider text-[#5A697D] mb-2"
                 >
-                  Fecha de Llegada (Check-in)
+                  Fecha de Llegada (Check-in 14:00 hs)
                 </label>
                 <div className="flex items-center gap-2.5 bg-white rounded-xl px-3.5 py-3 border border-[#D7E0EB]">
                   <Calendar className="size-4 text-[#1E293B] shrink-0" />
@@ -297,7 +297,7 @@ function ReservarContent() {
                   htmlFor="res-checkout"
                   className="block text-xs font-bold uppercase tracking-wider text-[#5A697D] mb-2"
                 >
-                  Fecha de Salida (Check-out)
+                  Fecha de Salida (Check-out 10:00 hs)
                 </label>
                 <div className="flex items-center gap-2.5 bg-white rounded-xl px-3.5 py-3 border border-[#D7E0EB]">
                   <Calendar className="size-4 text-[#1E293B] shrink-0" />
@@ -404,6 +404,27 @@ function ReservarContent() {
                   <Calendar className="size-3.5" />
                   <span>Modificar</span>
                 </button>
+              </div>
+            </div>
+
+            {/* Banner Destacado de Horarios de Check-in y Check-out */}
+            <div className="rounded-[1.5rem] bg-[#1E293B] text-white p-4 sm:p-5 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm border border-slate-700">
+              <div className="flex items-center gap-3.5">
+                <span className="size-11 rounded-2xl bg-white/10 flex items-center justify-center text-amber-300 shrink-0">
+                  <Sparkles className="size-5" />
+                </span>
+                <div>
+                  <span className="text-[11px] uppercase tracking-wider font-bold text-white/70 block">
+                    Horarios Oficiales de Estadía
+                  </span>
+                  <p className="text-sm sm:text-base font-extrabold text-white mt-0.5">
+                    Check-in: a partir de las 14:00 hs &nbsp;·&nbsp; Check-out: hasta las 10:00 hs
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-bold text-emerald-300 bg-emerald-950/70 border border-emerald-500/30 px-4 py-2 rounded-full">
+                <Check className="size-3.5" />
+                <span>Horarios confirmados</span>
               </div>
             </div>
 
@@ -728,6 +749,24 @@ function ReservarContent() {
                   </div>
                 )}
 
+                {/* Cartel de Aviso Destacado de Confirmación y 24hs */}
+                <div className="mt-6 rounded-2xl bg-amber-50/90 border-2 border-amber-300 p-4 sm:p-5 text-amber-950 shadow-xs">
+                  <div className="flex items-start gap-3">
+                    <div className="size-8 rounded-xl bg-amber-200/90 flex items-center justify-center shrink-0 text-amber-900 mt-0.5">
+                      <Sparkles className="size-4.5" />
+                    </div>
+                    <div className="text-xs sm:text-sm leading-relaxed">
+                      <strong className="block font-bold text-amber-950 text-sm sm:text-base mb-1">
+                        Aviso Importante sobre la Confirmación de tu Reserva:
+                      </strong>
+                      <p className="text-amber-900">
+                        La reserva quedará <strong>definitivamente confirmada</strong> una vez recibido el comprobante de pago de la seña ({brand.depositPercentage}%).
+                        Disponés de un plazo de <strong>24 horas</strong> para enviar el comprobante; cumplido ese tiempo sin acreditarse el pago, las fechas se liberarán y volverán a quedar <strong>disponibles automáticamente</strong> para otros huéspedes.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   disabled={loading}
@@ -859,11 +898,65 @@ function ReservarContent() {
                   <span>${pricing.deposit.toLocaleString("es-AR")}</span>
                 </div>
                 <div className="flex justify-between text-xs text-[#5A697D]">
-                  <span>Alias MercadoPago:</span>
+                  <span>Alias Oficial de Pago:</span>
                   <strong className="text-[#1E293B]">{activePaymentAlias}</strong>
                 </div>
               </div>
             )}
+
+            {/* Resumen de Condiciones de Reserva */}
+            <div className="mt-6 rounded-2xl bg-[#EFEFEF]/70 p-5 sm:p-6 border border-[#D7E0EB] text-left">
+              <div className="flex items-center gap-2 mb-4 text-[#1E293B]">
+                <ShieldCheck className="size-5 text-[#1E293B]" />
+                <h3 className="text-base font-bold text-[#1E293B]">
+                  Resumen de Condiciones de Reserva
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs leading-relaxed text-[#5A697D]">
+                <div className="p-3 bg-white rounded-xl border border-[#D7E0EB]/70">
+                  <strong className="block text-[#1E293B] font-bold mb-1">
+                    🕒 Horarios Oficiales
+                  </strong>
+                  Check-in a partir de las <strong>14:00 hs</strong>. Check-out hasta las <strong>10:00 hs</strong> para permitir la preparación del complejo.
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-[#D7E0EB]/70">
+                  <strong className="block text-[#1E293B] font-bold mb-1">
+                    ⏳ Confirmación y Plazo 24hs
+                  </strong>
+                  La reserva se confirma al enviar el comprobante de la seña (30%). Disponés de <strong>24 horas</strong> antes de que las fechas vuelvan a estar disponibles.
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-[#D7E0EB]/70">
+                  <strong className="block text-[#1E293B] font-bold mb-1">
+                    💵 Saldo al Ingresar
+                  </strong>
+                  El saldo restante (70%) se abona al momento del check-in al recibir la unidad.
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-[#D7E0EB]/70">
+                  <strong className="block text-[#1E293B] font-bold mb-1">
+                    🚗 Estacionamiento
+                  </strong>
+                  Espacio para estacionar al frente en la puerta de cada dúplex (descubierto).
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-[#D7E0EB]/70">
+                  <strong className="block text-[#1E293B] font-bold mb-1">
+                    🧺 Ropa Blanca y Servicios
+                  </strong>
+                  Cada huésped debe traer sus propias sábanas y toallas. Gas, agua corriente y wifi incluidos. Prohibido fumar en interiores.
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-[#D7E0EB]/70">
+                  <strong className="block text-[#1E293B] font-bold mb-1">
+                    👨‍👩‍👧 Ambiente Familiar
+                  </strong>
+                  Complejo de descanso. Rogamos respetar las normas de convivencia y el silencio nocturno para disfrutar de unas vacaciones en paz.
+                </div>
+              </div>
+            </div>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <a

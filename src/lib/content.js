@@ -49,8 +49,8 @@ export const siteContent = {
       buttonText: "Conocer el lugar",
     },
     searchBar: {
-      checkInLabel: "Llegada (Check-in)",
-      checkOutLabel: "Salida (Check-out)",
+      checkInLabel: "Llegada (14:00 hs)",
+      checkOutLabel: "Salida (10:00 hs)",
       guestsLabel: "Personas",
       submitButton: "Consultar",
     },
@@ -194,8 +194,9 @@ export const siteContent = {
       },
       {
         place: "Terminal y Accesos",
-        dist: "Fácil llegada",
-        detail: "Acceso directo sobre Calle 12 Nº 495.",
+        dist: "Check-in 14h · Check-out 10h",
+        detail:
+          "Acceso directo sobre Calle 12 Nº 495. Horarios de estadía: ingreso a partir de las 14:00 hs y egreso hasta las 10:00 hs.",
       },
     ],
   },

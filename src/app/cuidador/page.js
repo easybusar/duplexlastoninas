@@ -119,7 +119,7 @@ function GuestCard({ booking, onCheckin, onPayment, isArrival }) {
         <div className="rounded-2xl bg-[#EFEFEF]/70 p-3.5 border border-[#D7E0EB]/70">
           <div className="flex items-center gap-1.5 text-xs font-medium text-[#5A697D]">
             <Calendar className="size-3.5 text-[#1E293B]" />
-            <span>Llegada (DD-MM-AAAA)</span>
+            <span>Llegada (Check-in 14:00 hs)</span>
           </div>
           <div className="mt-1 text-sm font-bold text-[#1E293B]">
             {formatDateDDMMAAAA(checkIn)}
@@ -128,7 +128,7 @@ function GuestCard({ booking, onCheckin, onPayment, isArrival }) {
         <div className="rounded-2xl bg-[#EFEFEF]/70 p-3.5 border border-[#D7E0EB]/70">
           <div className="flex items-center gap-1.5 text-xs font-medium text-[#5A697D]">
             <Calendar className="size-3.5 text-[#1E293B]" />
-            <span>Salida (DD-MM-AAAA)</span>
+            <span>Salida (Check-out 10:00 hs)</span>
           </div>
           <div className="mt-1 text-sm font-bold text-[#1E293B]">
             {formatDateDDMMAAAA(checkOut)}
@@ -489,8 +489,8 @@ export default function CuidadorPage() {
         {/* Navigation Pill Bar */}
         <div className="mt-6 flex flex-wrap gap-2">
           {[
-            { key: "arrivals", label: "Ingresos Hoy", icon: LogIn },
-            { key: "departures", label: "Egresos Hoy", icon: LogOut },
+            { key: "arrivals", label: "Ingresos Hoy (14hs)", icon: LogIn },
+            { key: "departures", label: "Egresos Hoy (10hs)", icon: LogOut },
             { key: "calendar", label: "Calendario", icon: Calendar },
             { key: "all", label: "Todas las Reservas", icon: ListFilter },
           ].map((t) => {

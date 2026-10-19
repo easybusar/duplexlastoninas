@@ -81,7 +81,7 @@ export const BookingForm = React.forwardRef<HTMLDivElement, BookingFormProps>(
           <div className="grid grid-cols-2 gap-2.5">
             <div className="rounded-2xl border border-gray-200 bg-gray-50/70 p-3 transition-all focus-within:border-gray-900 focus-within:bg-white">
               <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
-                Llegada
+                Llegada (14:00 hs)
               </label>
               <div className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-gray-400 shrink-0" />
@@ -103,7 +103,7 @@ export const BookingForm = React.forwardRef<HTMLDivElement, BookingFormProps>(
 
             <div className="rounded-2xl border border-gray-200 bg-gray-50/70 p-3 transition-all focus-within:border-gray-900 focus-within:bg-white">
               <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
-                Salida
+                Salida (10:00 hs)
               </label>
               <div className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-gray-400 shrink-0" />
