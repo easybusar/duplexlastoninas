@@ -85,6 +85,40 @@ export async function updateSiteSettings(newSettings) {
   return savedLocal;
 }
 
+// ─── Contador de Visitas Persistente en Supabase ────────────────────────────
+export async function registerSiteVisit() {
+  if (typeof window === "undefined") return 1042;
+  const STORAGE_KEY_VISIT = "toninas_session_visited_v1";
+  try {
+    const hasVisited = sessionStorage.getItem(STORAGE_KEY_VISIT);
+    const { data: row } = await supabase
+      .from("properties")
+      .select("capacity")
+      .eq("id", "site-visits")
+      .maybeSingle();
+
+    let current = Number(row?.capacity || 1042);
+
+    if (!hasVisited) {
+      sessionStorage.setItem(STORAGE_KEY_VISIT, "1");
+      current += 1;
+      await supabase.from("properties").upsert({
+        id: "site-visits",
+        name: "Contador de Visitas",
+        type: "analytics",
+        description: JSON.stringify({ visits: current }),
+        capacity: current,
+        price_per_night: 0,
+        is_active: false,
+        updated_at: new Date().toISOString(),
+      });
+    }
+    return current;
+  } catch (err) {
+    return 1042;
+  }
+}
+
 // ─── Properties con persistencia local garantizada y sync ──────────────────
 export async function getProperties() {
   const localProps = getStoredProperties();
@@ -107,10 +141,22 @@ export async function getProperties() {
         } catch {}
       }
 
-      const unitRows = data.filter((r) => r.id !== "site-settings" && r.type !== "config");
+      const unitRows = data.filter(
+        (r) =>
+          r.id !== "site-settings" &&
+          r.type !== "config" &&
+          r.id !== "site-visits" &&
+          r.type !== "analytics"
+      );
       // Cruzar con seasonalRates locales y sincronizar comodidades (amenities) e imágenes desde Supabase
       const merged = localProps
-        .filter((lp) => lp.id !== "site-settings" && lp.type !== "config")
+        .filter(
+          (lp) =>
+            lp.id !== "site-settings" &&
+            lp.type !== "config" &&
+            lp.id !== "site-visits" &&
+            lp.type !== "analytics"
+        )
         .map((lp) => {
           const remote = unitRows.find((r) => r.id === lp.id);
           if (!remote) return lp;

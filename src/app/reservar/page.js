@@ -210,7 +210,7 @@ function ReservarContent() {
             Reserva Directa con Dueños · {brand.address}, {brand.city}
           </span>
           <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight leading-[1.08]">
-            Asegurá tu estadía frente al mar
+            Asegurá tu estadía a 400 metros del mar
           </h1>
           <p className="mt-3 text-sm sm:text-base text-white/80">
             Congelá la tarifa abonando el {brand.depositPercentage}% de seña y el saldo al ingresar.

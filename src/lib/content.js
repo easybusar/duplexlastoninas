@@ -183,9 +183,9 @@ export const siteContent = {
         detail: "4 cuadras reales bajando directo a la costa amplia.",
       },
       {
-        place: "Centro Comercial",
-        dist: "3 minutos",
-        detail: "Peatonal, supermercados, restaurantes y heladerías.",
+        place: "Barrio Residencial y Calmo",
+        dist: "Paz y Relax",
+        detail: "Zona tranquila, segura y familiar, ideal para descansar sin ruidos molestos.",
       },
       {
         place: "Parque Laberinto",

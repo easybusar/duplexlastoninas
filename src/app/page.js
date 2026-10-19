@@ -11,7 +11,7 @@ import {
   trackAdsConversion,
   sanitizeAmenities,
 } from "@/lib/data";
-import { getProperties, getSiteSettings } from "@/lib/supabase";
+import { getProperties, getSiteSettings, registerSiteVisit } from "@/lib/supabase";
 import { siteContent } from "@/lib/content";
 import {
   Sparkles,
@@ -37,6 +37,7 @@ import {
   Menu,
   ShieldCheck,
   Play,
+  Eye,
 } from "lucide-react";
 
 // ─── Official WhatsApp Logo SVG ─────────────────────────────────────────────
@@ -1174,7 +1175,7 @@ function RivrCtaBannerSection({ whatsappNumber }) {
 }
 
 // ─── 8. FOOTER RIVR ─────────────────────────────────────────────────────────
-function RivrFooter({ whatsappNumber }) {
+function RivrFooter({ whatsappNumber, visitCount }) {
   const { brand, navigation } = siteContent;
   const footerWaUrl = buildWhatsAppUrl(
     whatsappNumber,
@@ -1193,7 +1194,13 @@ function RivrFooter({ whatsappNumber }) {
               href="#home"
               className="flex w-fit items-center gap-2.5 text-[#1E293B]"
             >
-              <RivrRingLogo className="size-6 text-[#1E293B]" />
+              <img
+                src={brand.logo || "/logo.png"}
+                alt={`Logo ${brand.fullName}`}
+                width={32}
+                height={32}
+                className="size-8 object-contain rounded-full shadow-2xs"
+              />
               <span className="text-lg font-extrabold tracking-tight uppercase">
                 {brand.fullName}
               </span>
@@ -1236,7 +1243,7 @@ function RivrFooter({ whatsappNumber }) {
             </div>
 
             <div>
-              <h3 className="text-sm font-extrabold text-[#1E293B]">Plataforma</h3>
+              <h3 className="text-sm font-extrabold text-[#1E293B]">Información</h3>
               <ul className="mt-4 flex flex-col gap-3">
                 <li>
                   <Link href="/reservar" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
@@ -1244,14 +1251,19 @@ function RivrFooter({ whatsappNumber }) {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/cuidador" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
-                    Panel Cuidador
-                  </Link>
+                  <a href="#escolleras" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
+                    Comodidades y Parrilla
+                  </a>
                 </li>
                 <li>
-                  <Link href="/admin" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
-                    Panel Administración
-                  </Link>
+                  <a href="#unidades" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
+                    Videos Recorridos
+                  </a>
+                </li>
+                <li>
+                  <a href={footerWaUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-[#5A697D] hover:text-[#1E293B]">
+                    Consultas Directas
+                  </a>
                 </li>
               </ul>
             </div>
@@ -1287,6 +1299,21 @@ function RivrFooter({ whatsappNumber }) {
           <p className="text-sm font-medium text-[#5A697D]">
             © {new Date().getFullYear()} {brand.fullName} · {brand.address}, Costa Atlántica Argentina.
           </p>
+
+          {/* Visitor Counter */}
+          <div className="inline-flex items-center gap-2 rounded-full bg-white border border-[#D7E0EB] px-3.5 py-1.5 shadow-2xs">
+            <span className="relative flex size-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+            </span>
+            <Eye className="size-3.5 text-[#5A697D]" />
+            <span className="text-xs font-semibold text-[#5A697D]">
+              Visitas a la web:{" "}
+              <strong className="font-extrabold text-[#1E293B]">
+                {visitCount ? Number(visitCount).toLocaleString("es-AR") : "1.042"}
+              </strong>
+            </span>
+          </div>
         </div>
       </div>
     </footer>
@@ -1543,6 +1570,7 @@ export default function HomePage() {
   const [activeVideoModal, setActiveVideoModal] = useState(null);
   const [siteSettings, setSiteSettings] = useState(getStoredSiteSettings);
   const [showFloatingWa, setShowFloatingWa] = useState(false);
+  const [visitCount, setVisitCount] = useState(1042);
   const heroRef = useRef(null);
 
   // Cargar teléfono de WhatsApp y configuración general desde Supabase y LocalStorage
@@ -1551,6 +1579,13 @@ export default function HomePage() {
     getSiteSettings()
       .then((s) => {
         if (s) setSiteSettings(s);
+      })
+      .catch(() => {});
+
+    // Registrar y sincronizar contador de visitas en Supabase
+    registerSiteVisit()
+      .then((count) => {
+        if (count) setVisitCount(count);
       })
       .catch(() => {});
 
@@ -1601,7 +1636,7 @@ export default function HomePage() {
       <RivrGallerySection />
       <RivrLocationSection />
       <RivrCtaBannerSection whatsappNumber={activePhone} />
-      <RivrFooter whatsappNumber={activePhone} />
+      <RivrFooter whatsappNumber={activePhone} visitCount={visitCount} />
 
       <FloatingWhatsAppButton
         isVisible={showFloatingWa}

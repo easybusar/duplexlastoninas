@@ -277,7 +277,15 @@ export function getStoredProperties() {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.map((p) => {
+      return parsed
+        .filter(
+          (p) =>
+            p.id !== "site-settings" &&
+            p.type !== "config" &&
+            p.id !== "site-visits" &&
+            p.type !== "analytics"
+        )
+        .map((p) => {
         const baseFallback = properties.find((base) => base.id === p.id);
         const unitType = p.type || baseFallback?.type || "duplex";
         const rawAmenities =

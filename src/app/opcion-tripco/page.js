@@ -218,7 +218,7 @@ function HeroSection() {
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-extrabold text-white tracking-tight leading-[1.12] max-w-3xl">
-            Viví la tranquilidad y el confort frente al mar
+            Viví la tranquilidad y el confort a 400m del mar
           </h1>
 
           <p className="mt-4 text-sm sm:text-lg text-white/90 font-medium max-w-xl leading-relaxed">
