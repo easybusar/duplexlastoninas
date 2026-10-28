@@ -26,7 +26,6 @@ import {
   Copy,
   CheckCircle2,
   Building2,
-  CreditCard,
   Sparkles,
   Phone,
   ShieldCheck,
@@ -82,7 +81,11 @@ function ReservarContent() {
   const activeWhatsappNumber =
     siteSettings?.whatsappNumber || brand.whatsappNumber;
   const activePaymentAlias =
-    siteSettings?.paymentAlias || brand.paymentAlias;
+    siteSettings?.paymentAlias || brand.paymentAlias || "RENE.LASTONINAS";
+  const activePaymentCvu =
+    siteSettings?.paymentCvu || brand.paymentCvu || "0000003100082748753031";
+  const activePaymentHolder =
+    siteSettings?.paymentHolder || brand.paymentHolder || "Gregorio Rene Flores Barriga";
   const activeDepositPercentage =
     Number(siteSettings?.depositPercentage) ||
     Number(brand?.depositPercentage) ||
@@ -104,7 +107,8 @@ function ReservarContent() {
     notes: "",
   });
   const [paymentMethod, setPaymentMethod] = useState("transfer");
-  const [copied, setCopied] = useState(false);
+  const [copiedAlias, setCopiedAlias] = useState(false);
+  const [copiedCvu, setCopiedCvu] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
@@ -149,7 +153,7 @@ function ReservarContent() {
         total_amount: total,
         deposit_paid: 0,
         status: "pending",
-        payment_method: paymentMethod === "mercadopago" ? "MercadoPago" : "Transferencia",
+        payment_method: "Transferencia",
         source: "web",
       });
       trackAdsConversion("purchase_reservation", {
@@ -167,8 +171,14 @@ function ReservarContent() {
 
   const copyAlias = () => {
     navigator.clipboard.writeText(activePaymentAlias);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedAlias(true);
+    setTimeout(() => setCopiedAlias(false), 2000);
+  };
+
+  const copyCvu = () => {
+    navigator.clipboard.writeText(activePaymentCvu);
+    setCopiedCvu(true);
+    setTimeout(() => setCopiedCvu(false), 2000);
   };
 
 
@@ -681,78 +691,82 @@ function ReservarContent() {
                   </strong>
                 </p>
 
-                <fieldset className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <legend className="sr-only">Seleccioná medio de pago</legend>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("transfer")}
-                    className={`flex items-center gap-3 rounded-2xl p-4 border-2 text-left transition-all cursor-pointer ${
-                      paymentMethod === "transfer"
-                        ? "border-[#1E293B] bg-[#E7EEF5]/60 text-[#1E293B]"
-                        : "border-[#D7E0EB] bg-white text-[#5A697D] hover:border-[#1E293B]/30"
-                    }`}
-                  >
-                    <Building2 className="size-5 shrink-0 text-[#1E293B]" />
-                    <div>
-                      <div className="text-sm font-bold text-[#1E293B]">
-                        Transferencia Bancaria
-                      </div>
-                      <div className="text-xs text-[#5A697D]">Alias directo sin recargo</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("mercadopago")}
-                    className={`flex items-center gap-3 rounded-2xl p-4 border-2 text-left transition-all cursor-pointer ${
-                      paymentMethod === "mercadopago"
-                        ? "border-[#1E293B] bg-[#E7EEF5]/60 text-[#1E293B]"
-                        : "border-[#D7E0EB] bg-white text-[#5A697D] hover:border-[#1E293B]/30"
-                    }`}
-                  >
-                    <CreditCard className="size-5 shrink-0 text-[#1E293B]" />
-                    <div>
-                      <div className="text-sm font-bold text-[#1E293B]">
-                        MercadoPago / Tarjetas
-                      </div>
-                      <div className="text-xs text-[#5A697D]">Dinero en cuenta o tarjeta</div>
-                    </div>
-                  </button>
-                </fieldset>
-
-                {paymentMethod === "transfer" && (
-                  <div className="mt-5 rounded-2xl bg-[#EFEFEF]/80 p-5 border border-[#D7E0EB]">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-xl p-4 border border-[#D7E0EB]">
-                      <div>
-                        <span className="block text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
-                          Alias Oficial
-                        </span>
-                        <span className="text-lg font-bold text-[#1E293B] tracking-tight">
-                          {activePaymentAlias}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={copyAlias}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1E293B] text-white px-4 py-2.5 text-xs font-semibold hover:bg-[#0F172A] cursor-pointer"
-                      >
-                        {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                        <span>{copied ? "Alias Copiado" : "Copiar Alias"}</span>
-                      </button>
-                    </div>
-                    <p className="mt-3 text-xs text-[#5A697D] leading-relaxed">
-                      Al confirmar tu solicitud podrás enviarnos el comprobante de transferencia directamente por WhatsApp para dejar congelada tu unidad.
-                    </p>
+                {/* Método de pago único: Transferencia Bancaria Directa */}
+                <div className="mt-5 flex items-center gap-3.5 rounded-2xl p-4 border border-[#D7E0EB] bg-[#E7EEF5]/70 text-[#1E293B]">
+                  <div className="size-11 rounded-xl bg-white border border-[#D7E0EB] flex items-center justify-center shrink-0 text-[#1E293B] shadow-2xs">
+                    <Building2 className="size-5.5 text-[#1E293B]" />
                   </div>
-                )}
-
-                {paymentMethod === "mercadopago" && (
-                  <div className="mt-5 rounded-2xl bg-[#E7EEF5]/70 p-5 border border-[#D7E0EB]">
-                    <p className="text-xs sm:text-sm text-[#1E293B] font-medium leading-relaxed">
-                      Al confirmar tu reserva te compartiremos el link oficial de MercadoPago por WhatsApp para abonar la seña del {activeDepositPercentage}% con tarjeta o dinero en cuenta.
-                    </p>
+                  <div>
+                    <div className="text-sm font-bold text-[#1E293B]">
+                      Transferencia Bancaria
+                    </div>
+                    <div className="text-xs text-[#5A697D]">
+                      Transferencia directa con Alias o CVU sin recargo
+                    </div>
                   </div>
-                )}
+                </div>
+
+                {/* Tarjeta de Datos de Transferencia e Identificación */}
+                <div className="mt-4 rounded-2xl bg-[#EFEFEF]/80 p-5 sm:p-6 border border-[#D7E0EB] space-y-3">
+                  {/* Titular */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white rounded-xl p-4 border border-[#D7E0EB]">
+                    <div>
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
+                        Titular de la cuenta
+                      </span>
+                      <span className="text-base sm:text-lg font-bold text-[#1E293B] tracking-tight">
+                        {activePaymentHolder}
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#E7EEF5] text-[#1E293B] w-fit">
+                      Cuenta Oficial
+                    </span>
+                  </div>
+
+                  {/* Alias Oficial */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-xl p-4 border border-[#D7E0EB]">
+                    <div>
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
+                        Alias Oficial
+                      </span>
+                      <span className="text-lg sm:text-xl font-bold font-mono text-[#1E293B] tracking-tight select-all">
+                        {activePaymentAlias}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={copyAlias}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white px-4 py-2.5 text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
+                    >
+                      {copiedAlias ? <Check className="size-4 text-emerald-400" /> : <Copy className="size-4" />}
+                      <span>{copiedAlias ? "Alias Copiado" : "Copiar Alias"}</span>
+                    </button>
+                  </div>
+
+                  {/* CVU Oficial */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-xl p-4 border border-[#D7E0EB]">
+                    <div>
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
+                        CVU Oficial
+                      </span>
+                      <span className="text-sm sm:text-base font-bold font-mono text-[#1E293B] tracking-tight select-all">
+                        {activePaymentCvu}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={copyCvu}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white px-4 py-2.5 text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
+                    >
+                      {copiedCvu ? <Check className="size-4 text-emerald-400" /> : <Copy className="size-4" />}
+                      <span>{copiedCvu ? "CVU Copiado" : "Copiar CVU"}</span>
+                    </button>
+                  </div>
+
+                  <p className="pt-1 text-xs text-[#5A697D] leading-relaxed">
+                    Al confirmar tu solicitud podrás enviarnos el comprobante de transferencia directamente por WhatsApp para dejar congelada tu unidad.
+                  </p>
+                </div>
 
                 {/* Cartel de Aviso Destacado de Confirmación y 24hs */}
                 <div className="mt-6 rounded-2xl bg-amber-50/90 border-2 border-amber-300 p-4 sm:p-5 text-amber-950 shadow-xs">
@@ -897,14 +911,22 @@ function ReservarContent() {
             </p>
 
             {pricing && (
-              <div className="mt-6 rounded-2xl bg-[#EFEFEF]/80 p-5 border border-[#D7E0EB] text-left space-y-2 text-sm">
-                <div className="flex justify-between font-bold text-[#1E293B]">
+              <div className="mt-6 rounded-2xl bg-[#EFEFEF]/80 p-5 border border-[#D7E0EB] text-left space-y-2.5 text-sm">
+                <div className="flex justify-between font-bold text-[#1E293B] pb-2 border-b border-[#D7E0EB]">
                   <span>Seña ({pricing.depositPercentage || activeDepositPercentage}%) para congelar tarifa:</span>
-                  <span>${pricing.deposit.toLocaleString("es-AR")}</span>
+                  <span className="text-base">${pricing.deposit.toLocaleString("es-AR")}</span>
+                </div>
+                <div className="flex justify-between text-xs text-[#5A697D]">
+                  <span>Titular de la cuenta:</span>
+                  <strong className="text-[#1E293B]">{activePaymentHolder}</strong>
                 </div>
                 <div className="flex justify-between text-xs text-[#5A697D]">
                   <span>Alias Oficial de Pago:</span>
-                  <strong className="text-[#1E293B]">{activePaymentAlias}</strong>
+                  <strong className="text-[#1E293B] font-mono">{activePaymentAlias}</strong>
+                </div>
+                <div className="flex justify-between text-xs text-[#5A697D]">
+                  <span>CVU Oficial:</span>
+                  <strong className="text-[#1E293B] font-mono">{activePaymentCvu}</strong>
                 </div>
               </div>
             )}

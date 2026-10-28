@@ -1859,7 +1859,13 @@ function ConfiguracionSection({ siteSettings, onSave }) {
       "Hola! Vengo desde la web de Dúplex Las Toninas y quiero consultar disponibilidad."
   );
   const [paymentAlias, setPaymentAlias] = useState(
-    siteSettings?.paymentAlias || "DUPLEX.TONINAS.MP"
+    siteSettings?.paymentAlias || "RENE.LASTONINAS"
+  );
+  const [paymentCvu, setPaymentCvu] = useState(
+    siteSettings?.paymentCvu || "0000003100082748753031"
+  );
+  const [paymentHolder, setPaymentHolder] = useState(
+    siteSettings?.paymentHolder || "Gregorio Rene Flores Barriga"
   );
   const [googleAdsId, setGoogleAdsId] = useState(siteSettings?.googleAdsId || "");
   const [depositPercentage, setDepositPercentage] = useState(
@@ -1875,7 +1881,9 @@ function ConfiguracionSection({ siteSettings, onSave }) {
         siteSettings.whatsappDefaultMessage ||
           "Hola! Vengo desde la web de Dúplex Las Toninas y quiero consultar disponibilidad."
       );
-      setPaymentAlias(siteSettings.paymentAlias || "DUPLEX.TONINAS.MP");
+      setPaymentAlias(siteSettings.paymentAlias || "RENE.LASTONINAS");
+      setPaymentCvu(siteSettings.paymentCvu || "0000003100082748753031");
+      setPaymentHolder(siteSettings.paymentHolder || "Gregorio Rene Flores Barriga");
       setGoogleAdsId(siteSettings.googleAdsId || "");
       setDepositPercentage(siteSettings.depositPercentage || 50);
     }
@@ -1892,6 +1900,8 @@ function ConfiguracionSection({ siteSettings, onSave }) {
         whatsappNumber: normalized,
         whatsappDefaultMessage: whatsappDefaultMessage.trim(),
         paymentAlias: paymentAlias.trim(),
+        paymentCvu: paymentCvu.trim(),
+        paymentHolder: paymentHolder.trim(),
         googleAdsId: googleAdsId.trim(),
         depositPercentage: Number(depositPercentage) || 50,
       });
@@ -1998,25 +2008,78 @@ function ConfiguracionSection({ siteSettings, onSave }) {
           </p>
         </div>
 
-        {/* Alias de Pago y Google Ads */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#EFEFEF]">
-          <div>
-            <label
-              htmlFor="config-payment-alias"
-              className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
-            >
-              Alias Oficial (Transferencia / MercadoPago)
-            </label>
-            <input
-              id="config-payment-alias"
-              type="text"
-              value={paymentAlias}
-              onChange={(e) => setPaymentAlias(e.target.value)}
-              placeholder="complejo.toninas.mp"
-              className="w-full rounded-xl bg-[#EFEFEF]/60 border border-[#D7E0EB] px-4 py-2.5 text-sm font-bold text-[#1E293B]"
-            />
+        {/* Datos Bancarios de Transferencia Oficial */}
+        <div className="rounded-2xl bg-[#EFEFEF]/60 p-5 border border-[#D7E0EB] space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-[#1E293B] text-white">
+              <Building2 className="size-5" />
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-[#1E293B]">
+                Datos Oficiales de Transferencia Bancaria (Señas)
+              </h3>
+              <p className="text-xs text-[#5A697D]">
+                Estos datos se muestran en la pantalla de reserva para que los huéspedes transfieran la seña ({depositPercentage}%).
+              </p>
+            </div>
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label
+                htmlFor="config-payment-holder"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+              >
+                Titular de la Cuenta
+              </label>
+              <input
+                id="config-payment-holder"
+                type="text"
+                value={paymentHolder}
+                onChange={(e) => setPaymentHolder(e.target.value)}
+                placeholder="Gregorio Rene Flores Barriga"
+                className="w-full rounded-xl bg-white border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-semibold text-[#1E293B]"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="config-payment-alias"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+              >
+                Alias Oficial
+              </label>
+              <input
+                id="config-payment-alias"
+                type="text"
+                value={paymentAlias}
+                onChange={(e) => setPaymentAlias(e.target.value)}
+                placeholder="RENE.LASTONINAS"
+                className="w-full rounded-xl bg-white border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-bold font-mono text-[#1E293B]"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="config-payment-cvu"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+              >
+                CVU Oficial
+              </label>
+              <input
+                id="config-payment-cvu"
+                type="text"
+                value={paymentCvu}
+                onChange={(e) => setPaymentCvu(e.target.value)}
+                placeholder="0000003100082748753031"
+                className="w-full rounded-xl bg-white border border-[#D7E0EB] px-3.5 py-2.5 text-sm font-bold font-mono text-[#1E293B]"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Google Ads */}
+        <div className="pt-2 border-t border-[#EFEFEF]">
           <div>
             <label
               htmlFor="config-google-ads"
@@ -2030,7 +2093,7 @@ function ConfiguracionSection({ siteSettings, onSave }) {
               value={googleAdsId}
               onChange={(e) => setGoogleAdsId(e.target.value)}
               placeholder="Ej: AW-123456789"
-              className="w-full rounded-xl bg-[#EFEFEF]/60 border border-[#D7E0EB] px-4 py-2.5 text-sm font-semibold text-[#1E293B]"
+              className="w-full sm:max-w-md rounded-xl bg-[#EFEFEF]/60 border border-[#D7E0EB] px-4 py-2.5 text-sm font-semibold text-[#1E293B]"
             />
           </div>
         </div>

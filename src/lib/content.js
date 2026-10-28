@@ -23,7 +23,9 @@ export const siteContent = {
       "Hola! Vengo desde la web de Dúplex Las Toninas y quiero consultar disponibilidad.",
     googleMapsUrl:
       "https://www.google.com/maps/search/?api=1&query=Calle+12+495+Las+Toninas+Buenos+Aires",
-    paymentAlias: "DUPLEX.TONINAS.MP",
+    paymentAlias: "RENE.LASTONINAS",
+    paymentCvu: "0000003100082748753031",
+    paymentHolder: "Gregorio Rene Flores Barriga",
     depositPercentage: 50,
   },
 
@@ -126,7 +128,7 @@ export const siteContent = {
       imageCaption: "Trato directo con sus dueños",
       title: "Reserva Directa",
       description:
-        "Congelá tu alquiler de temporada abonando tu seña vía transferencia o MercadoPago. Sin intermediarios ni comisiones.",
+        "Congelá tu alquiler de temporada abonando tu seña vía transferencia bancaria directa (Alias o CVU). Sin intermediarios ni comisiones.",
       buttonText: "Reservar Ahora",
     },
   },

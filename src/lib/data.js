@@ -507,7 +507,9 @@ export const defaultSiteSettings = {
   whatsappNumber: "5491134610085",
   whatsappDefaultMessage:
     "Hola! Vengo desde la web de Dúplex Las Toninas y quiero consultar disponibilidad.",
-  paymentAlias: "DUPLEX.TONINAS.MP",
+  paymentAlias: "RENE.LASTONINAS",
+  paymentCvu: "0000003100082748753031",
+  paymentHolder: "Gregorio Rene Flores Barriga",
   googleAdsId: "",
   googleAdsConversionLabel: "",
   depositPercentage: 50,
