@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -17,6 +17,8 @@ import {
   formatDateDDMMAAAA,
   normalizeWhatsAppNumber,
   EXPENSE_CATEGORIES,
+  hexToRgba,
+  getBookingColorMap,
 } from "@/lib/data";
 import { siteContent } from "@/lib/content";
 import BookingCalendar from "@/components/BookingCalendar";
@@ -73,12 +75,16 @@ const STATUS_CONFIG = {
   },
 };
 
-function GuestCard({ booking, onCheckin, onPayment, timingType }) {
+function GuestCard({ booking, onCheckin, onPayment, timingType, color }) {
   const [showPayment, setShowPayment] = useState(false);
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState("cash");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+
+  const bookingColor = color || { bg: "#1E293B", text: "#FFFFFF", name: "Azul Pizarra" };
+  const bgTransparent = hexToRgba(bookingColor.bg, 0.12);
+  const borderTransparent = hexToRgba(bookingColor.bg, 0.35);
 
   const totalAmount = booking.totalAmount || booking.total_amount || 0;
   const depositPaid = booking.depositPaid || booking.deposit_paid || 0;
@@ -112,24 +118,32 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
   // Determinar texto y estilo del badge de sincronización
   const timingBadge = (() => {
     if (timingType === "arrival_today") {
-      return { label: "Ingresa Hoy (14:00 hs)", bg: "bg-[#E7EEF5] text-[#1E293B]", icon: LogIn };
+      return { label: "Ingresa Hoy (14:00 hs)", bg: "bg-white/80 text-[#1E293B] border border-white/90 shadow-2xs", icon: LogIn };
     }
     if (timingType === "departure_today") {
-      return { label: "Se Retira Hoy (10:00 hs)", bg: "bg-amber-50 text-amber-900 border border-amber-200", icon: LogOut };
+      return { label: "Se Retira Hoy (10:00 hs)", bg: "bg-amber-100/90 text-amber-950 border border-amber-300 shadow-2xs", icon: LogOut };
     }
     if (timingType === "arrival_tomorrow") {
-      return { label: "Ingresa Mañana (14:00 hs)", bg: "bg-indigo-50 text-indigo-900 border border-indigo-200", icon: LogIn };
+      return { label: "Ingresa Mañana (14:00 hs)", bg: "bg-indigo-100/90 text-indigo-950 border border-indigo-300 shadow-2xs", icon: LogIn };
     }
     if (timingType === "departure_tomorrow") {
-      return { label: "Se Retira Mañana (10:00 hs)", bg: "bg-orange-50 text-orange-900 border border-orange-200", icon: LogOut };
+      return { label: "Se Retira Mañana (10:00 hs)", bg: "bg-orange-100/90 text-orange-950 border border-orange-300 shadow-2xs", icon: LogOut };
     }
-    return { label: "Reserva Programada", bg: "bg-slate-100 text-slate-700", icon: Calendar };
+    return { label: "Reserva Programada", bg: "bg-white/80 text-slate-800 border border-white/90 shadow-2xs", icon: Calendar };
   })();
 
   const TimingIcon = timingBadge.icon;
 
   return (
-    <div className="rounded-[1.75rem] bg-white p-6 border border-[#D7E0EB] shadow-xs mb-4">
+    <div
+      style={{
+        backgroundColor: bgTransparent,
+        borderColor: borderTransparent,
+        borderLeftWidth: "6px",
+        borderLeftColor: bookingColor.bg,
+      }}
+      className="rounded-[1.75rem] p-6 border shadow-xs mb-4 backdrop-blur-xs transition-all relative overflow-hidden"
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-5">
         <div>
@@ -139,9 +153,16 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
             <TimingIcon className="size-3.5" />
             {timingBadge.label}
           </span>
-          <h2 className="text-2xl font-semibold tracking-tight text-[#1E293B]">
-            {guestName}
-          </h2>
+          <div className="flex items-center gap-2">
+            <span
+              style={{ backgroundColor: bookingColor.bg }}
+              className="size-3.5 rounded-full inline-block border-2 border-white shadow-2xs shrink-0"
+              title={`Color asignado en calendario: ${bookingColor.name}`}
+            />
+            <h2 className="text-2xl font-bold tracking-tight text-[#1E293B]">
+              {guestName}
+            </h2>
+          </div>
           <div className="flex flex-wrap items-center gap-3 mt-1 text-sm font-semibold text-[#5A697D]">
             <span className="flex items-center gap-1.5">
               <Home className="size-4 text-[#1E293B]" />
@@ -169,7 +190,7 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
 
       {/* Info Grid con DD-MM-AAAA */}
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="rounded-2xl bg-[#EFEFEF]/70 p-3.5 border border-[#D7E0EB]/70">
+        <div className="rounded-2xl bg-white/75 backdrop-blur-xs p-3.5 border border-white/90 shadow-2xs">
           <div className="flex items-center gap-1.5 text-xs font-medium text-[#5A697D]">
             <Calendar className="size-3.5 text-[#1E293B]" />
             <span>Llegada (Check-in 14:00 hs)</span>
@@ -178,7 +199,7 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
             {formatDateDDMMAAAA(checkIn)}
           </div>
         </div>
-        <div className="rounded-2xl bg-[#EFEFEF]/70 p-3.5 border border-[#D7E0EB]/70">
+        <div className="rounded-2xl bg-white/75 backdrop-blur-xs p-3.5 border border-white/90 shadow-2xs">
           <div className="flex items-center gap-1.5 text-xs font-medium text-[#5A697D]">
             <Calendar className="size-3.5 text-[#1E293B]" />
             <span>Salida (Check-out 10:00 hs)</span>
@@ -187,7 +208,7 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
             {formatDateDDMMAAAA(checkOut)}
           </div>
         </div>
-        <div className="rounded-2xl bg-[#EFEFEF]/70 p-3.5 border border-[#D7E0EB]/70">
+        <div className="rounded-2xl bg-white/75 backdrop-blur-xs p-3.5 border border-white/90 shadow-2xs">
           <div className="flex items-center gap-1.5 text-xs font-medium text-[#5A697D]">
             <Users className="size-3.5 text-[#1E293B]" />
             <span>Ocupantes</span>
@@ -196,7 +217,7 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
             {booking.guests || 1} personas
           </div>
         </div>
-        <div className="rounded-2xl bg-[#EFEFEF]/70 p-3.5 border border-[#D7E0EB]/70">
+        <div className="rounded-2xl bg-white/75 backdrop-blur-xs p-3.5 border border-white/90 shadow-2xs">
           <div className="flex items-center gap-1.5 text-xs font-medium text-[#5A697D]">
             <Wallet className="size-3.5 text-[#1E293B]" />
             <span>Saldo a Cobrar</span>
@@ -213,19 +234,19 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
 
       {/* Comentarios del Huésped / Notas Especiales */}
       {notes && notes.trim() !== "" && (
-        <div className="mb-4 rounded-2xl bg-amber-50/80 border border-amber-200/90 p-3.5">
+        <div className="mb-4 rounded-2xl bg-white/80 backdrop-blur-xs border border-white/90 shadow-2xs p-3.5">
           <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900 mb-1">
             <FileText className="size-3.5 text-amber-700" />
             <span>Comentarios y Notas de la Reserva:</span>
           </div>
-          <p className="text-xs text-amber-950 whitespace-pre-wrap leading-relaxed">
+          <p className="text-xs text-[#1E293B] whitespace-pre-wrap leading-relaxed font-medium">
             {notes}
           </p>
         </div>
       )}
 
       {/* Balance Bar & Seña entregada */}
-      <div className="rounded-2xl bg-[#EFEFEF]/50 p-3 border border-[#D7E0EB]/70 flex items-center justify-between text-xs mb-4">
+      <div className="rounded-2xl bg-white/65 backdrop-blur-xs p-3 border border-white/90 shadow-2xs flex items-center justify-between text-xs mb-4">
         <div>
           <span className="text-[#5A697D]">Total Reserva: </span>
           <span className="font-bold text-[#1E293B] tabular-nums">
@@ -279,7 +300,7 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
           <button
             type="button"
             onClick={() => setShowPayment(!showPayment)}
-            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#D7E0EB] bg-white hover:bg-[#EFEFEF] text-[#1E293B] py-2.5 px-4 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/80 bg-white/90 hover:bg-white text-[#1E293B] py-2.5 px-4 text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-2xs"
           >
             <Wallet className="size-4" />
             <span>{showPayment ? "Cancelar" : "Cobrar Saldo"}</span>
@@ -289,7 +310,7 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
 
       {/* Payment Inline Form */}
       {showPayment && (
-        <div className="mt-4 pt-4 border-t border-[#D7E0EB]">
+        <div className="mt-4 pt-4 border-t border-white/90">
           <div className="text-xs font-bold uppercase tracking-wider text-[#5A697D] mb-3">
             Registrar Cobro de Saldo
           </div>
@@ -303,7 +324,7 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
                 placeholder={remaining.toString()}
                 value={payAmount}
                 onChange={(e) => setPayAmount(e.target.value)}
-                className="w-full rounded-xl border border-[#D7E0EB] bg-[#EFEFEF]/50 px-3 py-2 text-sm font-bold text-[#1E293B] focus:outline-hidden focus:border-[#1E293B]"
+                className="w-full rounded-xl border border-white/90 bg-white/90 px-3 py-2 text-sm font-bold text-[#1E293B] focus:outline-hidden focus:border-[#1E293B]"
               />
             </div>
             <div>
@@ -313,7 +334,7 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
               <select
                 value={payMethod}
                 onChange={(e) => setPayMethod(e.target.value)}
-                className="w-full rounded-xl border border-[#D7E0EB] bg-[#EFEFEF]/50 px-3 py-2 text-sm font-semibold text-[#1E293B] focus:outline-hidden focus:border-[#1E293B]"
+                className="w-full rounded-xl border border-white/90 bg-white/90 px-3 py-2 text-sm font-semibold text-[#1E293B] focus:outline-hidden focus:border-[#1E293B]"
               >
                 <option value="cash">Efectivo en Recepción</option>
                 <option value="transfer">Transferencia Bancaria</option>
@@ -325,7 +346,7 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
             type="button"
             onClick={handlePayment}
             disabled={saving || !payAmount}
-            className="w-full rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white py-2.5 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+            className="w-full rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white py-2.5 text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-2xs"
           >
             {saving ? "Registrando cobro..." : `Confirmar Cobro de $${Number(payAmount || 0).toLocaleString("es-AR")}`}
           </button>
@@ -333,7 +354,7 @@ function GuestCard({ booking, onCheckin, onPayment, timingType }) {
       )}
 
       {done && (
-        <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-semibold text-emerald-800 text-center">
+        <div className="mt-4 rounded-xl bg-emerald-50/90 border border-emerald-300 p-3 text-xs font-semibold text-emerald-800 text-center shadow-2xs">
           ✓ Pago registrado y actualizado en el sistema
         </div>
       )}
@@ -540,7 +561,7 @@ function FinanzasCuidadorSection({
   return (
     <div className="space-y-6">
       {/* Header Finanzas */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-5 rounded-[2rem] border border-[#D7E0EB]">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white/90 backdrop-blur-sm p-5 rounded-[2rem] border border-[#D7E0EB] shadow-xs">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -587,7 +608,7 @@ function FinanzasCuidadorSection({
 
       {/* Grid de Métricas */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-[1.5rem] bg-white p-4 sm:p-5 border border-[#D7E0EB] shadow-2xs">
+        <div className="rounded-[1.5rem] bg-white/90 backdrop-blur-sm p-4 sm:p-5 border border-[#D7E0EB] shadow-2xs">
           <div className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
             Total Cobrado / Señas
           </div>
@@ -597,7 +618,7 @@ function FinanzasCuidadorSection({
           <div className="text-[10px] text-[#5A697D] mt-1">Ingresos ya percibidos</div>
         </div>
 
-        <div className="rounded-[1.5rem] bg-white p-4 sm:p-5 border border-[#D7E0EB] shadow-2xs">
+        <div className="rounded-[1.5rem] bg-white/90 backdrop-blur-sm p-4 sm:p-5 border border-[#D7E0EB] shadow-2xs">
           <div className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
             Saldo a Cobrar
           </div>
@@ -607,7 +628,7 @@ function FinanzasCuidadorSection({
           <div className="text-[10px] text-[#5A697D] mt-1">Pendiente al Check-in</div>
         </div>
 
-        <div className="rounded-[1.5rem] bg-white p-4 sm:p-5 border border-[#D7E0EB] shadow-2xs">
+        <div className="rounded-[1.5rem] bg-white/90 backdrop-blur-sm p-4 sm:p-5 border border-[#D7E0EB] shadow-2xs">
           <div className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
             Gastos Registrados
           </div>
@@ -629,7 +650,7 @@ function FinanzasCuidadorSection({
       </div>
 
       {/* Lista de Gastos Registrados */}
-      <div className="rounded-[2rem] bg-white p-5 sm:p-6 border border-[#D7E0EB] shadow-xs">
+      <div className="rounded-[2rem] bg-white/90 backdrop-blur-sm p-5 sm:p-6 border border-[#D7E0EB] shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-bold text-[#1E293B]">
@@ -850,7 +871,11 @@ export default function CuidadorDashboard() {
     setExpenses((prev) => prev.filter((e) => e.id !== expenseId));
   };
 
-  // Clasificaciones por fecha
+  // Clasificaciones por fecha y asignación de colores sincronizados con el calendario
+  const bookingColorMap = useMemo(() => {
+    return getBookingColorMap(allBookings);
+  }, [allBookings]);
+
   const arrivalsToday = allBookings.filter((b) => (b.checkIn || b.check_in) === todayStr);
   const departuresToday = allBookings.filter((b) => (b.checkOut || b.check_out) === todayStr);
   const arrivalsTomorrow = allBookings.filter((b) => (b.checkIn || b.check_in) === tomorrowStr);
@@ -1144,6 +1169,7 @@ export default function CuidadorDashboard() {
                 <GuestCard
                   key={booking.id}
                   booking={booking}
+                  color={bookingColorMap[booking.id]}
                   timingType={getTimingType(booking)}
                   onCheckin={handleCheckin}
                   onPayment={handlePayment}

@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { properties, getStoredProperties, formatDateDDMMAAAA } from "@/lib/data";
+import {
+  properties,
+  getStoredProperties,
+  formatDateDDMMAAAA,
+  CONTRAST_PALETTE,
+  getBookingColorMap,
+} from "@/lib/data";
 import {
   ChevronLeft,
   ChevronRight,
@@ -25,17 +31,6 @@ const STATUS_THEME = {
   cancelled: { bg: "#DC2626", label: "Cancelada" },
 };
 
-// Paleta de colores altamente contrastantes para alternar en reservas correlativas
-const CONTRAST_PALETTE = [
-  { bg: "#D97706", text: "#FFFFFF", name: "Ámbar Cálido" },     // 0: Naranja / Ámbar
-  { bg: "#1E293B", text: "#FFFFFF", name: "Azul Pizarra" },     // 1: Azul marino oscuro
-  { bg: "#059669", text: "#FFFFFF", name: "Verde Esmeralda" },  // 2: Verde intenso
-  { bg: "#4338CA", text: "#FFFFFF", name: "Índigo Profundo" },  // 3: Azul índigo
-  { bg: "#BE123C", text: "#FFFFFF", name: "Rubí Carmesí" },     // 4: Rojo rubí
-  { bg: "#0F766E", text: "#FFFFFF", name: "Verde Azulado" },    // 5: Teal oscuro
-  { bg: "#7C3AED", text: "#FFFFFF", name: "Violeta" },          // 6: Púrpura / Violeta
-  { bg: "#9A3412", text: "#FFFFFF", name: "Óxido Terracota" },  // 7: Terracota profundo
-];
 
 const MONTHS_ES = [
   "Enero",
@@ -421,35 +416,9 @@ export default function BookingCalendar({
     }
   };
 
-  // Asignación de colores contrastantes por reserva correlativa dentro de cada unidad
-  // - Offset por propiedad para que columnas adyacentes no compartan color
-  // - Salto de 2 posiciones para alternancia extrema entre reservas correlativas
+  // Asignación de colores contrastantes por reserva correlativa sincronizada con el resto de la app
   const bookingColorMap = useMemo(() => {
-    const map = {};
-    propertiesList.forEach((prop, propIdx) => {
-      const propBookings = (bookings || [])
-        .filter((b) => {
-          const pid = b.propertyId || b.property_id;
-          return pid === prop.id && b.status !== "cancelled";
-        })
-        .sort((a, b) => {
-          const aIn = a.checkIn || a.check_in || "";
-          const bIn = b.checkIn || b.check_in || "";
-          return aIn.localeCompare(bIn);
-        });
-
-      const propOffset = (propIdx * 3) % CONTRAST_PALETTE.length;
-
-      propBookings.forEach((b, idx) => {
-        if (b.color && typeof b.color === "object" && b.color.bg) {
-          map[b.id] = b.color;
-        } else {
-          const paletteIndex = (propOffset + idx * 2) % CONTRAST_PALETTE.length;
-          map[b.id] = CONTRAST_PALETTE[paletteIndex];
-        }
-      });
-    });
-    return map;
+    return getBookingColorMap(bookings, propertiesList);
   }, [bookings, propertiesList]);
 
   // Asignación de día para mostrar el nombre: EXACTAMENTE UNA VEZ por cinta continua
@@ -553,90 +522,7 @@ export default function BookingCalendar({
 
   return (
     <div>
-      {/* Header Bar Simplificada y Limpia */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="text-xl font-semibold text-[#1E293B]">
-              Calendario de Ocupación
-            </h3>
-            <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
-              Scroll Continuo
-            </span>
-          </div>
-          <p className="text-xs text-[#5A697D]">
-            Días correlativos sin cortes · Salida 10:00 hs (mitad superior) · Entrada 14:00 hs (mitad inferior)
-          </p>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={prevMonth}
-            aria-label="Mes anterior"
-            title="Mover ventana de meses un mes hacia atrás"
-            className="size-9 rounded-xl border border-[#D7E0EB] bg-white flex items-center justify-center text-[#1E293B] hover:bg-[#E7EEF5] cursor-pointer shadow-2xs"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <div className="min-w-[170px] text-center text-xs sm:text-sm font-bold text-[#1E293B] bg-[#EFEFEF]/60 px-3 py-2 rounded-xl border border-[#D7E0EB]">
-            {startMonthLabel} — {endMonthLabel}
-          </div>
-          <button
-            type="button"
-            onClick={nextMonth}
-            aria-label="Mes siguiente"
-            title="Mover ventana de meses un mes hacia adelante"
-            className="size-9 rounded-xl border border-[#D7E0EB] bg-white flex items-center justify-center text-[#1E293B] hover:bg-[#E7EEF5] cursor-pointer shadow-2xs"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-          <button
-            type="button"
-            onClick={scrollToToday}
-            className="px-3.5 py-2 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
-          >
-            Hoy
-          </button>
-        </div>
-      </div>
-
-      {/* Legend & Policy Indicators */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 p-3.5 rounded-2xl bg-[#EFEFEF]/80 border border-[#D7E0EB] text-xs">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1.5 font-bold text-[#1E293B]">
-            <Clock className="size-3.5 text-[#1E293B]" />
-            <span>Turnos de Estadía:</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[#5A697D]">
-            <span className="inline-block size-3 rounded-xs bg-[#1E293B]" />
-            <span>Mitad Sup: <strong>Sale 10:00 hs</strong></span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[#5A697D]">
-            <span className="inline-block size-3 rounded-xs bg-[#D97706]" />
-            <span>Mitad Inf: <strong>Entra 14:00 hs</strong></span>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
-            Colores Alternados:
-          </span>
-          <div className="flex items-center gap-1">
-            {CONTRAST_PALETTE.slice(0, 5).map((c, i) => (
-              <span
-                key={i}
-                style={{ backgroundColor: c.bg }}
-                className="size-3 rounded-full inline-block border border-white shadow-2xs"
-                title={c.name}
-              />
-            ))}
-            <span className="text-[11px] text-[#5A697D] ml-1">Distinción inmediata</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Calendar Table Wrapper con Scroll Continuo */}
+      {/* Calendar Table Wrapper con Scroll Continuo (Sin cabecera para máxima limpieza visual) */}
       <div
         ref={tableContainerRef}
         className="overflow-auto max-h-[72vh] rounded-2xl border border-[#D7E0EB] bg-white shadow-2xs scroll-smooth"
@@ -912,62 +798,136 @@ export default function BookingCalendar({
         </table>
       </div>
 
-      {/* Controles al Pie del Calendario: Acceso Rápido y Selector de Rango */}
-      <div className="mt-3.5 p-3 sm:p-4 rounded-2xl bg-[#EFEFEF]/80 border border-[#D7E0EB] flex flex-wrap items-center justify-between gap-3 text-xs">
-        {/* Barra de Acceso Rápido a cada Mes */}
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D] shrink-0 mr-1 flex items-center gap-1">
-            <Calendar className="size-3.5 text-[#1E293B]" />
-            <span>Saltar al Mes:</span>
-          </span>
-          {monthsList.map((m) => (
+      {/* Controles y Leyenda al Pie del Calendario (img1 reubicado al pie para calendario ultra-limpio) */}
+      <div className="mt-4 space-y-3">
+        {/* Fila 1: Navegación de Meses, Salto Rápido y Selector de Rango */}
+        <div className="p-3.5 rounded-2xl bg-[#EFEFEF]/80 border border-[#D7E0EB] flex flex-wrap items-center justify-between gap-3 text-xs">
+          {/* Navegación < Rango de Meses > Hoy */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
-              key={`${m.year}-${m.month}`}
               type="button"
-              onClick={() => scrollToMonth(m.year, m.month)}
-              className="px-2.5 py-1 rounded-lg border border-[#D7E0EB] bg-white hover:bg-[#1E293B] hover:text-white text-xs font-bold text-[#1E293B] shrink-0 transition-all cursor-pointer shadow-2xs flex items-center gap-1"
+              onClick={prevMonth}
+              aria-label="Mes anterior"
+              title="Mover ventana de meses un mes hacia atrás"
+              className="size-9 rounded-xl border border-[#D7E0EB] bg-white flex items-center justify-center text-[#1E293B] hover:bg-[#E7EEF5] cursor-pointer shadow-2xs transition-colors"
             >
-              <span>{MONTHS_ES[m.month]}</span>
-              <span className="text-[10px] opacity-75 font-normal">{m.year}</span>
+              <ChevronLeft className="size-4" />
             </button>
-          ))}
+            <div className="min-w-[170px] text-center text-xs sm:text-sm font-bold text-[#1E293B] bg-white px-3 py-2 rounded-xl border border-[#D7E0EB] shadow-2xs">
+              {startMonthLabel} — {endMonthLabel}
+            </div>
+            <button
+              type="button"
+              onClick={nextMonth}
+              aria-label="Mes siguiente"
+              title="Mover ventana de meses un mes hacia adelante"
+              className="size-9 rounded-xl border border-[#D7E0EB] bg-white flex items-center justify-center text-[#1E293B] hover:bg-[#E7EEF5] cursor-pointer shadow-2xs transition-colors"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={scrollToToday}
+              className="px-3.5 py-2 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
+            >
+              Hoy
+            </button>
+          </div>
+
+          {/* Barra de Acceso Rápido a cada Mes */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D] shrink-0 mr-1 flex items-center gap-1">
+              <Calendar className="size-3.5 text-[#1E293B]" />
+              <span>Ir a:</span>
+            </span>
+            {monthsList.map((m) => (
+              <button
+                key={`${m.year}-${m.month}`}
+                type="button"
+                onClick={() => scrollToMonth(m.year, m.month)}
+                className="px-2.5 py-1 rounded-lg border border-[#D7E0EB] bg-white hover:bg-[#1E293B] hover:text-white text-xs font-bold text-[#1E293B] shrink-0 transition-all cursor-pointer shadow-2xs flex items-center gap-1"
+              >
+                <span>{MONTHS_ES[m.month]}</span>
+                <span className="text-[10px] opacity-75 font-normal">{m.year}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Selector de meses a mostrar */}
+          <div className="inline-flex rounded-xl bg-white p-1 border border-[#D7E0EB] text-xs font-semibold shrink-0 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setMonthsCount(3)}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                monthsCount === 3
+                  ? "bg-[#1E293B] text-white shadow-2xs font-bold"
+                  : "text-[#5A697D] hover:text-[#1E293B]"
+              }`}
+            >
+              3 Meses
+            </button>
+            <button
+              type="button"
+              onClick={() => setMonthsCount(5)}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                monthsCount === 5
+                  ? "bg-[#1E293B] text-white shadow-2xs font-bold"
+                  : "text-[#5A697D] hover:text-[#1E293B]"
+              }`}
+            >
+              5 Meses
+            </button>
+            <button
+              type="button"
+              onClick={() => setMonthsCount(12)}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                monthsCount === 12
+                  ? "bg-[#1E293B] text-white shadow-2xs font-bold"
+                  : "text-[#5A697D] hover:text-[#1E293B]"
+              }`}
+            >
+              Año Completo
+            </button>
+          </div>
         </div>
 
-        {/* Selector de meses a mostrar */}
-        <div className="inline-flex rounded-xl bg-white p-1 border border-[#D7E0EB] text-xs font-semibold shrink-0 shadow-2xs">
-          <button
-            type="button"
-            onClick={() => setMonthsCount(3)}
-            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-              monthsCount === 3
-                ? "bg-[#1E293B] text-white shadow-2xs font-bold"
-                : "text-[#5A697D] hover:text-[#1E293B]"
-            }`}
-          >
-            3 Meses
-          </button>
-          <button
-            type="button"
-            onClick={() => setMonthsCount(5)}
-            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-              monthsCount === 5
-                ? "bg-[#1E293B] text-white shadow-2xs font-bold"
-                : "text-[#5A697D] hover:text-[#1E293B]"
-            }`}
-          >
-            5 Meses
-          </button>
-          <button
-            type="button"
-            onClick={() => setMonthsCount(12)}
-            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-              monthsCount === 12
-                ? "bg-[#1E293B] text-white shadow-2xs font-bold"
-                : "text-[#5A697D] hover:text-[#1E293B]"
-            }`}
-          >
-            Año Completo
-          </button>
+        {/* Fila 2: Leyenda de Turnos de Estadía y Colores Alternados */}
+        <div className="p-3.5 rounded-2xl bg-[#EFEFEF]/70 border border-[#D7E0EB] flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1.5 font-bold text-[#1E293B]">
+              <Clock className="size-3.5 text-[#1E293B]" />
+              <span>Turnos de Estadía:</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[#5A697D]">
+              <span className="inline-block size-3 rounded-xs bg-[#1E293B]" />
+              <span>Mitad Sup: <strong>Sale 10:00 hs</strong></span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[#5A697D]">
+              <span className="inline-block size-3 rounded-xs bg-[#D97706]" />
+              <span>Mitad Inf: <strong>Entra 14:00 hs</strong></span>
+            </div>
+            <span className="text-[#5A697D] hidden lg:inline">·</span>
+            <span className="text-xs text-[#5A697D] hidden lg:inline">
+              Días correlativos sin cortes entre meses · Salida 10:00 hs / Entrada 14:00 hs
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
+              Colores Alternados:
+            </span>
+            <div className="flex items-center gap-1">
+              {CONTRAST_PALETTE.slice(0, 5).map((c, i) => (
+                <span
+                  key={i}
+                  style={{ backgroundColor: c.bg }}
+                  className="size-3 rounded-full inline-block border border-white shadow-2xs"
+                  title={c.name}
+                />
+              ))}
+              <span className="text-[11px] text-[#5A697D] ml-1">Distinción inmediata</span>
+            </div>
+          </div>
         </div>
       </div>
 

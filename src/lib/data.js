@@ -630,3 +630,62 @@ export function saveStoredExpenses(expenses) {
   }
 }
 
+// ─── Paleta de Colores Contrastantes para Reservas (Calendario y Tarjetas) ───
+export const CONTRAST_PALETTE = [
+  { bg: "#D97706", text: "#FFFFFF", name: "Ámbar Cálido", border: "#B45309" },     // 0: Naranja / Ámbar
+  { bg: "#1E293B", text: "#FFFFFF", name: "Azul Pizarra", border: "#0F172A" },     // 1: Azul marino oscuro
+  { bg: "#059669", text: "#FFFFFF", name: "Verde Esmeralda", border: "#047857" },  // 2: Verde intenso
+  { bg: "#4338CA", text: "#FFFFFF", name: "Índigo Profundo", border: "#3730A3" },  // 3: Azul índigo
+  { bg: "#BE123C", text: "#FFFFFF", name: "Rubí Carmesí", border: "#9F1239" },     // 4: Rojo rubí
+  { bg: "#0F766E", text: "#FFFFFF", name: "Verde Azulado", border: "#115E59" },    // 5: Teal oscuro
+  { bg: "#7C3AED", text: "#FFFFFF", name: "Violeta", border: "#6D28D9" },          // 6: Púrpura / Violeta
+  { bg: "#9A3412", text: "#FFFFFF", name: "Óxido Terracota", border: "#7C2D12" },  // 7: Terracota profundo
+];
+
+export function hexToRgba(hex, alpha = 0.12) {
+  if (!hex) return `rgba(30, 41, 59, ${alpha})`;
+  const clean = hex.replace("#", "");
+  const r = parseInt(clean.substring(0, 2), 16) || 0;
+  const g = parseInt(clean.substring(2, 4), 16) || 0;
+  const b = parseInt(clean.substring(4, 6), 16) || 0;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export function getBookingColorMap(bookings = [], propertiesList = []) {
+  const map = {};
+  const props = propertiesList && propertiesList.length > 0 ? propertiesList : properties;
+
+  props.forEach((prop, propIdx) => {
+    const propBookings = (bookings || [])
+      .filter((b) => {
+        const pid = b.propertyId || b.property_id;
+        return pid === prop.id && b.status !== "cancelled";
+      })
+      .sort((a, b) => {
+        const aIn = a.checkIn || a.check_in || "";
+        const bIn = b.checkIn || b.check_in || "";
+        return aIn.localeCompare(bIn);
+      });
+
+    const propOffset = (propIdx * 3) % CONTRAST_PALETTE.length;
+
+    propBookings.forEach((b, idx) => {
+      if (b.color && typeof b.color === "object" && b.color.bg) {
+        map[b.id] = b.color;
+      } else {
+        const paletteIndex = (propOffset + idx * 2) % CONTRAST_PALETTE.length;
+        map[b.id] = CONTRAST_PALETTE[paletteIndex];
+      }
+    });
+  });
+
+  (bookings || []).forEach((b, idx) => {
+    if (!map[b.id]) {
+      map[b.id] = CONTRAST_PALETTE[idx % CONTRAST_PALETTE.length];
+    }
+  });
+
+  return map;
+}
+
+

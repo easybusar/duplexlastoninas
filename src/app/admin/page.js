@@ -17,6 +17,8 @@ import {
   calculateStayPrice,
   isDateRangeAvailable,
   EXPENSE_CATEGORIES,
+  hexToRgba,
+  getBookingColorMap,
 } from "@/lib/data";
 import { siteContent } from "@/lib/content";
 import BookingCalendar from "@/components/BookingCalendar";
@@ -1543,6 +1545,10 @@ function ReservasSection({
       ? bookings
       : bookings.filter((b) => b.status === filterStatus);
 
+  const bookingColorMap = useMemo(() => {
+    return getBookingColorMap(bookings, propertiesList);
+  }, [bookings, propertiesList]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -1613,18 +1619,35 @@ function ReservasSection({
             const depositPaid = b.depositPaid || b.deposit_paid || 0;
             const pending = totalAmount - depositPaid;
 
+            const bookingColor = bookingColorMap[b.id] || { bg: "#1E293B", text: "#FFFFFF", name: "Azul Pizarra" };
+            const bgTransparent = hexToRgba(bookingColor.bg, 0.12);
+            const borderTransparent = hexToRgba(bookingColor.bg, 0.35);
+
             return (
               <div
                 key={b.id}
-                className="rounded-[1.5rem] bg-white p-5 sm:p-6 border border-[#D7E0EB] flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-2xs"
+                style={{
+                  backgroundColor: bgTransparent,
+                  borderColor: borderTransparent,
+                  borderLeftWidth: "6px",
+                  borderLeftColor: bookingColor.bg,
+                }}
+                className="rounded-[1.5rem] p-5 sm:p-6 border flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-2xs backdrop-blur-xs transition-all relative overflow-hidden"
               >
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1">
                   <div>
                     <div className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
                       Huésped
                     </div>
-                    <div className="font-semibold text-sm sm:text-base text-[#1E293B] mt-0.5">
-                      {guestName}
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span
+                        style={{ backgroundColor: bookingColor.bg }}
+                        className="size-3.5 rounded-full inline-block border-2 border-white shadow-2xs shrink-0"
+                        title={`Color asignado en calendario: ${bookingColor.name}`}
+                      />
+                      <div className="font-bold text-sm sm:text-base text-[#1E293B]">
+                        {guestName}
+                      </div>
                     </div>
                     <div className="text-xs text-[#5A697D] flex items-center gap-1 mt-0.5">
                       <MapPin className="size-3 text-[#1E293B]" />
