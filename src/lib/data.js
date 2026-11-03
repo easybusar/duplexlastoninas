@@ -597,3 +597,36 @@ export function trackAdsConversion(eventName, eventParams = {}) {
   } catch {}
 }
 
+// ─── Gestión de Gastos Operativos (Cuidador y Admin) ────────────────────────
+export const STORAGE_KEY_EXPENSES = "toninas_expenses_v1";
+
+export const EXPENSE_CATEGORIES = [
+  { id: "garrafas", label: "Gas y Garrafas", icon: "Flame", color: "bg-amber-100 text-amber-800 border-amber-300" },
+  { id: "limpieza", label: "Limpieza e Insumos", icon: "Sparkles", color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
+  { id: "mantenimiento", label: "Mantenimiento y Reparaciones", icon: "Wrench", color: "bg-blue-100 text-blue-800 border-blue-300" },
+  { id: "servicios", label: "Servicios (Luz, Wi-Fi, Agua)", icon: "Zap", color: "bg-indigo-100 text-indigo-800 border-indigo-300" },
+  { id: "impuestos", label: "Impuestos y Tasas", icon: "Landmark", color: "bg-purple-100 text-purple-800 border-purple-300" },
+  { id: "otros", label: "Otros Gastos", icon: "MoreHorizontal", color: "bg-slate-100 text-slate-800 border-slate-300" },
+];
+
+export function getStoredExpenses() {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_EXPENSES);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveStoredExpenses(expenses) {
+  if (typeof window === "undefined") return [];
+  try {
+    localStorage.setItem(STORAGE_KEY_EXPENSES, JSON.stringify(expenses));
+    window.dispatchEvent(new Event("toninas_expenses_changed"));
+    return expenses;
+  } catch {
+    return [];
+  }
+}
+

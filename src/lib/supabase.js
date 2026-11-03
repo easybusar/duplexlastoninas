@@ -8,6 +8,8 @@ import {
   getStoredSiteSettings,
   saveStoredSiteSettings,
   sanitizeAmenities,
+  getStoredExpenses,
+  saveStoredExpenses,
 } from "./data";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -146,7 +148,8 @@ export async function getProperties() {
           r.id !== "site-settings" &&
           r.type !== "config" &&
           r.id !== "site-visits" &&
-          r.type !== "analytics"
+          r.type !== "analytics" &&
+          r.type !== "expense"
       );
       // Cruzar con seasonalRates locales y sincronizar comodidades (amenities) e imágenes desde Supabase
       const merged = localProps
@@ -155,7 +158,8 @@ export async function getProperties() {
             lp.id !== "site-settings" &&
             lp.type !== "config" &&
             lp.id !== "site-visits" &&
-            lp.type !== "analytics"
+            lp.type !== "analytics" &&
+            lp.type !== "expense"
         )
         .map((lp) => {
           const remote = unitRows.find((r) => r.id === lp.id);
@@ -537,4 +541,101 @@ export async function getPayments(bookingId) {
   } catch {
     return [];
   }
+}
+
+// ─── Gestión de Gastos Operativos (Cuidador & Admin) ────────────────────────
+export async function getExpenses() {
+  const local = getStoredExpenses();
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const { data, error } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("type", "expense")
+      .order("created_at", { ascending: false })
+      .abortSignal(controller.signal);
+    clearTimeout(timeoutId);
+
+    if (!error && Array.isArray(data)) {
+      const parsed = data.map((row) => {
+        let meta = {};
+        try {
+          meta = JSON.parse(row.description || "{}");
+        } catch {}
+        return {
+          id: row.id,
+          concept: row.name,
+          amount: Number(row.price_per_night || meta.amount || 0),
+          category: meta.category || "mantenimiento",
+          date: meta.date || row.created_at?.split("T")[0] || new Date().toISOString().split("T")[0],
+          notes: meta.notes || "",
+          registeredBy: meta.registeredBy || "cuidador",
+          createdAt: row.created_at,
+        };
+      });
+      saveStoredExpenses(parsed);
+      return parsed;
+    }
+  } catch (err) {
+    console.warn("Error fetching expenses:", err);
+  }
+  return local;
+}
+
+export async function createExpense(expenseData) {
+  const id = `exp-${Date.now()}`;
+  const amount = Number(expenseData.amount) || 0;
+  const newExpense = {
+    id,
+    concept: expenseData.concept?.trim() || "Gasto operativo",
+    amount,
+    category: expenseData.category || "mantenimiento",
+    date: expenseData.date || new Date().toISOString().split("T")[0],
+    notes: expenseData.notes?.trim() || "",
+    registeredBy: expenseData.registeredBy || "cuidador",
+    createdAt: new Date().toISOString(),
+  };
+
+  const current = getStoredExpenses();
+  const updated = [newExpense, ...current];
+  saveStoredExpenses(updated);
+
+  try {
+    await supabase.from("properties").insert({
+      id,
+      name: newExpense.concept,
+      type: "expense",
+      description: JSON.stringify({
+        category: newExpense.category,
+        amount: newExpense.amount,
+        date: newExpense.date,
+        notes: newExpense.notes,
+        registeredBy: newExpense.registeredBy,
+      }),
+      capacity: 1,
+      price_per_night: amount,
+      is_active: true,
+      created_at: newExpense.createdAt,
+      updated_at: newExpense.createdAt,
+    });
+  } catch (err) {
+    console.warn("Error creating expense in Supabase:", err);
+  }
+
+  return newExpense;
+}
+
+export async function deleteExpense(expenseId) {
+  const current = getStoredExpenses();
+  const updated = current.filter((e) => e.id !== expenseId);
+  saveStoredExpenses(updated);
+
+  try {
+    await supabase.from("properties").delete().eq("id", expenseId);
+  } catch (err) {
+    console.warn("Error deleting expense in Supabase:", err);
+  }
+
+  return updated;
 }

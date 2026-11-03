@@ -553,110 +553,52 @@ export default function BookingCalendar({
 
   return (
     <div>
-      {/* Header Bar */}
+      {/* Header Bar Simplificada y Limpia */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div>
           <div className="flex items-center gap-2">
             <h3 className="text-xl font-semibold text-[#1E293B]">
-              Calendario de Ocupación Continuo
+              Calendario de Ocupación
             </h3>
             <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
               Scroll Continuo
             </span>
           </div>
           <p className="text-xs text-[#5A697D]">
-            Días correlativos sin cortes entre meses · Salida 10:00 hs (mitad superior) · Entrada 14:00 hs (mitad inferior)
+            Días correlativos sin cortes · Salida 10:00 hs (mitad superior) · Entrada 14:00 hs (mitad inferior)
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Selector de meses a mostrar */}
-          <div className="inline-flex rounded-xl bg-[#EFEFEF] p-1 border border-[#D7E0EB] text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setMonthsCount(3)}
-              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                monthsCount === 3
-                  ? "bg-white text-[#1E293B] shadow-2xs font-bold"
-                  : "text-[#5A697D] hover:text-[#1E293B]"
-              }`}
-            >
-              3 Meses
-            </button>
-            <button
-              type="button"
-              onClick={() => setMonthsCount(5)}
-              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                monthsCount === 5
-                  ? "bg-white text-[#1E293B] shadow-2xs font-bold"
-                  : "text-[#5A697D] hover:text-[#1E293B]"
-              }`}
-            >
-              5 Meses
-            </button>
-            <button
-              type="button"
-              onClick={() => setMonthsCount(12)}
-              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                monthsCount === 12
-                  ? "bg-white text-[#1E293B] shadow-2xs font-bold"
-                  : "text-[#5A697D] hover:text-[#1E293B]"
-              }`}
-            >
-              Año Completo
-            </button>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={prevMonth}
-              aria-label="Mes anterior"
-              title="Mover ventana de meses un mes hacia atrás"
-              className="size-9 rounded-xl border border-[#D7E0EB] bg-white flex items-center justify-center text-[#1E293B] hover:bg-[#E7EEF5] cursor-pointer shadow-2xs"
-            >
-              <ChevronLeft className="size-4" />
-            </button>
-            <div className="min-w-[170px] text-center text-xs sm:text-sm font-bold text-[#1E293B] bg-[#EFEFEF]/60 px-3 py-2 rounded-xl border border-[#D7E0EB]">
-              {startMonthLabel} — {endMonthLabel}
-            </div>
-            <button
-              type="button"
-              onClick={nextMonth}
-              aria-label="Mes siguiente"
-              title="Mover ventana de meses un mes hacia adelante"
-              className="size-9 rounded-xl border border-[#D7E0EB] bg-white flex items-center justify-center text-[#1E293B] hover:bg-[#E7EEF5] cursor-pointer shadow-2xs"
-            >
-              <ChevronRight className="size-4" />
-            </button>
-            <button
-              type="button"
-              onClick={scrollToToday}
-              className="px-3.5 py-2 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
-            >
-              Hoy
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Barra de Acceso Rápido a cada Mes */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-3 scrollbar-none">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D] shrink-0 mr-1 flex items-center gap-1">
-          <Calendar className="size-3.5 text-[#1E293B]" />
-          <span>Ir al Mes:</span>
-        </span>
-        {monthsList.map((m) => (
+        <div className="flex items-center gap-1.5">
           <button
-            key={`${m.year}-${m.month}`}
             type="button"
-            onClick={() => scrollToMonth(m.year, m.month)}
-            className="px-3 py-1.5 rounded-xl border border-[#D7E0EB] bg-white hover:bg-[#1E293B] hover:text-white text-xs font-bold text-[#1E293B] shrink-0 transition-all cursor-pointer shadow-2xs flex items-center gap-1.5"
+            onClick={prevMonth}
+            aria-label="Mes anterior"
+            title="Mover ventana de meses un mes hacia atrás"
+            className="size-9 rounded-xl border border-[#D7E0EB] bg-white flex items-center justify-center text-[#1E293B] hover:bg-[#E7EEF5] cursor-pointer shadow-2xs"
           >
-            <span>{MONTHS_ES[m.month]}</span>
-            <span className="text-[10px] opacity-75 font-normal">{m.year}</span>
+            <ChevronLeft className="size-4" />
           </button>
-        ))}
+          <div className="min-w-[170px] text-center text-xs sm:text-sm font-bold text-[#1E293B] bg-[#EFEFEF]/60 px-3 py-2 rounded-xl border border-[#D7E0EB]">
+            {startMonthLabel} — {endMonthLabel}
+          </div>
+          <button
+            type="button"
+            onClick={nextMonth}
+            aria-label="Mes siguiente"
+            title="Mover ventana de meses un mes hacia adelante"
+            className="size-9 rounded-xl border border-[#D7E0EB] bg-white flex items-center justify-center text-[#1E293B] hover:bg-[#E7EEF5] cursor-pointer shadow-2xs"
+          >
+            <ChevronRight className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={scrollToToday}
+            className="px-3.5 py-2 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
+          >
+            Hoy
+          </button>
+        </div>
       </div>
 
       {/* Legend & Policy Indicators */}
@@ -968,6 +910,65 @@ export default function BookingCalendar({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Controles al Pie del Calendario: Acceso Rápido y Selector de Rango */}
+      <div className="mt-3.5 p-3 sm:p-4 rounded-2xl bg-[#EFEFEF]/80 border border-[#D7E0EB] flex flex-wrap items-center justify-between gap-3 text-xs">
+        {/* Barra de Acceso Rápido a cada Mes */}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D] shrink-0 mr-1 flex items-center gap-1">
+            <Calendar className="size-3.5 text-[#1E293B]" />
+            <span>Saltar al Mes:</span>
+          </span>
+          {monthsList.map((m) => (
+            <button
+              key={`${m.year}-${m.month}`}
+              type="button"
+              onClick={() => scrollToMonth(m.year, m.month)}
+              className="px-2.5 py-1 rounded-lg border border-[#D7E0EB] bg-white hover:bg-[#1E293B] hover:text-white text-xs font-bold text-[#1E293B] shrink-0 transition-all cursor-pointer shadow-2xs flex items-center gap-1"
+            >
+              <span>{MONTHS_ES[m.month]}</span>
+              <span className="text-[10px] opacity-75 font-normal">{m.year}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Selector de meses a mostrar */}
+        <div className="inline-flex rounded-xl bg-white p-1 border border-[#D7E0EB] text-xs font-semibold shrink-0 shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setMonthsCount(3)}
+            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+              monthsCount === 3
+                ? "bg-[#1E293B] text-white shadow-2xs font-bold"
+                : "text-[#5A697D] hover:text-[#1E293B]"
+            }`}
+          >
+            3 Meses
+          </button>
+          <button
+            type="button"
+            onClick={() => setMonthsCount(5)}
+            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+              monthsCount === 5
+                ? "bg-[#1E293B] text-white shadow-2xs font-bold"
+                : "text-[#5A697D] hover:text-[#1E293B]"
+            }`}
+          >
+            5 Meses
+          </button>
+          <button
+            type="button"
+            onClick={() => setMonthsCount(12)}
+            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+              monthsCount === 12
+                ? "bg-[#1E293B] text-white shadow-2xs font-bold"
+                : "text-[#5A697D] hover:text-[#1E293B]"
+            }`}
+          >
+            Año Completo
+          </button>
+        </div>
       </div>
 
       {selectedBooking && (

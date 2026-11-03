@@ -16,6 +16,7 @@ import {
   calculateTotal,
   calculateStayPrice,
   isDateRangeAvailable,
+  EXPENSE_CATEGORIES,
 } from "@/lib/data";
 import { siteContent } from "@/lib/content";
 import BookingCalendar from "@/components/BookingCalendar";
@@ -29,6 +30,9 @@ import {
   updateBooking,
   deleteBooking,
   createBooking,
+  getExpenses,
+  createExpense,
+  deleteExpense,
 } from "@/lib/supabase";
 import {
   LayoutDashboard,
@@ -1736,8 +1740,16 @@ function ReservasSection({
   );
 }
 
-// ─── Pagos Section ─────────────────────────────────────────────────────────
-function PagosSection({ bookings, siteSettings }) {
+// ─── Pagos Section con Gastos Operativos y Balance ─────────────────────────
+function PagosSection({ bookings, siteSettings, expenses = [], onAddExpense, onDeleteExpense }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [concept, setConcept] = useState("");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("mantenimiento");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+
   const totalRevenue = bookings.reduce(
     (s, b) => s + (b.totalAmount || b.total_amount || 0),
     0
@@ -1747,48 +1759,214 @@ function PagosSection({ bookings, siteSettings }) {
     0
   );
   const totalPending = totalRevenue - totalCollected;
+  const totalExpenses = expenses.reduce(
+    (s, e) => s + (Number(e.amount) || 0),
+    0
+  );
+  const netProfit = totalCollected - totalExpenses;
+
+  const handleCreateExpense = async (e) => {
+    e.preventDefault();
+    if (!concept.trim() || !amount || Number(amount) <= 0) return;
+    setSaving(true);
+    try {
+      if (onAddExpense) {
+        await onAddExpense({
+          concept: concept.trim(),
+          amount: Number(amount),
+          category,
+          date,
+          notes: notes.trim(),
+          registeredBy: "admin",
+        });
+      }
+      setIsModalOpen(false);
+      setConcept("");
+      setAmount("");
+      setNotes("");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getCategoryInfo = (catId) => {
+    return (
+      EXPENSE_CATEGORIES?.find((c) => c.id === catId) || {
+        label: "General",
+        color: "bg-slate-100 text-slate-800 border-slate-300",
+      }
+    );
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <span className="text-xs font-bold uppercase tracking-widest text-[#5A697D]">
-          Finanzas y Señas ({siteSettings?.depositPercentage || 50}%)
-        </span>
-        <h2 className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-[#1E293B]">
-          Control de Pagos y Saldos
-        </h2>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-widest text-[#5A697D]">
+            Finanzas, Señas ({siteSettings?.depositPercentage || 50}%) y Gastos
+          </span>
+          <h2 className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-[#1E293B]">
+            Control de Caja, Pagos y Gastos
+          </h2>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          className="inline-flex items-center gap-2 rounded-full bg-[#1E293B] hover:bg-[#0F172A] text-white px-5 py-2.5 text-xs sm:text-sm font-bold shadow-xs cursor-pointer transition-colors"
+        >
+          <Plus className="size-4" />
+          <span>+ Cargar Gasto Operativo</span>
+        </button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-[1.5rem] bg-white p-6 border border-[#D7E0EB]">
-          <div className="text-xs font-bold uppercase tracking-wider text-[#5A697D]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+        <div className="rounded-[1.5rem] bg-white p-5 border border-[#D7E0EB] shadow-2xs">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
             Facturación Total
           </div>
-          <div className="mt-2 text-2xl sm:text-3xl font-semibold text-[#1E293B] tabular-nums">
+          <div className="mt-2 text-xl sm:text-2xl font-bold text-[#1E293B] tabular-nums">
             ${totalRevenue.toLocaleString("es-AR")}
           </div>
+          <div className="text-[10px] text-[#5A697D] mt-1">100% de reservas</div>
         </div>
-        <div className="rounded-[1.5rem] bg-white p-6 border border-[#D7E0EB]">
-          <div className="text-xs font-bold uppercase tracking-wider text-[#5A697D]">
+
+        <div className="rounded-[1.5rem] bg-white p-5 border border-[#D7E0EB] shadow-2xs">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
             Señas y Cobros Recibidos
           </div>
-          <div className="mt-2 text-2xl sm:text-3xl font-semibold text-emerald-700 tabular-nums">
+          <div className="mt-2 text-xl sm:text-2xl font-bold text-emerald-700 tabular-nums">
             ${totalCollected.toLocaleString("es-AR")}
           </div>
+          <div className="text-[10px] text-emerald-700 mt-1 font-semibold">Total ingresado</div>
         </div>
-        <div className="rounded-[1.5rem] bg-white p-6 border border-[#D7E0EB]">
-          <div className="text-xs font-bold uppercase tracking-wider text-[#5A697D]">
+
+        <div className="rounded-[1.5rem] bg-white p-5 border border-[#D7E0EB] shadow-2xs">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
+            Gastos Operativos
+          </div>
+          <div className="mt-2 text-xl sm:text-2xl font-bold text-rose-700 tabular-nums">
+            -${totalExpenses.toLocaleString("es-AR")}
+          </div>
+          <div className="text-[10px] text-rose-700 mt-1 font-medium">{expenses.length} gastos registrados</div>
+        </div>
+
+        <div className="rounded-[1.5rem] bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-white p-5 shadow-2xs">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-white/70">
+            Ganancia Neta en Caja
+          </div>
+          <div className="mt-2 text-xl sm:text-2xl font-bold text-white tabular-nums">
+            ${netProfit.toLocaleString("es-AR")}
+          </div>
+          <div className="text-[10px] text-white/70 mt-1">Cobrado − Gastos</div>
+        </div>
+
+        <div className="rounded-[1.5rem] bg-white p-5 border border-[#D7E0EB] shadow-2xs">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
             Saldo Pendiente al Check-in
           </div>
-          <div className="mt-2 text-2xl sm:text-3xl font-semibold text-amber-700 tabular-nums">
+          <div className="mt-2 text-xl sm:text-2xl font-bold text-amber-700 tabular-nums">
             ${totalPending.toLocaleString("es-AR")}
           </div>
+          <div className="text-[10px] text-amber-700 mt-1 font-medium">A cobrar en recepción</div>
         </div>
       </div>
 
+      {/* Historial de Gastos Operativos Auditables */}
+      <div className="rounded-[1.75rem] bg-white p-6 border border-[#D7E0EB] shadow-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 className="text-lg font-bold text-[#1E293B]">
+              Gastos Operativos Registrados (Cuidador y Admin)
+            </h3>
+            <p className="text-xs text-[#5A697D]">
+              Control de salidas de dinero: garrafas, mantenimiento, productos de limpieza y servicios
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="text-xs font-bold text-[#1E293B] hover:underline cursor-pointer"
+          >
+            + Cargar gasto
+          </button>
+        </div>
+
+        {expenses.length === 0 ? (
+          <div className="rounded-2xl bg-[#EFEFEF]/50 border border-dashed border-[#D7E0EB] p-8 text-center text-[#5A697D]">
+            <p className="text-sm font-semibold">No hay gastos operativos registrados aún.</p>
+            <p className="text-xs mt-1">Los gastos cargados por el cuidador o desde este panel se listarán aquí para balance general.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-separate border-spacing-0 text-left text-sm">
+              <thead>
+                <tr>
+                  {["Fecha", "Concepto", "Categoría", "Registrado Por", "Notas", "Monto", "Acción"].map((h) => (
+                    <th
+                      key={h}
+                      className="sticky top-0 z-10 bg-white border-b border-[#D7E0EB] py-3 px-3 text-xs font-bold uppercase tracking-wider text-[#5A697D]"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {expenses.map((exp) => {
+                  const cat = getCategoryInfo(exp.category);
+                  return (
+                    <tr key={exp.id} className="hover:bg-[#EFEFEF]/40">
+                      <td className="border-b border-[#EFEFEF] py-3 px-3 text-xs font-semibold text-[#5A697D] whitespace-nowrap">
+                        {formatDateDDMMAAAA(exp.date)}
+                      </td>
+                      <td className="border-b border-[#EFEFEF] py-3 px-3 font-bold text-[#1E293B]">
+                        {exp.concept}
+                      </td>
+                      <td className="border-b border-[#EFEFEF] py-3 px-3">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${cat.color}`}>
+                          {cat.label}
+                        </span>
+                      </td>
+                      <td className="border-b border-[#EFEFEF] py-3 px-3 text-xs capitalize text-[#5A697D]">
+                        {exp.registeredBy || "cuidador"}
+                      </td>
+                      <td className="border-b border-[#EFEFEF] py-3 px-3 text-xs text-[#5A697D] max-w-[200px] truncate" title={exp.notes}>
+                        {exp.notes || "—"}
+                      </td>
+                      <td className="border-b border-[#EFEFEF] py-3 px-3 font-bold text-rose-700 tabular-nums whitespace-nowrap">
+                        -${Number(exp.amount).toLocaleString("es-AR")}
+                      </td>
+                      <td className="border-b border-[#EFEFEF] py-3 px-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`¿Eliminar gasto "${exp.concept}"?`)) {
+                              if (onDeleteExpense) onDeleteExpense(exp.id);
+                            }
+                          }}
+                          className="size-8 rounded-full bg-[#EFEFEF] hover:bg-rose-50 hover:text-rose-700 flex items-center justify-center text-[#5A697D] cursor-pointer transition-colors"
+                          title="Eliminar gasto"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* Table con Residencia y DD-MM-AAAA */}
-      <div className="rounded-[1.75rem] bg-white p-6 border border-[#D7E0EB] overflow-x-auto">
+      <div className="rounded-[1.75rem] bg-white p-6 border border-[#D7E0EB] overflow-x-auto shadow-xs">
+        <div className="mb-4">
+          <h3 className="text-lg font-bold text-[#1E293B]">Detalle de Reservas y Cobranzas</h3>
+          <p className="text-xs text-[#5A697D]">Estado de señas abonadas y saldos pendientes por huésped</p>
+        </div>
         <table className="w-full border-separate border-spacing-0 text-left text-sm">
           <thead>
             <tr>
@@ -1845,6 +2023,129 @@ function PagosSection({ bookings, siteSettings }) {
           </tbody>
         </table>
       </div>
+
+      {/* Modal Cargar Gasto Admin */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-[#0F172A]/75 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full border border-[#D7E0EB] shadow-2xl"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="size-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-800">
+                  <Plus className="size-4" />
+                </span>
+                <h3 className="text-xl font-semibold text-[#1E293B]">
+                  Cargar Gasto Operativo
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="size-8 rounded-full bg-[#EFEFEF] flex items-center justify-center text-[#5A697D] hover:text-[#1E293B] cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateExpense} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#1E293B] mb-1">
+                  Concepto / Detalle del Gasto *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Garrafa 10kg, Insumos de limpieza, Factura luz"
+                  value={concept}
+                  onChange={(e) => setConcept(e.target.value)}
+                  className="w-full rounded-xl border border-[#D7E0EB] bg-[#EFEFEF]/50 px-3.5 py-2.5 text-sm font-semibold text-[#1E293B] focus:outline-hidden focus:border-[#1E293B]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#1E293B] mb-1">
+                    Monto ($ ARS) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    placeholder="Ej: 15000"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="w-full rounded-xl border border-[#D7E0EB] bg-[#EFEFEF]/50 px-3.5 py-2.5 text-sm font-bold text-[#1E293B] focus:outline-hidden focus:border-[#1E293B]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#1E293B] mb-1">
+                    Fecha del Gasto
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full rounded-xl border border-[#D7E0EB] bg-[#EFEFEF]/50 px-3 py-2 text-xs font-semibold text-[#1E293B] focus:outline-hidden focus:border-[#1E293B]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#1E293B] mb-1">
+                  Categoría
+                </label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full rounded-xl border border-[#D7E0EB] bg-[#EFEFEF]/50 px-3 py-2.5 text-sm font-semibold text-[#1E293B] focus:outline-hidden focus:border-[#1E293B]"
+                >
+                  {EXPENSE_CATEGORIES?.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#1E293B] mb-1">
+                  Notas adicionales (opcional)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Proveedor, factura, o motivo del gasto..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="w-full rounded-xl border border-[#D7E0EB] bg-[#EFEFEF]/50 px-3.5 py-2 text-xs font-medium text-[#1E293B] focus:outline-hidden focus:border-[#1E293B]"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 rounded-full border border-[#D7E0EB] py-2.5 text-xs font-bold text-[#5A697D] hover:bg-[#EFEFEF] cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 rounded-full bg-[#1E293B] hover:bg-[#0F172A] disabled:opacity-50 text-white py-2.5 text-xs font-bold cursor-pointer transition-colors"
+                >
+                  {saving ? "Guardando..." : "Guardar Gasto"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2189,15 +2490,17 @@ export default function AdminPage() {
   const [bookingsList, setBookingsList] = useState(getStoredBookings);
   const [propertiesList, setPropertiesList] = useState(getStoredProperties);
   const [siteSettings, setSiteSettings] = useState(getStoredSiteSettings);
+  const [expensesList, setExpensesList] = useState([]);
   const [manualModalOpen, setManualModalOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
 
   const loadData = useCallback(async () => {
     try {
-      const [bData, pData, sData] = await Promise.all([
+      const [bData, pData, sData, eData] = await Promise.all([
         getBookings().catch(() => null),
         getProperties().catch(() => null),
         getSiteSettings().catch(() => null),
+        getExpenses().catch(() => []),
       ]);
 
       if (Array.isArray(bData)) {
@@ -2206,6 +2509,10 @@ export default function AdminPage() {
 
       if (sData) {
         setSiteSettings(sData);
+      }
+
+      if (Array.isArray(eData)) {
+        setExpensesList(eData);
       }
 
       const currentProps = pData && pData.length > 0 ? pData : getStoredProperties();
@@ -2225,18 +2532,20 @@ export default function AdminPage() {
     if (!session) router.push("/admin/login");
     loadData();
 
-    // Escuchar cambios de reservas, propiedades y ajustes entre pestañas
+    // Escuchar cambios de reservas, propiedades, gastos y ajustes entre pestañas
     const handleStorageChange = () => {
       loadData();
     };
     window.addEventListener("toninas_bookings_changed", handleStorageChange);
     window.addEventListener("toninas_properties_changed", handleStorageChange);
     window.addEventListener("toninas_settings_changed", handleStorageChange);
+    window.addEventListener("toninas_expenses_changed", handleStorageChange);
     window.addEventListener("storage", handleStorageChange);
     return () => {
       window.removeEventListener("toninas_bookings_changed", handleStorageChange);
       window.removeEventListener("toninas_properties_changed", handleStorageChange);
       window.removeEventListener("toninas_settings_changed", handleStorageChange);
+      window.removeEventListener("toninas_expenses_changed", handleStorageChange);
       window.removeEventListener("storage", handleStorageChange);
     };
   }, [router, loadData]);
@@ -2245,6 +2554,16 @@ export default function AdminPage() {
     const updated = await updateSiteSettings(newSettings);
     setSiteSettings(updated);
     return updated;
+  };
+
+  const handleAddExpense = async (expenseData) => {
+    const created = await createExpense({ ...expenseData, registeredBy: "admin" });
+    setExpensesList((prev) => [created, ...prev]);
+  };
+
+  const handleDeleteExpense = async (expenseId) => {
+    await deleteExpense(expenseId);
+    setExpensesList((prev) => prev.filter((e) => e.id !== expenseId));
   };
 
   const handleStatusChange = async (bookingId, newStatus) => {
@@ -2312,6 +2631,9 @@ export default function AdminPage() {
             <PagosSection
               bookings={bookingsList}
               siteSettings={siteSettings}
+              expenses={expensesList}
+              onAddExpense={handleAddExpense}
+              onDeleteExpense={handleDeleteExpense}
             />
           )}
           {activeSection === "calendario" && (
