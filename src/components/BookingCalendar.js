@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { properties, getStoredProperties, formatDateDDMMAAAA } from "@/lib/data";
 import {
   ChevronLeft,
@@ -317,6 +317,7 @@ export default function BookingCalendar({
   onEditBooking,
 }) {
   const [propertiesList, setPropertiesList] = useState(getStoredProperties);
+  const tableContainerRef = useRef(null);
 
   useEffect(() => {
     setPropertiesList(getStoredProperties());
@@ -330,24 +331,94 @@ export default function BookingCalendar({
   }, []);
 
   const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
+  // Por defecto arrancamos en Diciembre (si estamos cerca de la temporada) o en el mes actual
+  const initialMonth = now.getMonth() === 10 ? 11 : now.getMonth();
+  const [startYear, setStartYear] = useState(now.getFullYear());
+  const [startMonth, setStartMonth] = useState(initialMonth);
+  const [monthsCount, setMonthsCount] = useState(5); // 5 meses correlativos (ej: Dic, Ene, Feb, Mar, Abr)
   const [selectedBooking, setSelectedBooking] = useState(null);
 
-  const daysInMonth = useMemo(() => getDaysInMonth(year, month), [year, month]);
   const todayStr = now.toISOString().split("T")[0];
 
+  // Lista correlativa de meses visibles en scroll continuo
+  const monthsList = useMemo(() => {
+    const list = [];
+    let curY = startYear;
+    let curM = startMonth;
+    for (let i = 0; i < monthsCount; i++) {
+      list.push({ year: curY, month: curM });
+      curM++;
+      if (curM > 11) {
+        curM = 0;
+        curY++;
+      }
+    }
+    return list;
+  }, [startYear, startMonth, monthsCount]);
+
+  // Lista plana de todos los días correlativos continuos a lo largo de los meses
+  const calendarDays = useMemo(() => {
+    const days = [];
+    monthsList.forEach(({ year, month }, monthIndex) => {
+      const numDays = getDaysInMonth(year, month);
+      for (let day = 1; day <= numDays; day++) {
+        const currentDateStr = dateStr(year, month, day);
+        const d = new Date(year, month, day);
+        const dow = d.getDay();
+        days.push({
+          dateStr: currentDateStr,
+          year,
+          month,
+          day,
+          dow,
+          isFirstDayOfMonth: day === 1,
+          isLastDayOfMonth: day === numDays,
+          monthName: MONTHS_ES[month],
+          monthShort: MONTHS_ES[month].substring(0, 3).toUpperCase(),
+          monthIndex,
+        });
+      }
+    });
+    return days;
+  }, [monthsList]);
+
   const prevMonth = () => {
-    if (month === 0) {
-      setYear((y) => y - 1);
-      setMonth(11);
-    } else setMonth((m) => m - 1);
+    if (startMonth === 0) {
+      setStartYear((y) => y - 1);
+      setStartMonth(11);
+    } else {
+      setStartMonth((m) => m - 1);
+    }
   };
+
   const nextMonth = () => {
-    if (month === 11) {
-      setYear((y) => y + 1);
-      setMonth(0);
-    } else setMonth((m) => m + 1);
+    if (startMonth === 11) {
+      setStartYear((y) => y + 1);
+      setStartMonth(0);
+    } else {
+      setStartMonth((m) => m + 1);
+    }
+  };
+
+  const scrollToMonth = (y, m) => {
+    const el = document.getElementById(`cal-month-${y}-${m}`);
+    if (el && tableContainerRef.current) {
+      const container = tableContainerRef.current;
+      const topPos = el.offsetTop - container.offsetTop;
+      container.scrollTo({ top: Math.max(0, topPos - 10), behavior: "smooth" });
+    }
+  };
+
+  const scrollToToday = () => {
+    const el = document.getElementById(`cal-row-${todayStr}`);
+    if (el && tableContainerRef.current) {
+      const container = tableContainerRef.current;
+      const topPos = el.offsetTop - container.offsetTop;
+      container.scrollTo({ top: Math.max(0, topPos - 50), behavior: "smooth" });
+    } else {
+      setStartYear(now.getFullYear());
+      setStartMonth(now.getMonth());
+    }
   };
 
   // Asignación de colores contrastantes por reserva correlativa dentro de cada unidad
@@ -382,7 +453,7 @@ export default function BookingCalendar({
   }, [bookings, propertiesList]);
 
   // Asignación de día para mostrar el nombre: EXACTAMENTE UNA VEZ por cinta continua
-  // Ubicado preferentemente en el centro de los días de estadía completa del mes
+  // Ubicado preferentemente en el centro de los días de estadía completa de todo el rango visible
   const bookingNameDayMap = useMemo(() => {
     const map = {};
     const activeBookings = (bookings || []).filter((b) => b.status !== "cancelled");
@@ -392,34 +463,28 @@ export default function BookingCalendar({
       const outDate = b.checkOut || b.check_out || "";
       if (!inDate || !outDate) return;
 
-      const daysInCurrentMonth = [];
-      for (let d = 1; d <= daysInMonth; d++) {
-        const cur = dateStr(year, month, d);
-        if (cur >= inDate && cur <= outDate) {
-          daysInCurrentMonth.push(d);
-        }
-      }
+      const daysInRange = calendarDays.filter(
+        (d) => d.dateStr >= inDate && d.dateStr <= outDate
+      );
+      if (daysInRange.length === 0) return;
 
-      if (daysInCurrentMonth.length === 0) return;
-
-      const stayingDays = daysInCurrentMonth.filter((d) => {
-        const cur = dateStr(year, month, d);
-        return cur > inDate && cur < outDate;
-      });
+      const stayingDays = daysInRange.filter(
+        (d) => d.dateStr > inDate && d.dateStr < outDate
+      );
 
       if (stayingDays.length > 0) {
         const midIndex = Math.floor(stayingDays.length / 2);
-        map[b.id] = stayingDays[midIndex];
+        map[b.id] = stayingDays[midIndex].dateStr;
       } else {
-        const arrDay = daysInCurrentMonth.find((d) => dateStr(year, month, d) === inDate);
-        map[b.id] = arrDay || daysInCurrentMonth[0];
+        const arrDay = daysInRange.find((d) => d.dateStr === inDate);
+        map[b.id] = arrDay ? arrDay.dateStr : daysInRange[0].dateStr;
       }
     });
 
     return map;
-  }, [bookings, year, month, daysInMonth]);
+  }, [bookings, calendarDays]);
 
-  // Cuadrícula que gestiona check-in (14:00), check-out (10:00) y superposiciones 50/50
+  // Cuadrícula que gestiona check-in (14:00), check-out (10:00) y superposiciones 50/50 a través de todos los días continuos
   const cellGrid = useMemo(() => {
     const grid = {};
     propertiesList.forEach((prop) => {
@@ -428,8 +493,8 @@ export default function BookingCalendar({
         return pid === prop.id && b.status !== "cancelled";
       });
 
-      for (let day = 1; day <= daysInMonth; day++) {
-        const currentDate = dateStr(year, month, day);
+      calendarDays.forEach((dayObj) => {
+        const currentDate = dayObj.dateStr;
 
         // Huésped que sale hoy a las 10:00 hs
         const departing = propBookings.find((b) => {
@@ -452,81 +517,146 @@ export default function BookingCalendar({
 
         if (departing && arriving) {
           // SUPERPOSICIÓN: Toto sale 10:00 hs y Tito entra 14:00 hs el mismo día (50/50)
-          grid[`${prop.id}-${day}`] = {
+          grid[`${prop.id}-${currentDate}`] = {
             type: "overlap",
             departing,
             arriving,
           };
         } else if (departing) {
           // Solo egreso a las 10:00 hs (tarde libre)
-          grid[`${prop.id}-${day}`] = {
+          grid[`${prop.id}-${currentDate}`] = {
             type: "departure_only",
             departing,
           };
         } else if (arriving) {
           // Solo ingreso a las 14:00 hs (mañana libre)
-          grid[`${prop.id}-${day}`] = {
+          grid[`${prop.id}-${currentDate}`] = {
             type: "arrival_only",
             arriving,
           };
         } else if (staying) {
           // Estadía de día completo
-          grid[`${prop.id}-${day}`] = {
+          grid[`${prop.id}-${currentDate}`] = {
             type: "staying",
             booking: staying,
           };
         } else {
-          grid[`${prop.id}-${day}`] = null;
+          grid[`${prop.id}-${currentDate}`] = null;
         }
-      }
+      });
     });
     return grid;
-  }, [bookings, propertiesList, year, month, daysInMonth]);
+  }, [bookings, propertiesList, calendarDays]);
+
+  const startMonthLabel = `${MONTHS_ES[monthsList[0].month]} ${monthsList[0].year}`;
+  const endMonthLabel = `${MONTHS_ES[monthsList[monthsList.length - 1].month]} ${monthsList[monthsList.length - 1].year}`;
 
   return (
     <div>
       {/* Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div>
-          <h3 className="text-xl font-semibold text-[#1E293B]">
-            Calendario de Ocupación
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-xl font-semibold text-[#1E293B]">
+              Calendario de Ocupación Continuo
+            </h3>
+            <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+              Scroll Continuo
+            </span>
+          </div>
           <p className="text-xs text-[#5A697D]">
-            Días correlativos divididos 50/50: Salida 10:00 hs (mitad superior) · Entrada 14:00 hs (mitad inferior)
+            Días correlativos sin cortes entre meses · Salida 10:00 hs (mitad superior) · Entrada 14:00 hs (mitad inferior)
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={prevMonth}
-            aria-label="Mes anterior"
-            className="size-9 rounded-xl border border-[#D7E0EB] bg-white flex items-center justify-center text-[#1E293B] hover:bg-[#E7EEF5] cursor-pointer"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <div className="min-w-[140px] text-center text-sm font-bold text-[#1E293B]">
-            {MONTHS_ES[month]} {year}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Selector de meses a mostrar */}
+          <div className="inline-flex rounded-xl bg-[#EFEFEF] p-1 border border-[#D7E0EB] text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setMonthsCount(3)}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                monthsCount === 3
+                  ? "bg-white text-[#1E293B] shadow-2xs font-bold"
+                  : "text-[#5A697D] hover:text-[#1E293B]"
+              }`}
+            >
+              3 Meses
+            </button>
+            <button
+              type="button"
+              onClick={() => setMonthsCount(5)}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                monthsCount === 5
+                  ? "bg-white text-[#1E293B] shadow-2xs font-bold"
+                  : "text-[#5A697D] hover:text-[#1E293B]"
+              }`}
+            >
+              5 Meses
+            </button>
+            <button
+              type="button"
+              onClick={() => setMonthsCount(12)}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                monthsCount === 12
+                  ? "bg-white text-[#1E293B] shadow-2xs font-bold"
+                  : "text-[#5A697D] hover:text-[#1E293B]"
+              }`}
+            >
+              Año Completo
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={nextMonth}
-            aria-label="Mes siguiente"
-            className="size-9 rounded-xl border border-[#D7E0EB] bg-white flex items-center justify-center text-[#1E293B] hover:bg-[#E7EEF5] cursor-pointer"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setYear(now.getFullYear());
-              setMonth(now.getMonth());
-            }}
-            className="px-3.5 py-2 rounded-xl bg-[#1E293B] text-white text-xs font-semibold cursor-pointer"
-          >
-            Hoy
-          </button>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={prevMonth}
+              aria-label="Mes anterior"
+              title="Mover ventana de meses un mes hacia atrás"
+              className="size-9 rounded-xl border border-[#D7E0EB] bg-white flex items-center justify-center text-[#1E293B] hover:bg-[#E7EEF5] cursor-pointer shadow-2xs"
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+            <div className="min-w-[170px] text-center text-xs sm:text-sm font-bold text-[#1E293B] bg-[#EFEFEF]/60 px-3 py-2 rounded-xl border border-[#D7E0EB]">
+              {startMonthLabel} — {endMonthLabel}
+            </div>
+            <button
+              type="button"
+              onClick={nextMonth}
+              aria-label="Mes siguiente"
+              title="Mover ventana de meses un mes hacia adelante"
+              className="size-9 rounded-xl border border-[#D7E0EB] bg-white flex items-center justify-center text-[#1E293B] hover:bg-[#E7EEF5] cursor-pointer shadow-2xs"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={scrollToToday}
+              className="px-3.5 py-2 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
+            >
+              Hoy
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* Barra de Acceso Rápido a cada Mes */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-3 scrollbar-none">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D] shrink-0 mr-1 flex items-center gap-1">
+          <Calendar className="size-3.5 text-[#1E293B]" />
+          <span>Ir al Mes:</span>
+        </span>
+        {monthsList.map((m) => (
+          <button
+            key={`${m.year}-${m.month}`}
+            type="button"
+            onClick={() => scrollToMonth(m.year, m.month)}
+            className="px-3 py-1.5 rounded-xl border border-[#D7E0EB] bg-white hover:bg-[#1E293B] hover:text-white text-xs font-bold text-[#1E293B] shrink-0 transition-all cursor-pointer shadow-2xs flex items-center gap-1.5"
+          >
+            <span>{MONTHS_ES[m.month]}</span>
+            <span className="text-[10px] opacity-75 font-normal">{m.year}</span>
+          </button>
+        ))}
       </div>
 
       {/* Legend & Policy Indicators */}
@@ -564,13 +694,16 @@ export default function BookingCalendar({
         </div>
       </div>
 
-      {/* Calendar Table Wrapper */}
-      <div className="overflow-auto max-h-[70vh] rounded-2xl border border-[#D7E0EB] bg-white shadow-2xs">
+      {/* Calendar Table Wrapper con Scroll Continuo */}
+      <div
+        ref={tableContainerRef}
+        className="overflow-auto max-h-[72vh] rounded-2xl border border-[#D7E0EB] bg-white shadow-2xs scroll-smooth"
+      >
         <table className="w-full border-separate border-spacing-0 table-fixed">
           <thead>
             <tr>
               <th className="w-20 sticky top-0 left-0 z-30 bg-[#1E293B] text-white/90 text-xs font-bold uppercase py-3.5 px-2 text-center border-r border-white/10">
-                {MONTHS_ES[month].substring(0, 3)}
+                Día / Mes
               </th>
               {propertiesList.map((prop) => (
                 <th
@@ -587,17 +720,22 @@ export default function BookingCalendar({
           </thead>
 
           <tbody>
-            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
-              const cellDateStr = dateStr(year, month, day);
-              const dow = new Date(year, month, day).getDay();
+            {calendarDays.map((dayObj) => {
+              const cellDateStr = dayObj.dateStr;
+              const dow = dayObj.dow;
               const isWeekend = dow === 0 || dow === 6;
               const isToday = cellDateStr === todayStr;
+              const isFirstDay = dayObj.isFirstDayOfMonth;
 
               return (
-                <tr key={day} className="h-12">
+                <tr
+                  key={cellDateStr}
+                  id={isFirstDay ? `cal-month-${dayObj.year}-${dayObj.month}` : isToday ? `cal-row-${todayStr}` : undefined}
+                  className={`h-12 ${isFirstDay && dayObj.monthIndex > 0 ? "border-t-2 border-[#CBD5E1]" : ""}`}
+                >
                   <th
                     scope="row"
-                    className={`sticky left-0 z-10 border-r border-b border-[#D7E0EB] text-center p-0 ${
+                    className={`sticky left-0 z-10 border-r border-b border-[#D7E0EB] text-center p-0 select-none ${
                       isToday
                         ? "bg-[#1E293B] text-white"
                         : isWeekend
@@ -605,12 +743,23 @@ export default function BookingCalendar({
                         : "bg-white text-[#5A697D]"
                     }`}
                   >
-                    <div className="text-sm font-bold leading-none">{day}</div>
-                    <div className="text-[10px] opacity-75 mt-0.5">{DAYS_ES[dow]}</div>
+                    <div className="flex flex-col items-center justify-center py-1">
+                      {isFirstDay ? (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-[#1E293B] text-white mb-0.5 shadow-2xs">
+                          {dayObj.monthShort}
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-extrabold uppercase text-[#5A697D]/80 leading-none mb-0.5">
+                          {dayObj.monthShort}
+                        </span>
+                      )}
+                      <span className="text-sm font-bold leading-none">{dayObj.day}</span>
+                      <span className="text-[10px] opacity-75 mt-0.5">{DAYS_ES[dow]}</span>
+                    </div>
                   </th>
 
                   {propertiesList.map((prop) => {
-                    const info = cellGrid[`${prop.id}-${day}`];
+                    const info = cellGrid[`${prop.id}-${cellDateStr}`];
 
                     // 1. Día completamente libre
                     if (!info) {
@@ -626,11 +775,12 @@ export default function BookingCalendar({
                     if (info.type === "overlap") {
                       const colDep = bookingColorMap[info.departing.id] || CONTRAST_PALETTE[0];
                       const colArr = bookingColorMap[info.arriving.id] || CONTRAST_PALETTE[1];
-                      const isDepNameDay = bookingNameDayMap[info.departing.id] === day;
-                      const isArrNameDay = bookingNameDayMap[info.arriving.id] === day;
+                      const isDepNameDay = bookingNameDayMap[info.departing.id] === cellDateStr;
+                      const isArrNameDay = bookingNameDayMap[info.arriving.id] === cellDateStr;
                       const nameDep = (info.departing.guestName || info.departing.guest_name || "").trim().split(" ")[0];
                       const nameArr = (info.arriving.guestName || info.arriving.guest_name || "").trim().split(" ")[0];
-                      const continuesToTomorrow = day < daysInMonth;
+                      const outDate = info.arriving.checkOut || info.arriving.check_out || "";
+                      const continuesToTomorrow = outDate > cellDateStr;
 
                       return (
                         <td
@@ -660,7 +810,7 @@ export default function BookingCalendar({
                               )}
                             </div>
 
-                            {/* Mitad Inferior: Huésped entrante desde 14:00 hs (Empieza redondeado y conecta abajo) */}
+                            {/* Mitad Inferior: Huésped entrante desde 14:00 hs (Empieza redondeado y conecta abajo sin cortes) */}
                             <div
                               onClick={() => setSelectedBooking(info.arriving)}
                               style={{ backgroundColor: colArr.bg }}
@@ -688,7 +838,7 @@ export default function BookingCalendar({
                     // 3. SOLO EGRESO: Huésped sale a las 10:00 hs, tarde disponible
                     if (info.type === "departure_only") {
                       const colDep = bookingColorMap[info.departing.id] || CONTRAST_PALETTE[0];
-                      const isDepNameDay = bookingNameDayMap[info.departing.id] === day;
+                      const isDepNameDay = bookingNameDayMap[info.departing.id] === cellDateStr;
                       const nameDep = (info.departing.guestName || info.departing.guest_name || "").trim().split(" ")[0];
 
                       return (
@@ -729,9 +879,10 @@ export default function BookingCalendar({
                     // 4. SOLO INGRESO: Huésped entra a las 14:00 hs, mañana disponible
                     if (info.type === "arrival_only") {
                       const colArr = bookingColorMap[info.arriving.id] || CONTRAST_PALETTE[0];
-                      const isArrNameDay = bookingNameDayMap[info.arriving.id] === day;
+                      const isArrNameDay = bookingNameDayMap[info.arriving.id] === cellDateStr;
                       const nameArr = (info.arriving.guestName || info.arriving.guest_name || "").trim().split(" ")[0];
-                      const continuesToTomorrow = day < daysInMonth;
+                      const outDate = info.arriving.checkOut || info.arriving.check_out || "";
+                      const continuesToTomorrow = outDate > cellDateStr;
 
                       return (
                         <td
@@ -744,7 +895,7 @@ export default function BookingCalendar({
                               Libre hasta 14h
                             </div>
 
-                            {/* Mitad Inferior: Huésped entrante desde 14:00 hs (Empieza redondeado y conecta abajo) */}
+                            {/* Mitad Inferior: Huésped entrante desde 14:00 hs (Empieza redondeado y conecta abajo sin cortes) */}
                             <div
                               onClick={() => setSelectedBooking(info.arriving)}
                               style={{ backgroundColor: colArr.bg }}
@@ -769,13 +920,15 @@ export default function BookingCalendar({
                       );
                     }
 
-                    // 5. ESTADÍA COMPLETA: Bloque continuo de día completo sin cortes
+                    // 5. ESTADÍA COMPLETA: Bloque continuo de día completo sin cortes entre meses
                     if (info.type === "staying") {
                       const color = bookingColorMap[info.booking.id] || CONTRAST_PALETTE[0];
-                      const isNameDay = bookingNameDayMap[info.booking.id] === day;
+                      const isNameDay = bookingNameDayMap[info.booking.id] === cellDateStr;
                       const guestName = (info.booking.guestName || info.booking.guest_name || "").trim().split(" ")[0];
-                      const continuesToTomorrow = day < daysInMonth;
-                      const continuesFromYesterday = day > 1;
+                      const inDate = info.booking.checkIn || info.booking.check_in || "";
+                      const outDate = info.booking.checkOut || info.booking.check_out || "";
+                      const continuesFromYesterday = inDate < cellDateStr;
+                      const continuesToTomorrow = outDate > cellDateStr;
 
                       return (
                         <td
@@ -791,7 +944,7 @@ export default function BookingCalendar({
                             } ${
                               !continuesToTomorrow ? "rounded-b-lg" : "rounded-b-none"
                             }`}
-                            title={`${info.booking.guestName || info.booking.guest_name} - En estadía (${formatDateDDMMAAAA(info.booking.checkIn || info.booking.check_in)} al ${formatDateDDMMAAAA(info.booking.checkOut || info.booking.check_out)})`}
+                            title={`${info.booking.guestName || info.booking.guest_name} - En estadía (${formatDateDDMMAAAA(inDate)} al ${formatDateDDMMAAAA(outDate)})`}
                           >
                             {isNameDay && (
                               <span className="text-sm sm:text-base font-black tracking-wider uppercase text-white drop-shadow-md select-none truncate px-1">
