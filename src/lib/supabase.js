@@ -10,6 +10,9 @@ import {
   sanitizeAmenities,
   getStoredExpenses,
   saveStoredExpenses,
+  getCleanNotes,
+  packNotesWithPayments,
+  normalizeBookingPayments,
 } from "./data";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -305,6 +308,13 @@ export async function getBookings(filters = {}) {
         const [cleanSource, encodedMethod] = rawSource.includes("|")
           ? rawSource.split("|")
           : [rawSource, null];
+        const rawNotes = b.guest_notes || b.notes || "";
+        const payments = normalizeBookingPayments({ ...b, notes: rawNotes });
+        const cleanNotes = getCleanNotes(rawNotes);
+        const totalPaid = payments.length > 0
+          ? payments.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0)
+          : Number(b.deposit_paid || b.depositPaid || 0);
+
         return {
           id: b.id,
           propertyId: b.property_id || b.propertyId,
@@ -316,11 +326,12 @@ export async function getBookings(filters = {}) {
           checkOut: b.check_out || b.checkOut,
           guests: Number(b.guests || 1),
           totalAmount: Number(b.total_amount || b.totalAmount || 0),
-          depositPaid: Number(b.deposit_paid || b.depositPaid || 0),
+          depositPaid: totalPaid,
           status: b.status || "confirmed",
           paymentMethod: encodedMethod || b.payment_method || b.paymentMethod || "Transferencia",
           source: cleanSource || "web",
-          notes: b.guest_notes || b.notes || "",
+          notes: cleanNotes,
+          payments,
           createdAt: b.created_at || new Date().toISOString(),
         };
       });
@@ -334,7 +345,20 @@ export async function getBookings(filters = {}) {
   }
 
   // 2. Almacenamiento local persistente
-  let local = getStoredBookings();
+  let local = getStoredBookings().map((b) => {
+    const rawNotes = b.notes || b.guest_notes || "";
+    const payments = normalizeBookingPayments(b);
+    const cleanNotes = getCleanNotes(rawNotes);
+    const totalPaid = payments.length > 0
+      ? payments.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0)
+      : Number(b.depositPaid || b.deposit_paid || 0);
+    return {
+      ...b,
+      notes: cleanNotes,
+      payments,
+      depositPaid: totalPaid,
+    };
+  });
   if (filters.status) {
     local = local.filter((b) => b.status === filters.status);
   }
@@ -364,6 +388,29 @@ export async function createBooking(bookingData) {
     }
   }
 
+  const rawNotes = bookingData.guest_notes || bookingData.notes || "";
+  const cleanNotes = getCleanNotes(rawNotes);
+  const initialDeposit = parseFloat(bookingData.deposit_paid || bookingData.depositPaid || 0);
+  const payments = Array.isArray(bookingData.payments) && bookingData.payments.length > 0
+    ? bookingData.payments
+    : initialDeposit > 0
+    ? [
+        {
+          id: `pay-${Date.now()}-init`,
+          amount: initialDeposit,
+          date: (bookingData.check_in || bookingData.checkIn || new Date().toISOString()).split("T")[0],
+          method: bookingData.payment_method || bookingData.paymentMethod || "Transferencia",
+          notes: "Seña inicial registrada",
+        },
+      ]
+    : [];
+
+  const totalDeposit = payments.length > 0
+    ? payments.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0)
+    : initialDeposit;
+
+  const packedNotes = packNotesWithPayments(cleanNotes, payments);
+
   const normalized = {
     id: newId,
     propertyId: bookingData.property_id || bookingData.propertyId,
@@ -378,10 +425,11 @@ export async function createBooking(bookingData) {
     checkOut: bookingData.check_out || bookingData.checkOut,
     guests: parseInt(bookingData.guests || 2, 10),
     totalAmount: parseFloat(bookingData.total_amount || bookingData.totalAmount || 0),
-    depositPaid: parseFloat(bookingData.deposit_paid || bookingData.depositPaid || 0),
+    depositPaid: totalDeposit,
     status: bookingData.status || "pending",
     paymentMethod: bookingData.payment_method || bookingData.paymentMethod || "Transferencia",
-    notes: bookingData.guest_notes || bookingData.notes || "",
+    notes: cleanNotes,
+    payments,
     source: bookingData.source || "web",
     createdAt: new Date().toISOString(),
   };
@@ -405,7 +453,7 @@ export async function createBooking(bookingData) {
       total_amount: normalized.totalAmount,
       deposit_paid: normalized.depositPaid,
       status: normalized.status,
-      guest_notes: normalized.notes,
+      guest_notes: packedNotes,
       source: `${normalized.source}|${normalized.paymentMethod}`,
     }]);
     if (error) {
@@ -422,12 +470,23 @@ export async function updateBooking(bookingId, updatedData) {
   const current = getStoredBookings();
   const existing = current.find((b) => b.id === bookingId) || {};
 
+  const existingPayments = normalizeBookingPayments(existing);
+  const newPayments = Array.isArray(updatedData.payments)
+    ? updatedData.payments
+    : existingPayments;
+
   const totalVal = parseFloat(
     updatedData.totalAmount ?? updatedData.total_amount ?? existing.totalAmount ?? existing.total_amount ?? 0
   );
-  const depositVal = parseFloat(
-    updatedData.depositPaid ?? updatedData.deposit_paid ?? existing.depositPaid ?? existing.deposit_paid ?? 0
-  );
+  const depositVal = newPayments.length > 0
+    ? newPayments.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0)
+    : parseFloat(
+        updatedData.depositPaid ?? updatedData.deposit_paid ?? existing.depositPaid ?? existing.deposit_paid ?? 0
+      );
+
+  const rawNotes = updatedData.notes ?? updatedData.guest_notes ?? existing.notes ?? "";
+  const cleanNotes = getCleanNotes(rawNotes);
+  const packedNotes = packNotesWithPayments(cleanNotes, newPayments);
 
   const merged = {
     ...existing,
@@ -437,6 +496,8 @@ export async function updateBooking(bookingId, updatedData) {
     total_amount: totalVal,
     depositPaid: depositVal,
     deposit_paid: depositVal,
+    notes: cleanNotes,
+    payments: newPayments,
     updatedAt: new Date().toISOString(),
   };
 
@@ -455,7 +516,7 @@ export async function updateBooking(bookingId, updatedData) {
       total_amount: totalVal,
       deposit_paid: depositVal,
       status: merged.status || "confirmed",
-      guest_notes: merged.notes || merged.guest_notes || "",
+      guest_notes: packedNotes,
       source: `${(merged.source || "admin").split("|")[0]}|${merged.paymentMethod || merged.payment_method || "Transferencia"}`,
       updated_at: new Date().toISOString(),
     };
@@ -501,12 +562,37 @@ export async function deleteBooking(bookingId) {
 export async function recordPayment(paymentData) {
   const bookingId = paymentData.booking_id || paymentData.bookingId;
   const amount = parseFloat(paymentData.amount || 0);
+  const method = paymentData.method || "Transferencia";
+  const notes = paymentData.notes || "Cobro de saldo";
+  const date = paymentData.date || new Date().toISOString().split("T")[0];
 
   const current = getStoredBookings();
+  let updatedBooking = null;
+
   const updated = current.map((b) => {
     if (b.id === bookingId) {
-      const currentPaid = b.depositPaid || b.deposit_paid || 0;
-      return { ...b, depositPaid: currentPaid + amount, deposit_paid: currentPaid + amount };
+      const existingPayments = normalizeBookingPayments(b);
+      const newPayment = {
+        id: `pay-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        amount,
+        date,
+        method: method === "cash" ? "Efectivo" : method === "transfer" ? "Transferencia" : method === "mercadopago" ? "MercadoPago" : method,
+        notes,
+      };
+      const updatedPayments = [...existingPayments, newPayment];
+      const newPaid = updatedPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+      const cleanNotes = getCleanNotes(b.notes || b.guest_notes || "");
+      const packedNotes = packNotesWithPayments(cleanNotes, updatedPayments);
+
+      updatedBooking = {
+        ...b,
+        depositPaid: newPaid,
+        deposit_paid: newPaid,
+        payments: updatedPayments,
+        notes: cleanNotes,
+        guest_notes: packedNotes,
+      };
+      return updatedBooking;
     }
     return b;
   });
@@ -514,19 +600,22 @@ export async function recordPayment(paymentData) {
 
   try {
     await supabase.from("payments").insert([paymentData]);
-    const { data: payments } = await supabase
-      .from("payments")
-      .select("amount")
-      .eq("booking_id", bookingId);
-
-    const totalPaid = payments?.reduce((s, p) => s + p.amount, 0) || amount;
-    await supabase
-      .from("bookings")
-      .update({ deposit_paid: totalPaid })
-      .eq("id", bookingId);
   } catch {}
 
-  return { success: true };
+  try {
+    if (updatedBooking) {
+      await supabase
+        .from("bookings")
+        .update({
+          deposit_paid: updatedBooking.depositPaid,
+          guest_notes: updatedBooking.guest_notes,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", bookingId);
+    }
+  } catch {}
+
+  return { success: true, booking: updatedBooking };
 }
 
 export async function getPayments(bookingId) {

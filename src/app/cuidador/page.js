@@ -19,6 +19,8 @@ import {
   EXPENSE_CATEGORIES,
   hexToRgba,
   getBookingColorMap,
+  normalizeBookingPayments,
+  getCleanNotes,
 } from "@/lib/data";
 import { siteContent } from "@/lib/content";
 import BookingCalendar from "@/components/BookingCalendar";
@@ -50,6 +52,7 @@ import {
   ArrowLeft,
   X,
   FileText,
+  Receipt,
 } from "lucide-react";
 
 const STATUS_CONFIG = {
@@ -96,7 +99,8 @@ function GuestCard({ booking, onCheckin, onPayment, timingType, color }) {
     booking.guestResidence || booking.guest_residence || booking.guestEmail || "Las Toninas";
   const checkIn = booking.checkIn || booking.check_in;
   const checkOut = booking.checkOut || booking.check_out;
-  const notes = booking.notes || booking.guest_notes || booking.guestNotes || "";
+  const notes = getCleanNotes(booking.notes || booking.guest_notes || booking.guestNotes || "");
+  const payments = normalizeBookingPayments(booking);
   const propName = booking.property?.name || booking.propertyId || "Dúplex";
   const cleanPhone = normalizeWhatsAppNumber(guestPhone);
   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
@@ -245,6 +249,28 @@ function GuestCard({ booking, onCheckin, onPayment, timingType, color }) {
         </div>
       )}
 
+      {/* Aviso de 100% Saldado si corresponde */}
+      {remaining <= 0 && totalAmount > 0 && (
+        <div className="mb-4 rounded-2xl bg-emerald-500/15 border-2 border-emerald-500/40 p-3.5 flex items-center justify-between text-emerald-950 shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-8 items-center justify-center rounded-xl bg-emerald-600 text-white shrink-0 shadow-2xs">
+              <CheckCircle2 className="size-4.5" />
+            </span>
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider text-emerald-900">
+                ✓ 100% Totalmente Pago (Saldo $0)
+              </div>
+              <div className="text-xs font-medium text-emerald-800">
+                El huésped ya canceló la totalidad de la reserva. <strong>No cobrar saldo</strong> al ingresar.
+              </div>
+            </div>
+          </div>
+          <span className="text-xs font-black uppercase px-2.5 py-1 rounded-full bg-emerald-600 text-white shrink-0 shadow-2xs">
+            $0 Saldo
+          </span>
+        </div>
+      )}
+
       {/* Balance Bar & Seña entregada */}
       <div className="rounded-2xl bg-white/65 backdrop-blur-xs p-3 border border-white/90 shadow-2xs flex items-center justify-between text-xs mb-4">
         <div>
@@ -255,7 +281,7 @@ function GuestCard({ booking, onCheckin, onPayment, timingType, color }) {
         </div>
         <div className="h-4 w-px bg-[#D7E0EB]" />
         <div>
-          <span className="text-[#5A697D]">Seña Pagada: </span>
+          <span className="text-[#5A697D]">Abonado / Seña: </span>
           <span className="font-bold text-emerald-700 tabular-nums">
             ${depositPaid.toLocaleString("es-AR")}
           </span>
@@ -272,6 +298,47 @@ function GuestCard({ booking, onCheckin, onPayment, timingType, color }) {
           </span>
         </div>
       </div>
+
+      {/* Historial Detallado de Pagos con Fecha */}
+      {payments.length > 0 && (
+        <div className="mb-4 rounded-2xl bg-white/80 backdrop-blur-xs border border-white/90 shadow-2xs p-3.5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1E293B] flex items-center gap-1.5">
+              <Receipt className="size-3.5 text-[#1E293B]" />
+              <span>Historial de Pagos ({payments.length}):</span>
+            </span>
+            <span className="text-xs font-bold text-emerald-700">
+              Total: ${depositPaid.toLocaleString("es-AR")}
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            {payments.map((p, idx) => (
+              <div
+                key={p.id || idx}
+                className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl bg-white/90 border border-slate-200/80 text-xs"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-700 text-[11px] flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-md">
+                    <Calendar className="size-3 text-slate-500" />
+                    {formatDateDDMMAAAA(p.date)}
+                  </span>
+                  <span className="font-bold text-emerald-700">
+                    +${Number(p.amount).toLocaleString("es-AR")}
+                  </span>
+                  <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
+                    {p.method || "Transferencia"}
+                  </span>
+                </div>
+                {p.notes && (
+                  <span className="text-[11px] text-[#5A697D] font-medium italic">
+                    {p.notes}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2.5">
@@ -824,24 +891,42 @@ export default function CuidadorDashboard() {
 
   const handlePayment = async (bookingId, amount, method) => {
     try {
-      await recordPayment({
+      const res = await recordPayment({
         booking_id: bookingId,
         amount,
-        method,
+        method: method === "cash" ? "Efectivo" : method === "transfer" ? "Transferencia" : method === "mercadopago" ? "MercadoPago" : method,
         type: "balance",
+        notes: "Saldo cobrado en recepción por cuidador",
         registered_by: "caretaker",
       });
+      if (res?.booking) {
+        setAllBookings((prev) =>
+          prev.map((b) => (b.id === bookingId ? res.booking : b))
+        );
+        return;
+      }
     } catch {}
     setAllBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              depositPaid: (b.depositPaid || b.deposit_paid || 0) + amount,
-              deposit_paid: (b.deposit_paid || 0) + amount,
-            }
-          : b
-      )
+      prev.map((b) => {
+        if (b.id === bookingId) {
+          const currentPayments = normalizeBookingPayments(b);
+          const newPay = {
+            id: `pay-${Date.now()}`,
+            amount,
+            date: new Date().toISOString().split("T")[0],
+            method: method === "cash" ? "Efectivo" : method === "transfer" ? "Transferencia" : method === "mercadopago" ? "MercadoPago" : method,
+            notes: "Saldo cobrado en recepción por cuidador",
+          };
+          const nextPayments = [...currentPayments, newPay];
+          return {
+            ...b,
+            depositPaid: (b.depositPaid || b.deposit_paid || 0) + amount,
+            deposit_paid: (b.deposit_paid || 0) + amount,
+            payments: nextPayments,
+          };
+        }
+        return b;
+      })
     );
   };
 

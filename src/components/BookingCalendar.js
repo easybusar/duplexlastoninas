@@ -7,6 +7,8 @@ import {
   formatDateDDMMAAAA,
   CONTRAST_PALETTE,
   getBookingColorMap,
+  normalizeBookingPayments,
+  getCleanNotes,
 } from "@/lib/data";
 import {
   ChevronLeft,
@@ -21,6 +23,8 @@ import {
   Sparkles,
   Edit3,
   MessageCircle,
+  Receipt,
+  CheckCircle2,
 } from "lucide-react";
 
 const STATUS_THEME = {
@@ -75,7 +79,8 @@ function BookingModal({ booking, onClose, onDelete, onStatusUpdate, onEditBookin
   const totalAmount = booking.totalAmount || booking.total_amount || 0;
   const depositPaid = booking.depositPaid || booking.deposit_paid || 0;
   const pendingAmount = totalAmount - depositPaid;
-  const notes = booking.notes || booking.guest_notes || booking.guestNotes || "";
+  const notes = getCleanNotes(booking.notes || booking.guest_notes || booking.guestNotes || "");
+  const payments = normalizeBookingPayments(booking);
 
   const handleDelete = async () => {
     setLoading(true);
@@ -169,7 +174,7 @@ function BookingModal({ booking, onClose, onDelete, onStatusUpdate, onEditBookin
         </div>
 
         {/* Desglose de Pagos: Total, Seña Abonada y Saldo */}
-        <div className="rounded-2xl bg-[#E7EEF5]/70 p-4 border border-[#D7E0EB] grid grid-cols-3 gap-2 items-center mb-5">
+        <div className="rounded-2xl bg-[#E7EEF5]/70 p-4 border border-[#D7E0EB] grid grid-cols-3 gap-2 items-center mb-4">
           <div>
             <span className="text-[11px] text-[#5A697D] block font-medium">Total Estadía</span>
             <strong className="text-base sm:text-lg font-bold text-[#1E293B] block mt-0.5">
@@ -177,7 +182,7 @@ function BookingModal({ booking, onClose, onDelete, onStatusUpdate, onEditBookin
             </strong>
           </div>
           <div>
-            <span className="text-[11px] text-[#5A697D] block font-medium">Seña Abonada</span>
+            <span className="text-[11px] text-[#5A697D] block font-medium">Abonado / Seña</span>
             <strong className="text-base sm:text-lg font-bold text-emerald-700 block mt-0.5">
               ${depositPaid.toLocaleString("es-AR")}
             </strong>
@@ -186,7 +191,7 @@ function BookingModal({ booking, onClose, onDelete, onStatusUpdate, onEditBookin
             <span className="text-[11px] text-[#5A697D] block font-medium">Saldo Pendiente</span>
             <strong
               className={`text-base sm:text-lg font-bold block mt-0.5 ${
-                pendingAmount > 0 ? "text-amber-700" : "text-emerald-700"
+                pendingAmount > 0 ? "text-amber-700" : "text-emerald-700 font-bold"
               }`}
             >
               {pendingAmount > 0
@@ -195,6 +200,50 @@ function BookingModal({ booking, onClose, onDelete, onStatusUpdate, onEditBookin
             </strong>
           </div>
         </div>
+
+        {/* Historial Detallado de Pagos con Fecha */}
+        {payments.length > 0 && (
+          <div className="rounded-2xl bg-white border border-[#D7E0EB] p-3.5 mb-4 shadow-2xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#1E293B] flex items-center gap-1.5">
+                <Receipt className="size-3.5 text-[#1E293B]" />
+                <span>Historial de Pagos ({payments.length})</span>
+              </span>
+              {pendingAmount <= 0 && totalAmount > 0 && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                  <CheckCircle2 className="size-3" />
+                  100% Saldado
+                </span>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              {payments.map((p, idx) => (
+                <div
+                  key={p.id || idx}
+                  className="flex flex-wrap items-center justify-between gap-1.5 p-1.5 rounded-lg bg-[#F8FAFC] border border-slate-200/70 text-xs"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-slate-700 text-[11px] flex items-center gap-1 bg-white border border-slate-200 px-1.5 py-0.5 rounded">
+                      <Calendar className="size-2.5 text-slate-500" />
+                      {formatDateDDMMAAAA(p.date)}
+                    </span>
+                    <span className="font-bold text-emerald-700 tabular-nums">
+                      +${Number(p.amount).toLocaleString("es-AR")}
+                    </span>
+                    <span className="rounded bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">
+                      {p.method || "Transferencia"}
+                    </span>
+                  </div>
+                  {p.notes && (
+                    <span className="text-[10px] text-slate-500 font-medium italic">
+                      {p.notes}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Observaciones / Comentarios Internos */}
         {notes && (

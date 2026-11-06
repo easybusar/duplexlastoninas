@@ -688,4 +688,67 @@ export function getBookingColorMap(bookings = [], propertiesList = []) {
   return map;
 }
 
+// ─── Helpers de Pagos Parciales y Cuotas de Reserva ─────────────────────────
+export function getCleanNotes(notes) {
+  if (!notes) return "";
+  return String(notes).replace(/<!--PAYMENTS:[\s\S]*?-->/g, "").trim();
+}
+
+export function packNotesWithPayments(notes, payments) {
+  const clean = getCleanNotes(notes);
+  if (!Array.isArray(payments) || payments.length === 0) return clean;
+  return `${clean}${clean ? "\n" : ""}<!--PAYMENTS:${JSON.stringify(payments)}-->`;
+}
+
+export function normalizeBookingPayments(booking) {
+  if (!booking) return [];
+
+  // 1. Si ya viene un array payments explícito
+  if (Array.isArray(booking.payments) && booking.payments.length > 0) {
+    return booking.payments.map((p, idx) => ({
+      id: p.id || `pay-${idx}-${p.date || "d"}`,
+      amount: parseFloat(p.amount || 0),
+      date: p.date ? String(p.date).split("T")[0] : new Date().toISOString().split("T")[0],
+      method: p.method || p.payment_method || "Transferencia",
+      notes: p.notes || p.concept || "",
+    }));
+  }
+
+  // 2. Si viene codificado en notas / guest_notes
+  const rawNotes = String(booking.notes || booking.guest_notes || booking.guestNotes || "");
+  const match = rawNotes.match(/<!--PAYMENTS:([\s\S]*?)-->/);
+  if (match && match[1]) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((p, idx) => ({
+          id: p.id || `pay-${idx}-${p.date || "d"}`,
+          amount: parseFloat(p.amount || 0),
+          date: p.date ? String(p.date).split("T")[0] : new Date().toISOString().split("T")[0],
+          method: p.method || p.payment_method || "Transferencia",
+          notes: p.notes || p.concept || "",
+        }));
+      }
+    } catch {}
+  }
+
+  // 3. Fallback retrocompatible: si tiene seña cobrada > 0 pero no tiene array de pagos detallado
+  const deposit = parseFloat(booking.depositPaid ?? booking.deposit_paid ?? 0);
+  if (deposit > 0) {
+    const rawDate = booking.createdAt || booking.created_at || booking.checkIn || booking.check_in;
+    const date = rawDate ? String(rawDate).split("T")[0] : new Date().toISOString().split("T")[0];
+    return [
+      {
+        id: `init-${booking.id || "deposit"}`,
+        amount: deposit,
+        date,
+        method: booking.paymentMethod || booking.payment_method || "Transferencia",
+        notes: "Seña inicial registrada",
+      },
+    ];
+  }
+
+  return [];
+}
+
 

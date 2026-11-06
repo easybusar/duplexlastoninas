@@ -19,6 +19,8 @@ import {
   EXPENSE_CATEGORIES,
   hexToRgba,
   getBookingColorMap,
+  normalizeBookingPayments,
+  getCleanNotes,
 } from "@/lib/data";
 import { siteContent } from "@/lib/content";
 import BookingCalendar from "@/components/BookingCalendar";
@@ -61,6 +63,7 @@ import {
   Edit3,
   Percent,
   Sparkles,
+  Receipt,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -455,6 +458,13 @@ function EditBookingModal({ isOpen, onClose, onSave, booking, propertiesList, si
   const [collisionWarning, setCollisionWarning] = useState(false);
   const [recalcNotice, setRecalcNotice] = useState("");
 
+  // Control de Pagos Parciales y Cuotas con Fecha
+  const [paymentsList, setPaymentsList] = useState([]);
+  const [newPayAmount, setNewPayAmount] = useState("");
+  const [newPayDate, setNewPayDate] = useState("");
+  const [newPayMethod, setNewPayMethod] = useState("Transferencia");
+  const [newPayNote, setNewPayNote] = useState("");
+
   useEffect(() => {
     if (booking) {
       setPropertyId(booking.propertyId || booking.property_id || propertiesList[0]?.id || "duplex-1");
@@ -465,14 +475,67 @@ function EditBookingModal({ isOpen, onClose, onSave, booking, propertiesList, si
       setCheckOut(booking.checkOut || booking.check_out || "");
       setGuests(booking.guests || 2);
       setTotalAmount(String(booking.totalAmount || booking.total_amount || 0));
-      setDepositPaid(String(booking.depositPaid || booking.deposit_paid || 0));
+
+      const initialPayments = normalizeBookingPayments(booking);
+      setPaymentsList(initialPayments);
+
+      const sumPaid = initialPayments.length > 0
+        ? initialPayments.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0)
+        : parseFloat(booking.depositPaid || booking.deposit_paid || 0);
+
+      setDepositPaid(String(sumPaid));
       setPaymentMethod(booking.paymentMethod || booking.payment_method || "Transferencia");
       setStatus(booking.status || "confirmed");
-      setNotes(booking.notes || booking.guest_notes || "");
+      setNotes(getCleanNotes(booking.notes || booking.guest_notes || ""));
       setCollisionWarning(false);
       setRecalcNotice("");
+
+      setNewPayAmount("");
+      setNewPayDate(new Date().toISOString().split("T")[0]);
+      setNewPayMethod(booking.paymentMethod || booking.payment_method || "Transferencia");
+      setNewPayNote("");
     }
   }, [booking, propertiesList]);
+
+  const handleAddPayment = () => {
+    const amt = parseFloat(newPayAmount);
+    if (isNaN(amt) || amt <= 0) {
+      alert("Por favor ingresá un monto válido mayor a 0 para el pago.");
+      return;
+    }
+    if (!newPayDate) {
+      alert("Por favor seleccioná la fecha del pago.");
+      return;
+    }
+
+    const defaultConcept =
+      paymentsList.length === 0
+        ? "Seña inicial"
+        : `Pago parcial #${paymentsList.length + 1}`;
+
+    const newPay = {
+      id: `pay-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      amount: amt,
+      date: newPayDate,
+      method: newPayMethod,
+      notes: newPayNote.trim() || defaultConcept,
+    };
+
+    const nextList = [...paymentsList, newPay];
+    setPaymentsList(nextList);
+    const sumPaid = nextList.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
+    setDepositPaid(String(sumPaid));
+    setNewPayAmount("");
+    setNewPayNote("");
+  };
+
+  const handleRemovePayment = (payId) => {
+    if (!confirm("¿Deseás eliminar este pago del historial?")) return;
+    const nextList = paymentsList.filter((p) => p.id !== payId);
+    setPaymentsList(nextList);
+    const sumPaid = nextList.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
+    setDepositPaid(String(sumPaid));
+  };
 
   const selectedProp = propertiesList.find((p) => p.id === propertyId);
 
@@ -504,9 +567,8 @@ function EditBookingModal({ isOpen, onClose, onSave, booking, propertiesList, si
       siteSettings?.depositPercentage || 50
     );
     setTotalAmount(calc.total.toString());
-    setDepositPaid(calc.deposit.toString());
     setRecalcNotice(
-      `Recalculado: ${calc.nights} noches a $${calc.avgPricePerNight.toLocaleString("es-AR")}/noche (${siteSettings?.depositPercentage || 50}% seña)`
+      `Recalculado: ${calc.days} noches a $${calc.avgPerNight.toLocaleString("es-AR")}/noche`
     );
     setTimeout(() => setRecalcNotice(""), 6000);
   };
@@ -529,6 +591,10 @@ function EditBookingModal({ isOpen, onClose, onSave, booking, propertiesList, si
       if (!proceed) return;
     }
 
+    const calculatedDeposit = paymentsList.length > 0
+      ? paymentsList.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0)
+      : parseFloat(depositPaid) || 0;
+
     setSaving(true);
     try {
       const updatedData = {
@@ -547,13 +613,14 @@ function EditBookingModal({ isOpen, onClose, onSave, booking, propertiesList, si
         guests: parseInt(guests, 10),
         totalAmount: parseFloat(totalAmount) || 0,
         total_amount: parseFloat(totalAmount) || 0,
-        depositPaid: parseFloat(depositPaid) || 0,
-        deposit_paid: parseFloat(depositPaid) || 0,
+        depositPaid: calculatedDeposit,
+        deposit_paid: calculatedDeposit,
         paymentMethod,
         payment_method: paymentMethod,
         status,
         notes: notes.trim(),
         guest_notes: notes.trim(),
+        payments: paymentsList,
       };
 
       await onSave(booking.id, updatedData);
@@ -854,6 +921,176 @@ function EditBookingModal({ isOpen, onClose, onSave, booking, propertiesList, si
               onChange={(e) => setNotes(e.target.value)}
               className="w-full rounded-xl bg-[#EFEFEF]/70 border border-[#D7E0EB] px-3.5 py-2 text-sm text-[#1E293B]"
             />
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* HISTORIAL Y REGISTRO DE PAGOS PARCIALES CON FECHA              */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          <div className="rounded-2xl bg-white border border-[#D7E0EB] p-4 sm:p-5 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#EFEFEF]">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                  <Receipt className="size-4.5" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-[#1E293B]">
+                    Historial de Pagos y Cuotas de Reserva
+                  </h3>
+                  <p className="text-[11px] text-[#5A697D]">
+                    Agregá pagos parciales con fecha para registrar adelantos hasta cancelar el 100%
+                  </p>
+                </div>
+              </div>
+
+              {/* Badge de Estado del Saldo */}
+              {(() => {
+                const tot = parseFloat(totalAmount) || 0;
+                const paid = parseFloat(depositPaid) || 0;
+                const sal = tot - paid;
+                if (paid >= tot && tot > 0) {
+                  return (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-3.5 py-1 text-xs font-bold shadow-2xs">
+                      <CheckCircle2 className="size-3.5 text-emerald-600" />
+                      ✓ 100% Totalmente Pago ($0 Saldo)
+                    </span>
+                  );
+                }
+                return (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 text-amber-900 border border-amber-300 px-3 py-1 text-xs font-semibold shadow-2xs">
+                    <span>Saldo Pendiente:</span>
+                    <strong className="font-bold text-amber-800 tabular-nums">
+                      ${sal > 0 ? sal.toLocaleString("es-AR") : 0}
+                    </strong>
+                  </span>
+                );
+              })()}
+            </div>
+
+            {/* Listado de Pagos Registrados */}
+            {paymentsList.length > 0 ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-[#5A697D]">
+                  <span>Pagos Registrados ({paymentsList.length})</span>
+                  <span className="text-emerald-700 font-bold">
+                    Total Acumulado: ${Number(depositPaid || 0).toLocaleString("es-AR")}
+                  </span>
+                </div>
+                <div className="divide-y divide-[#EFEFEF] rounded-xl border border-[#D7E0EB] bg-[#F8FAFC] overflow-hidden">
+                  {paymentsList.map((p, idx) => (
+                    <div
+                      key={p.id || idx}
+                      className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs hover:bg-white transition-colors"
+                    >
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <span className="inline-flex items-center gap-1 font-bold text-[#1E293B] bg-white border border-[#D7E0EB] px-2.5 py-1 rounded-md shadow-2xs">
+                          <Calendar className="size-3 text-[#5A697D]" />
+                          {formatDateDDMMAAAA(p.date)}
+                        </span>
+                        <span className="font-bold text-sm text-emerald-700 tabular-nums">
+                          +${Number(p.amount).toLocaleString("es-AR")}
+                        </span>
+                        <span className="rounded-md bg-slate-200/80 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
+                          {p.method || "Transferencia"}
+                        </span>
+                        {p.notes && (
+                          <span className="text-[#5A697D] text-[11px] font-medium">
+                            — {p.notes}
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePayment(p.id)}
+                        title="Eliminar este pago del registro"
+                        className="self-end sm:self-center size-7 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center cursor-pointer transition-colors"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="p-3.5 text-center rounded-xl bg-[#F8FAFC] border border-dashed border-[#D7E0EB] text-xs text-[#5A697D]">
+                Aún no hay cuotas o pagos detallados cargados. Registrá el primer pago abajo.
+              </div>
+            )}
+
+            {/* Formulario Inline para Cargar Nuevo Pago */}
+            <div className="p-3.5 rounded-xl bg-[#E7EEF5]/50 border border-[#D7E0EB] space-y-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#1E293B] flex items-center gap-1.5">
+                <Plus className="size-3.5 text-emerald-700" />
+                <span>+ Cargar Nuevo Pago o Adelanto del Huésped</span>
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#5A697D] mb-1">
+                    Monto (ARS) *
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="Ej: 200000"
+                    value={newPayAmount}
+                    onChange={(e) => setNewPayAmount(e.target.value)}
+                    className="w-full rounded-lg bg-white border border-[#D7E0EB] px-3 py-1.5 text-xs font-bold text-[#1E293B]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#5A697D] mb-1">
+                    Fecha del Pago *
+                  </label>
+                  <input
+                    type="date"
+                    value={newPayDate}
+                    onChange={(e) => setNewPayDate(e.target.value)}
+                    className="w-full rounded-lg bg-white border border-[#D7E0EB] px-3 py-1.5 text-xs font-semibold text-[#1E293B]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#5A697D] mb-1">
+                    Medio de Cobro
+                  </label>
+                  <select
+                    value={newPayMethod}
+                    onChange={(e) => setNewPayMethod(e.target.value)}
+                    className="w-full rounded-lg bg-white border border-[#D7E0EB] px-3 py-1.5 text-xs font-semibold text-[#1E293B]"
+                  >
+                    <option value="Transferencia">Transferencia Bancaria</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="MercadoPago">MercadoPago / CVU</option>
+                    <option value="Tarjeta">Tarjeta</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#5A697D] mb-1">
+                    Concepto / Detalle
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej: 2do pago, Transferencia..."
+                    value={newPayNote}
+                    onChange={(e) => setNewPayNote(e.target.value)}
+                    className="w-full rounded-lg bg-white border border-[#D7E0EB] px-3 py-1.5 text-xs text-[#1E293B]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleAddPayment}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1E293B] hover:bg-[#0F172A] text-white text-xs font-semibold cursor-pointer shadow-2xs transition-all"
+                >
+                  <Plus className="size-3.5" />
+                  <span>+ Agregar Pago al Historial</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-3 border-t border-[#EFEFEF]">
@@ -1688,14 +1925,51 @@ function ReservasSection({
                     </div>
                     <div
                       className={`text-xs font-semibold ${
-                        pending > 0 ? "text-amber-700" : "text-emerald-700"
+                        pending > 0 ? "text-amber-700" : "text-emerald-700 font-bold"
                       }`}
                     >
                       {pending > 0
                         ? `Saldo: $${pending.toLocaleString("es-AR")}`
-                        : "Cobro Completo"}
+                        : "✓ 100% Totalmente Pago"}
                     </div>
                   </div>
+
+                  {/* Historial de Pagos con Fecha */}
+                  {(() => {
+                    const pList = normalizeBookingPayments(b);
+                    if (!pList || pList.length === 0) return null;
+                    return (
+                      <div className="col-span-2 sm:col-span-4 mt-1 pt-2 border-t border-slate-200/60 flex flex-wrap items-center gap-2">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D] flex items-center gap-1">
+                          <Receipt className="size-3 text-[#1E293B]" />
+                          <span>Pagos con Fecha ({pList.length}):</span>
+                        </span>
+                        {pList.map((p, idx) => (
+                          <span
+                            key={p.id || idx}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-white/90 border border-[#D7E0EB] px-2.5 py-1 text-xs shadow-2xs"
+                          >
+                            <span className="font-bold text-emerald-700">
+                              +${Number(p.amount).toLocaleString("es-AR")}
+                            </span>
+                            <span className="text-slate-400">·</span>
+                            <span className="text-slate-700 font-semibold flex items-center gap-1">
+                              <Calendar className="size-3 text-slate-400" />
+                              {formatDateDDMMAAAA(p.date)}
+                            </span>
+                            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
+                              {p.method || "Transferencia"}
+                            </span>
+                            {p.notes && (
+                              <span className="text-slate-500 text-[11px] italic">
+                                ({p.notes})
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 pt-3 lg:pt-0 border-t lg:border-t-0 border-[#EFEFEF]">
