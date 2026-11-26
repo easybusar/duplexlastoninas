@@ -1,0 +1,10 @@
+# Robots.txt - Dúplex Las Toninas
+User-agent: *
+Disallow: /admin/
+Disallow: /admin
+Disallow: /cuidador/
+Disallow: /cuidador
+Allow: /
+Allow: /reservar
+
+Sitemap: https://duplexlastoninas.com.ar/sitemap.xml

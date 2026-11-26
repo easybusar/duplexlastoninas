@@ -28,4 +28,9 @@
   <FilesMatch "\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|mp4|webm)$">
     Header set Cache-Control "max-age=31536000, public, immutable"
   </FilesMatch>
+
+  # Bloqueo estricto de indexación en buscadores para el panel de control
+  <If "%{REQUEST_URI} =~ m#^/(admin|cuidador)#">
+    Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
+  </If>
 </IfModule>

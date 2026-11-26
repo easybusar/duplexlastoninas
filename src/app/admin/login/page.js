@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { siteContent } from "@/lib/content";
+import { getSiteSettings } from "@/lib/supabase";
 import { ArrowUpRight, ArrowLeft, ShieldAlert, Lock } from "lucide-react";
 
 export default function AdminLoginPage() {
@@ -17,14 +18,27 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    await new Promise((r) => setTimeout(r, 600));
-    if (email === "admin@duplexlastoninas.com.ar" && password === "admin123") {
-      localStorage.setItem("admin_session", "true");
-      router.push("/admin");
-    } else {
-      setError("Credenciales inválidas. Verificá tu email y contraseña.");
+    try {
+      const settings = await getSiteSettings();
+      const targetEmail = (settings?.adminEmail || "admin@duplexlastoninas.com.ar").trim().toLowerCase();
+      const targetPassword = (settings?.adminPassword || "admin123").trim();
+
+      if (email.trim().toLowerCase() === targetEmail && password.trim() === targetPassword) {
+        localStorage.setItem("admin_session", "true");
+        router.push("/admin");
+      } else {
+        setError("Credenciales inválidas. Verificá tu email y contraseña.");
+      }
+    } catch {
+      if (email.trim().toLowerCase() === "admin@duplexlastoninas.com.ar" && password.trim() === "admin123") {
+        localStorage.setItem("admin_session", "true");
+        router.push("/admin");
+      } else {
+        setError("Credenciales inválidas. Verificá tu email y contraseña.");
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -112,11 +126,6 @@ export default function AdminLoginPage() {
               <ArrowUpRight className="size-4" />
             </span>
           </button>
-
-          <p className="text-center text-[11px] text-[#5A697D] pt-2">
-            Demo: <strong className="text-[#1E293B]">admin@duplexlastoninas.com.ar</strong> ·{" "}
-            <strong className="text-[#1E293B]">admin123</strong>
-          </p>
         </form>
 
         <div className="mt-6 pt-5 border-t border-[#D7E0EB] text-center">

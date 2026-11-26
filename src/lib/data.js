@@ -513,6 +513,9 @@ export const defaultSiteSettings = {
   googleAdsId: "",
   googleAdsConversionLabel: "",
   depositPercentage: 50,
+  adminEmail: "admin@duplexlastoninas.com.ar",
+  adminPassword: "admin123",
+  caretakerPassword: "toninas2025",
 };
 
 export function normalizeWhatsAppNumber(rawPhone) {

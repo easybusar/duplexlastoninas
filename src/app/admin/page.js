@@ -64,6 +64,7 @@ import {
   Percent,
   Sparkles,
   Receipt,
+  Lock,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -2469,6 +2470,15 @@ function ConfiguracionSection({ siteSettings, onSave }) {
   const [depositPercentage, setDepositPercentage] = useState(
     siteSettings?.depositPercentage || 50
   );
+  const [adminEmail, setAdminEmail] = useState(
+    siteSettings?.adminEmail || "admin@duplexlastoninas.com.ar"
+  );
+  const [adminPassword, setAdminPassword] = useState(
+    siteSettings?.adminPassword || "admin123"
+  );
+  const [caretakerPassword, setCaretakerPassword] = useState(
+    siteSettings?.caretakerPassword || "toninas2025"
+  );
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -2484,6 +2494,9 @@ function ConfiguracionSection({ siteSettings, onSave }) {
       setPaymentHolder(siteSettings.paymentHolder || "Gregorio Rene Flores Barriga");
       setGoogleAdsId(siteSettings.googleAdsId || "");
       setDepositPercentage(siteSettings.depositPercentage || 50);
+      setAdminEmail(siteSettings.adminEmail || "admin@duplexlastoninas.com.ar");
+      setAdminPassword(siteSettings.adminPassword || "admin123");
+      setCaretakerPassword(siteSettings.caretakerPassword || "toninas2025");
     }
   }, [siteSettings]);
 
@@ -2502,6 +2515,9 @@ function ConfiguracionSection({ siteSettings, onSave }) {
         paymentHolder: paymentHolder.trim(),
         googleAdsId: googleAdsId.trim(),
         depositPercentage: Number(depositPercentage) || 50,
+        adminEmail: adminEmail.trim(),
+        adminPassword: adminPassword.trim(),
+        caretakerPassword: caretakerPassword.trim(),
       });
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 4000);
@@ -2752,6 +2768,81 @@ function ConfiguracionSection({ siteSettings, onSave }) {
             </div>
             <p className="text-xs text-[#5A697D]">
               Este porcentaje se aplica de forma automática a todo el sitio web: cálculo de señas en el proceso de reserva, textos explicativos, resumen de condiciones y saldo al ingresar.
+            </p>
+          </div>
+        </div>
+
+        {/* Seguridad y Claves de Acceso Privadas */}
+        <div className="rounded-2xl bg-[#EFEFEF]/60 p-5 border border-[#D7E0EB] space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-[#1E293B] text-white">
+              <Lock className="size-5" />
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-[#1E293B]">
+                Seguridad y Contraseñas de Acceso al Panel
+              </h3>
+              <p className="text-xs text-[#5A697D]">
+                Modificá las credenciales privadas para Administrador y Cuidador. Solo vos y quienes autorices podrán acceder a los paneles de gestión.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="config-admin-email"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+              >
+                Email de Administrador *
+              </label>
+              <input
+                id="config-admin-email"
+                type="email"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                required
+                className="w-full rounded-xl bg-white border border-[#D7E0EB] px-4 py-2.5 text-sm font-semibold text-[#1E293B]"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="config-admin-password"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+              >
+                Contraseña de Administrador *
+              </label>
+              <input
+                id="config-admin-password"
+                type="text"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                required
+                placeholder="Nueva contraseña privada"
+                className="w-full rounded-xl bg-white border border-[#D7E0EB] px-4 py-2.5 text-sm font-semibold text-[#1E293B]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="config-caretaker-password"
+              className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+            >
+              Contraseña de Acceso para el Cuidador (Recepción / Check-in) *
+            </label>
+            <input
+              id="config-caretaker-password"
+              type="text"
+              value={caretakerPassword}
+              onChange={(e) => setCaretakerPassword(e.target.value)}
+              required
+              placeholder="Contraseña del cuidador"
+              className="w-full sm:max-w-md rounded-xl bg-white border border-[#D7E0EB] px-4 py-2.5 text-sm font-semibold text-[#1E293B]"
+            />
+            <p className="mt-1 text-[11px] text-[#5A697D]">
+              Esta es la contraseña que usará el cuidador para ingresar en /cuidador. Podés cambiarla en cualquier momento si cambia el personal o por seguridad.
             </p>
           </div>
         </div>

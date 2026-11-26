@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signIn } from "@/lib/supabase";
+import { signIn, getSiteSettings } from "@/lib/supabase";
 import { siteContent } from "@/lib/content";
 import { KeyRound, ArrowUpRight, ArrowLeft, ShieldAlert } from "lucide-react";
 
@@ -21,16 +21,29 @@ export default function CuidadorLoginPage() {
     setError("");
     try {
       await signIn(CARETAKER_EMAIL, password);
+      localStorage.setItem("caretaker_session", "true");
       router.push("/cuidador");
     } catch {
-      if (password === "toninas2025") {
-        localStorage.setItem("caretaker_session", "true");
-        router.push("/cuidador");
-      } else {
-        setError("Contraseña incorrecta. Consultá al administrador.");
+      try {
+        const settings = await getSiteSettings();
+        const targetPass = (settings?.caretakerPassword || "toninas2025").trim();
+        if (password.trim() === targetPass) {
+          localStorage.setItem("caretaker_session", "true");
+          router.push("/cuidador");
+        } else {
+          setError("Contraseña incorrecta. Consultá al administrador.");
+        }
+      } catch {
+        if (password.trim() === "toninas2025") {
+          localStorage.setItem("caretaker_session", "true");
+          router.push("/cuidador");
+        } else {
+          setError("Contraseña incorrecta. Consultá al administrador.");
+        }
       }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -95,10 +108,6 @@ export default function CuidadorLoginPage() {
               <ArrowUpRight className="size-4" />
             </span>
           </button>
-
-          <p className="text-center text-xs text-[#5A697D]">
-            Acceso rápido demo: <strong className="text-[#1E293B]">toninas2025</strong>
-          </p>
         </form>
 
         <div className="mt-6 pt-5 border-t border-[#D7E0EB] text-center">
