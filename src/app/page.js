@@ -8,6 +8,7 @@ import {
   getStoredProperties,
   getStoredSiteSettings,
   buildWhatsAppUrl,
+  formatPhoneForDisplay,
   trackAdsConversion,
   sanitizeAmenities,
 } from "@/lib/data";
@@ -38,6 +39,7 @@ import {
   ShieldCheck,
   Play,
   Eye,
+  Star,
 } from "lucide-react";
 
 // ─── Official WhatsApp Logo SVG ─────────────────────────────────────────────
@@ -50,6 +52,30 @@ function WhatsAppIcon({ className = "size-6" }) {
       className={className}
     >
       <path d="M12.031 2c-5.516 0-9.999 4.486-9.999 10.003 0 1.766.461 3.49 1.337 5.01L2 22l5.118-1.341c1.474.805 3.136 1.23 4.913 1.23h.004c5.515 0 9.998-4.486 9.998-10.002 0-2.672-1.04-5.185-2.928-7.074C17.216 3.041 14.703 2 12.031 2zm5.829 14.294c-.246.693-1.432 1.326-1.997 1.411-.513.076-1.183.109-1.91-.121-.441-.14-1.007-.327-1.732-.641-3.047-1.316-5.037-4.387-5.189-4.59-.152-.203-1.24-1.649-1.24-3.146 0-1.497.784-2.232 1.063-2.537.279-.305.608-.381.811-.381.203 0 .406.002.583.011.187.009.438-.071.685.523.254.609.863 2.106.939 2.258.076.152.127.33.025.533-.101.203-.152.33-.305.507-.152.178-.32.398-.457.533-.152.152-.311.317-.133.622.178.305.789 1.302 1.694 2.109 1.164 1.038 2.145 1.36 2.45 1.512.305.152.482.127.66-.076.178-.203.761-.888.964-1.193.203-.305.406-.254.685-.152.279.101 1.777.838 2.081.99.305.152.508.228.584.355.076.127.076.736-.17 1.429z" />
+    </svg>
+  );
+}
+
+// ─── Official Google G Icon SVG ─────────────────────────────────────────────
+function GoogleIcon({ className = "size-5" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+      />
     </svg>
   );
 }
@@ -681,6 +707,61 @@ function RivrFeaturesBentoSection() {
             <ArrowUpRight className="size-4" />
           </div>
         </Link>
+
+        {/* Card 5: Full-Width Bento Card — Reseñas Verificadas de Google Maps (4.8 Estrellas) */}
+        {bento.reviewsCard && (
+          <div className="group relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-white via-white to-[#F8FAFC] p-6 sm:p-7 md:p-8 transition-all hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] md:rounded-[2rem] md:col-span-3 border border-[#D7E0EB]/80 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="flex flex-col gap-3.5 max-w-3xl">
+              {/* Badge & Stars Header */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#E7EEF5] px-3.5 py-1 text-xs font-extrabold text-[#1E293B]">
+                  <GoogleIcon className="size-4 shrink-0" />
+                  <span>{bento.reviewsCard.badge}</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200/80 px-3 py-1 rounded-full shadow-2xs">
+                  <div className="flex items-center text-amber-500">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="size-3.5 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <span className="text-xs font-black text-slate-800">
+                    {bento.reviewsCard.rating} / {bento.reviewsCard.maxRating || "5.0"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Title & Testimonial Quote */}
+              <div>
+                <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#1E293B]">
+                  {bento.reviewsCard.title}
+                </h3>
+                <p className="mt-2 text-sm sm:text-base font-medium leading-relaxed text-[#5A697D] text-pretty italic">
+                  {bento.reviewsCard.quote}
+                </p>
+                <p className="mt-2 text-xs font-bold text-[#1E293B]/70 tracking-wide">
+                  {bento.reviewsCard.author}
+                </p>
+              </div>
+            </div>
+
+            {/* CTA Button to Google Maps */}
+            <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-2.5">
+              <a
+                href={siteContent.brand.googleMapsUrl || bento.reviewsCard.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-between gap-2.5 rounded-full bg-[#1E293B] text-white px-5 py-3 text-xs sm:text-sm font-bold transition-all hover:bg-[#0F172A] hover:shadow-sm w-fit"
+              >
+                <GoogleIcon className="size-4 shrink-0" />
+                <span>{bento.reviewsCard.buttonText}</span>
+                <ArrowUpRight className="size-4 shrink-0" />
+              </a>
+              <span className="text-[11px] font-medium text-[#5A697D]">
+                Calle 12 Nº 495 · Las Toninas
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -1385,8 +1466,8 @@ function RivrFooter({ whatsappNumber, visitCount }) {
                     }
                     className="inline-flex items-center gap-1.5 text-[#1E293B] font-bold hover:underline"
                   >
-                    <WhatsAppIcon className="size-4 text-[#25D366]" />
-                    <span>Contacto WhatsApp ↗</span>
+                    <WhatsAppIcon className="size-4 text-[#25D366] shrink-0" />
+                    <span>WhatsApp: {formatPhoneForDisplay(whatsappNumber)} ↗</span>
                   </a>
                 </li>
               </ul>

@@ -1,8 +1,27 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { getStoredSiteSettings, formatPhoneForDisplay, buildWhatsAppUrl } from "../lib/data";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [siteSettings, setSiteSettings] = useState(() => getStoredSiteSettings());
+
+  useEffect(() => {
+    const handleSync = () => {
+      setSiteSettings(getStoredSiteSettings());
+    };
+    window.addEventListener("toninas_settings_changed", handleSync);
+    window.addEventListener("storage", handleSync);
+    return () => {
+      window.removeEventListener("toninas_settings_changed", handleSync);
+      window.removeEventListener("storage", handleSync);
+    };
+  }, []);
+
+  const currentPhone = siteSettings?.whatsappNumber || "5491134610085";
+  const displayPhone = formatPhoneForDisplay(currentPhone);
+  const whatsappUrl = buildWhatsAppUrl(currentPhone);
 
   return (
     <footer
@@ -54,8 +73,8 @@ export default function Footer() {
             <div style={{ display: "flex", gap: 12 }}>
               {[
                 { icon: "📘", label: "Facebook", href: "#" },
-                { icon: "📸", label: "Instagram", href: "#" },
-                { icon: "💬", label: "WhatsApp", href: "https://wa.me/5491134610085" },
+                { icon: "📸", label: "Instagram", href: "https://www.instagram.com/duplexlastoninas_/" },
+                { icon: "💬", label: "WhatsApp", href: whatsappUrl },
               ].map((s) => (
                 <a
                   key={s.label}
@@ -150,13 +169,30 @@ export default function Footer() {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {[
                 { icon: "📍", text: "Las Toninas, Partido de La Costa, Buenos Aires" },
-                { icon: "📱", text: "+54 9 11 1234-5678" },
+                { icon: "📱", text: displayPhone, href: whatsappUrl },
                 { icon: "✉️", text: "info@duplexlastoninas.com.ar" },
                 { icon: "🕐", text: "Atención: Lun–Dom 9 a 22hs" },
               ].map((item, i) => (
                 <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                   <span style={{ fontSize: 15, flexShrink: 0 }}>{item.icon}</span>
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>{item.text}</span>
+                  {item.href ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: 13,
+                        color: "rgba(255,255,255,0.85)",
+                        lineHeight: 1.5,
+                        textDecoration: "none",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {item.text} ↗
+                    </a>
+                  ) : (
+                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>{item.text}</span>
+                  )}
                 </div>
               ))}
             </div>

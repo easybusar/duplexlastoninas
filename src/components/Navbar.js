@@ -2,15 +2,32 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { getStoredSiteSettings, buildWhatsAppUrl } from "../lib/data";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [siteSettings, setSiteSettings] = useState(() => getStoredSiteSettings());
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const handleSync = () => setSiteSettings(getStoredSiteSettings());
+    window.addEventListener("toninas_settings_changed", handleSync);
+    window.addEventListener("storage", handleSync);
+    return () => {
+      window.removeEventListener("toninas_settings_changed", handleSync);
+      window.removeEventListener("storage", handleSync);
+    };
+  }, []);
+
+  const waUrl = buildWhatsAppUrl(
+    siteSettings?.whatsappNumber,
+    "Hola! Me gustaría consultar sobre disponibilidad"
+  );
 
   return (
     <header
@@ -117,7 +134,7 @@ export default function Navbar() {
         {/* CTA */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Link
-            href="https://wa.me/5491134610085?text=Hola!%20Me%20gustar%C3%ADa%20consultar%20sobre%20disponibilidad"
+            href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
             style={{

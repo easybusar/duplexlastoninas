@@ -584,6 +584,24 @@ export function buildWhatsAppUrl(phoneNumber, customMessage) {
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
 
+export function formatPhoneForDisplay(rawPhone) {
+  if (!rawPhone) return "+54 9 11 3461-0085";
+  const digits = String(rawPhone).replace(/\D/g, "");
+  if (digits.startsWith("549") && digits.length === 13) {
+    const area = digits.slice(3, 5);
+    const part1 = digits.slice(5, 9);
+    const part2 = digits.slice(9);
+    return `+54 9 ${area} ${part1}-${part2}`;
+  }
+  if (digits.length === 10) {
+    const area = digits.slice(0, 2);
+    const part1 = digits.slice(2, 6);
+    const part2 = digits.slice(6);
+    return `+54 9 ${area} ${part1}-${part2}`;
+  }
+  return rawPhone;
+}
+
 // ─── Google Ads, GTM Conversion Tracking & UTM Attribution Helper ───────────
 export const STORAGE_KEY_ATTRIBUTION = "toninas_ad_attribution_v1";
 

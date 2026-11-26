@@ -132,6 +132,20 @@ export const siteContent = {
         "Congelá tu alquiler de temporada abonando tu seña vía transferencia bancaria directa (Alias o CVU). Sin intermediarios ni comisiones.",
       buttonText: "Reservar Ahora",
     },
+
+    // Tarjeta 5 Destacada (Reseñas Verificadas de Google Maps)
+    reviewsCard: {
+      badge: "Google Maps · Huéspedes Verificados",
+      rating: "4.8",
+      maxRating: "5.0",
+      stars: 5,
+      title: "Calificación 4.8 en Google Maps",
+      quote:
+        "“Excelente lugar para vacacionar en familia. La cercanía al mar con las escolleras hace que la playa sea súper amplia todo el día. El dúplex muy cómodo, con su parrilla propia y la atención impecable y directa de sus dueños.”",
+      author: "Huéspedes Verificados · Temporada de Verano en Las Toninas",
+      buttonText: "Ver opiniones en Google Maps",
+      link: "https://www.google.com/maps/search/?api=1&query=Calle+12+495+Las+Toninas+Buenos+Aires",
+    },
   },
 
   // ─── 6. CATÁLOGO DE ALOJAMIENTO (UNIDADES) ──────────────────────────────────
