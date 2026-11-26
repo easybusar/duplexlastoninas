@@ -584,18 +584,80 @@ export function buildWhatsAppUrl(phoneNumber, customMessage) {
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
 
-// ─── Google Ads & GTM Conversion Tracking Helper ────────────────────────────
+// ─── Google Ads, GTM Conversion Tracking & UTM Attribution Helper ───────────
+export const STORAGE_KEY_ATTRIBUTION = "toninas_ad_attribution_v1";
+
+export function getStoredAdAttribution() {
+  if (typeof window === "undefined") return null;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const utmSource = params.get("utm_source");
+    const gclid = params.get("gclid");
+    const fbclid = params.get("fbclid");
+    if (utmSource || gclid || fbclid) {
+      const detected = {
+        source: utmSource || (gclid ? "google_ads" : fbclid ? "meta_ads" : "campana"),
+        medium: params.get("utm_medium") || (gclid || fbclid ? "cpc" : ""),
+        campaign: params.get("utm_campaign") || "",
+        term: params.get("utm_term") || "",
+        gclid: gclid || "",
+        fbclid: fbclid || "",
+        landedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(STORAGE_KEY_ATTRIBUTION, JSON.stringify(detected));
+      return detected;
+    }
+    const raw = localStorage.getItem(STORAGE_KEY_ATTRIBUTION);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function getAttributionLabel(sourceRaw) {
+  const s = String(sourceRaw || "web").split("|")[0].toLowerCase();
+  if (s.includes("google") || s === "gclid") {
+    return { label: "Google Ads", bg: "bg-blue-100 text-blue-900 border-blue-300" };
+  }
+  if (s.includes("meta") || s.includes("instagram") || s.includes("facebook") || s === "fbclid") {
+    return { label: "Meta Ads (IG/FB)", bg: "bg-fuchsia-100 text-fuchsia-900 border-fuchsia-300" };
+  }
+  if (s.includes("meli") || s.includes("mercado")) {
+    return { label: "MercadoLibre", bg: "bg-yellow-100 text-yellow-900 border-yellow-300" };
+  }
+  if (s.includes("admin")) {
+    return { label: "Carga Manual", bg: "bg-slate-200 text-slate-800 border-slate-300" };
+  }
+  return { label: "Web Orgánico", bg: "bg-emerald-100 text-emerald-900 border-emerald-300" };
+}
+
 export function trackAdsConversion(eventName, eventParams = {}) {
   if (typeof window === "undefined") return;
   try {
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({
+    const attr = getStoredAdAttribution();
+    const settings = getStoredSiteSettings();
+    const payload = {
       event: eventName,
       ...eventParams,
+      ad_source: attr?.source || "organico",
+      ad_campaign: attr?.campaign || "",
       timestamp: new Date().toISOString(),
-    });
+    };
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push(payload);
     if (typeof window.gtag === "function") {
-      window.gtag("event", eventName, eventParams);
+      window.gtag("event", eventName, payload);
+      if (
+        settings?.googleAdsId &&
+        settings?.googleAdsConversionLabel &&
+        (eventName === "purchase_reservation" || eventName === "whatsapp_click")
+      ) {
+        window.gtag("event", "conversion", {
+          send_to: `${settings.googleAdsId.trim()}/${settings.googleAdsConversionLabel.trim()}`,
+          value: Number(eventParams.value || 0),
+          currency: "ARS",
+        });
+      }
     }
   } catch {}
 }

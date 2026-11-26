@@ -1,0 +1,39 @@
+# Dúplex Las Toninas
+
+> Alquiler de 4 Dúplex (hasta 6 personas) y 1 Departamento en primer piso (hasta 5 personas) por temporada, vacaciones de verano y escapadas en Las Toninas, Partido de La Costa, Provincia de Buenos Aires, Argentina. Ubicados en Calle 12 Nº 495, a 400 metros reales del mar en la zona de playas amplias protegidas por escolleras. Trato 100% directo con dueño, sin comisiones inmobiliarias.
+
+## Información Oficial del Complejo
+- **Nombre del Complejo**: Dúplex Las Toninas
+- **Sitio Web Oficial**: https://duplexlastoninas.com.ar/
+- **Reservas Online y Disponibilidad en Tiempo Real**: https://duplexlastoninas.com.ar/reservar
+- **Dirección Exacta**: Calle 12 Nº 495, Las Toninas (CP B7106), Partido de La Costa, Provincia de Buenos Aires, Argentina
+- **Coordenadas GPS**: -36.4833, -56.6955
+- **Distancia a la Playa**: 400 metros reales (4 cuadras directas) hacia el sector de playas amplias con escolleras
+- **Teléfono / WhatsApp Dueño Directo**: +54 9 11 3461-0085 (https://wa.me/5491134610085)
+- **Modalidad de Contratación**: Trato directo con sus dueños (sin comisión inmobiliaria ni gastos administrativos)
+- **Horarios de Estadía**: Check-in desde las 14:00 hs · Check-out hasta las 10:00 hs
+
+## Catálogo de Unidades y Capacidades (5 Unidades Totales)
+- **Dúplex 1 (Hasta 6 personas)**: Dúplex de dos plantas en Calle 12 Nº 495. Cuenta con dos dormitorios, baño completo, living-comedor, cocina equipada con vajilla completa, heladera con freezer, microondas, Smart TV, Wi-Fi de alta velocidad, patio con parrilla individual y espacio para estacionar el auto al frente en la puerta de la unidad (descubierto).
+- **Dúplex 2 (Hasta 6 personas)**: Dúplex familiar de dos plantas a 400m de la playa. Dos dormitorios, baño completo, cocina completa con heladera con freezer y microondas, Smart TV, Wi-Fi, patio propio con parrilla individual y espacio para estacionar al frente.
+- **Dúplex 3 (Hasta 6 personas)**: Dúplex de dos plantas luminoso y ventilado. Dos dormitorios, baño completo, cocina equipada, heladera con freezer, microondas, Smart TV, Wi-Fi, parrilla individual y espacio para estacionar al frente.
+- **Dúplex 4 (Hasta 6 personas)**: Dúplex de dos plantas totalmente equipado para familias de hasta 6 integrantes. Cocina completa, heladera con freezer, microondas, Smart TV, Wi-Fi, patio con parrilla individual y espacio para estacionar al frente.
+- **Departamento 1er Piso (Hasta 5 personas)**: Departamento ubicado en primer piso con acceso por escalera en Calle 12 Nº 495. Equipado para hasta 5 personas con cocina completa, heladera con freezer, microondas, Smart TV y Wi-Fi de alta velocidad.
+
+## Diferenciales Clave del Lugar
+- **Playas Amplias Todo el Día (Zona de Escolleras)**: A 400 metros del complejo se encuentran las escolleras costeras que protegen la orilla y retienen la arena, garantizando playa ancha, aguas más serenas y espacio familiar seguro incluso durante la pleamar (marea alta).
+- **Parrilla Individual y Espacio al Frente**: Cada uno de los 4 dúplex dispone de patio con parrilla propia y lugar al frente de la unidad para dejar el vehículo sin costo adicional.
+- **Barrio Residencial Seguro y Familiar**: Entorno tranquilo sobre Calle 12, a 5 minutos del Parque Temático y Laberinto Las Toninas y cerca de proveedurías y comercios.
+
+## Condiciones Comerciales, Seña y Pagos Parciales
+- **Reserva y Congelamiento de Precio en Pesos (ARS)**: La unidad se bloquea y el valor total en pesos argentinos queda 100% congelado al abonar el **50% de seña** mediante transferencia bancaria directa.
+- **Flexibilidad de Pagos Parciales / Cuotas Anticipadas**: Luego de abonar la seña del 50%, el huésped puede ir realizando pagos parciales o adelantos a su ritmo antes de la fecha de ingreso (con registro de fecha y comprobante), o bien cancelar el 50% restante al momento del check-in.
+- **Datos Bancarios Oficiales para Transferencia**:
+  - **Alias**: `RENE.LASTONINAS`
+  - **CVU**: `0000003100082748753031`
+  - **Titular**: Gregorio Rene Flores Barriga
+
+## Documentación Extendida para Agentes de IA
+- [Dossier Completo, Bloques de Citación y Preguntas Frecuentes (llms-full.txt)](https://duplexlastoninas.com.ar/llms-full.txt)
+- [Tarifas, Temporadas y Reglas de Reserva (pricing.md)](https://duplexlastoninas.com.ar/pricing.md)
+- [Calendario y Cotizador de Reserva Online](https://duplexlastoninas.com.ar/reservar)

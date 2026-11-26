@@ -19,7 +19,7 @@ export const metadata = {
   metadataBase: new URL("https://duplexlastoninas.com.ar"),
   title: "Alquiler Duplex en Las Toninas | Dueño Directo Alquiler de Temporada",
   description:
-    "Alquiler de Dúplex y Departamento de alquiler por temporada en Las Toninas (Calle 12 Nº 495). A 400 metros de las playas más amplias, con parrilla propia y espacio para estacionar al frente en los dúplex. Trato directo con dueño sin comisiones.",
+    "Alquiler de 4 Dúplex (hasta 6 personas) y 1 Departamento (hasta 5 personas) por temporada en Las Toninas (Calle 12 Nº 495). A 400 metros de las playas más amplias con escolleras, parrilla propia y espacio para estacionar al frente en los dúplex. Trato directo con dueño sin comisiones.",
   keywords: [
     "alquiler duplex",
     "alquiler temporada",
@@ -32,6 +32,8 @@ export const metadata = {
     "alojamiento en las toninas cerca del mar",
     "alquiler vacaciones costa atlantica",
     "duplex con parrilla las toninas",
+    "alquiler las toninas 6 personas",
+    "alquiler verano las toninas sin comision",
   ],
   alternates: {
     canonical: "https://duplexlastoninas.com.ar",
@@ -39,7 +41,7 @@ export const metadata = {
   openGraph: {
     title: "Alquiler Duplex en Las Toninas | Dueño Directo Alquiler de Temporada",
     description:
-      "Tu alquiler de temporada seguro a 400m del mar en Las Toninas. 4 Dúplex y 1 Departamento equipados con parrilla propia y espacio para estacionar al frente en los dúplex. Trato directo con dueño.",
+      "Tu alquiler de temporada seguro a 400m del mar en Las Toninas. 4 Dúplex (6 pers.) y 1 Departamento (5 pers.) equipados con parrilla propia y espacio para estacionar al frente en los dúplex. Trato directo con dueño.",
     url: "https://duplexlastoninas.com.ar",
     siteName: "Dúplex Las Toninas",
     locale: "es_AR",
@@ -57,7 +59,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Alquiler Duplex en Las Toninas | Alquiler de Temporada Directo Dueño",
     description:
-      "4 Dúplex y 1 Departamento totalmente equipados a 400 metros del mar en Las Toninas. Alquiler directo con su dueño.",
+      "4 Dúplex y 1 Departamento totalmente equipados a 400 metros del mar en Las Toninas. Alquiler directo con su dueño sin comisión.",
     images: ["/fotos/FRENTE/DUPLEX1.jpg"],
   },
   icons: {
@@ -83,37 +85,179 @@ export const metadata = {
 export default function RootLayout({ children }) {
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "LodgingBusiness",
-    name: "Dúplex Las Toninas — Alquiler de Dúplex y Temporada",
-    url: "https://duplexlastoninas.com.ar",
-    image: "https://duplexlastoninas.com.ar/fotos/FRENTE/DUPLEX1.jpg",
-    description:
-      "Especialistas en alquiler de dúplex y departamentos de alquiler por temporada en Las Toninas, Partido de La Costa, Buenos Aires. A 400 metros del mar con playas amplias protegidas por escolleras.",
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Calle 12 Nº 495",
-      addressLocality: "Las Toninas",
-      addressRegion: "Buenos Aires",
-      postalCode: "B7106",
-      addressCountry: "AR",
-    },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: -36.4833,
-      longitude: -56.6955,
-    },
-    priceRange: "$$",
-    checkinTime: "14:00",
-    checkoutTime: "10:00",
-    amenityFeature: [
-      { "@type": "LocationFeatureSpecification", name: "WiFi de alta velocidad", value: true },
-      { "@type": "LocationFeatureSpecification", name: "Heladera con freezer y microondas", value: true },
-      { "@type": "LocationFeatureSpecification", name: "Parrilla individual", value: true },
-      { "@type": "LocationFeatureSpecification", name: "Espacio para estacionar al frente en dúplex", value: true },
-      { "@type": "LocationFeatureSpecification", name: "Cocina familiar equipada", value: true },
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://duplexlastoninas.com.ar/#website",
+        url: "https://duplexlastoninas.com.ar/",
+        name: "Dúplex Las Toninas",
+        inLanguage: "es-AR",
+        publisher: {
+          "@id": "https://duplexlastoninas.com.ar/#lodging",
+        },
+      },
+      {
+        "@type": "LodgingBusiness",
+        "@id": "https://duplexlastoninas.com.ar/#lodging",
+        name: "Dúplex Las Toninas — Alquiler de Dúplex y Temporada Dueño Directo",
+        url: "https://duplexlastoninas.com.ar/",
+        logo: "https://duplexlastoninas.com.ar/logo.png",
+        image: [
+          "https://duplexlastoninas.com.ar/fotos/FRENTE/DUPLEX1.jpg",
+          "https://duplexlastoninas.com.ar/fotos/escolleras-playa.png",
+          "https://duplexlastoninas.com.ar/fotos/DUPLEX/LT%20DUPLEX%2013.jpg",
+        ],
+        description:
+          "Complejo de 4 Dúplex (hasta 6 personas) y 1 Departamento en primer piso (hasta 5 personas) de alquiler por temporada en Calle 12 Nº 495, Las Toninas, Partido de La Costa, Buenos Aires. A 400 metros reales del mar en la zona de playas amplias protegidas por escolleras. Trato directo con dueño sin comisión inmobiliaria.",
+        telephone: "+54 9 11 3461-0085",
+        priceRange: "$$",
+        currenciesAccepted: "ARS",
+        paymentAccepted: "Transferencia Bancaria, Efectivo",
+        checkinTime: "14:00",
+        checkoutTime: "10:00",
+        numberOfRooms: 5,
+        petsAllowed: false,
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: "Calle 12 Nº 495",
+          addressLocality: "Las Toninas",
+          addressRegion: "Buenos Aires",
+          postalCode: "B7106",
+          addressCountry: "AR",
+        },
+        geo: {
+          "@type": "GeoCoordinates",
+          latitude: -36.4833,
+          longitude: -56.6955,
+        },
+        areaServed: [
+          { "@type": "City", name: "Las Toninas" },
+          { "@type": "AdministrativeArea", name: "Partido de La Costa" },
+          { "@type": "AdministrativeArea", name: "Provincia de Buenos Aires" },
+        ],
+        amenityFeature: [
+          { "@type": "LocationFeatureSpecification", name: "WiFi de alta velocidad", value: true },
+          { "@type": "LocationFeatureSpecification", name: "Heladera con freezer y microondas", value: true },
+          { "@type": "LocationFeatureSpecification", name: "Parrilla individual en dúplex", value: true },
+          { "@type": "LocationFeatureSpecification", name: "Espacio para estacionar al frente en dúplex", value: true },
+          { "@type": "LocationFeatureSpecification", name: "Cocina familiar equipada y Smart TV", value: true },
+        ],
+        hasOfferCatalog: {
+          "@type": "OfferCatalog",
+          name: "Catálogo de Alojamiento en Dúplex Las Toninas (Calle 12 Nº 495)",
+          itemListElement: [
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "House",
+                name: "Dúplex 1 al 4 (Hasta 6 personas)",
+                description:
+                  "4 dúplex de dos plantas independientes en Calle 12 Nº 495 a 400 metros del mar. Equipados para hasta 6 personas con dos dormitorios, baño completo, cocina con vajilla, heladera con freezer, microondas, Smart TV, Wi-Fi, patio con parrilla individual y espacio descubierto al frente para estacionar el vehículo.",
+                occupancy: { "@type": "QuantitativeValue", maxValue: 6 },
+                url: "https://duplexlastoninas.com.ar/reservar?property=duplex-1",
+              },
+            },
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Apartment",
+                name: "Departamento Primer Piso (Hasta 5 personas)",
+                description:
+                  "Departamento familiar ubicado en primer piso con acceso por escalera en Calle 12 Nº 495, Las Toninas. Equipado para hasta 5 personas con cocina completa, heladera con freezer, microondas, Smart TV y Wi-Fi de alta velocidad a 400 metros de la playa.",
+                occupancy: { "@type": "QuantitativeValue", maxValue: 5 },
+                url: "https://duplexlastoninas.com.ar/reservar?property=depto-1",
+              },
+            },
+          ],
+        },
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://duplexlastoninas.com.ar/#faq",
+        mainEntity: [
+          {
+            "@type": "Question",
+            name: "¿A cuántas cuadras de la playa están ubicados los dúplex?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Estamos en Calle 12 Nº 495, a exactamente 400 metros reales (4 cuadras derechas) de la playa de Las Toninas, en un barrio residencial tranquilo, seguro y familiar.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "¿Por qué la playa de esa zona de Las Toninas es más amplia?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Porque a la altura de nuestra bajada se encuentran las escolleras costeras que protegen la costa de la erosión y retienen la arena. Gracias a esto, la playa se mantiene ancha y con aguas más serenas durante todo el día, incluso cuando sube la marea.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "¿Cuál es la capacidad de los dúplex y del departamento?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Contamos con 5 unidades en total: 4 Dúplex de dos plantas con capacidad máxima para hasta 6 personas cada uno, y 1 Departamento en primer piso por escalera con capacidad para hasta 5 personas.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "¿Cómo se reserva y cómo se congela el precio en pesos de la estadía?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Podés elegir tus fechas en el calendario online en duplexlastoninas.com.ar/reservar o consultar por WhatsApp al +54 9 11 3461-0085. La reserva queda confirmada y el precio total en pesos argentinos se congela al 100% abonando el 50% de seña mediante transferencia bancaria directa.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "¿Puedo pagar la seña ahora e ir adelantando pagos parciales antes de ingresar?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Sí. Una vez confirmada tu reserva con el 50% de seña, podés ir transfiriendo pagos parciales o adelantos a tu ritmo antes del viaje hasta completar el 100%, o bien cancelar el saldo restante al momento del check-in (14:00 hs). Cada pago queda registrado con fecha en tu ficha de cliente.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "¿Cobran comisión inmobiliaria o gastos administrativos?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "No. El alquiler es 100% trato directo con sus dueños. El valor que cotizás en la web es el precio final, sin comisiones inmobiliarias ni recargos.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "¿Tienen parrilla y lugar para estacionar el auto?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Sí, los 4 Dúplex cuentan con patio con parrilla individual propia y espacio descubierto al frente de cada unidad para estacionar el vehículo en la puerta sin cargo adicional.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "¿Qué equipamiento incluyen las unidades?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Todas las unidades cuentan con conexión Wi-Fi de alta velocidad, Smart TV, heladera con freezer, microondas, cocina con horno y vajilla completa para la capacidad de la unidad.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "¿Cuáles son los horarios de entrada (check-in) y salida (check-out)?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "El ingreso (check-in) es a partir de las 14:00 hs en Calle 12 Nº 495 y el horario de salida (check-out) es hasta las 10:00 hs.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "¿Cuáles son los datos oficiales para transferir la seña?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Las transferencias se realizan únicamente a la cuenta oficial a nombre de Gregorio Rene Flores Barriga (Alias: RENE.LASTONINAS · CVU: 0000003100082748753031), enviando luego el comprobante por WhatsApp para dejar congelada la unidad.",
+            },
+          },
+        ],
+      },
     ],
-    numberOfRooms: 5,
-    petsAllowed: false,
   };
 
   return (
@@ -125,16 +269,61 @@ export default function RootLayout({ children }) {
         <link rel="shortcut icon" href="/logo.png?v=3" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
+        {/* LLM & AI Search Engine Discovery (ChatGPT, Gemini, Claude, Perplexity) */}
+        <link rel="help" type="text/markdown" href="https://duplexlastoninas.com.ar/llms.txt" title="LLMs.txt" />
+        <link rel="alternate" type="text/markdown" href="https://duplexlastoninas.com.ar/llms-full.txt" title="LLMs-Full.txt" />
+        <link rel="alternate" type="text/markdown" href="https://duplexlastoninas.com.ar/pricing.md" title="Tarifas y Reglas de Reserva" />
+        <link rel="sitemap" type="application/xml" href="https://duplexlastoninas.com.ar/sitemap.xml" />
+
+        {/* Structured Data / Schema.org @graph (SEO & GEO) */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(structuredData),
           }}
         />
-        {/* Preparación de DataLayer para Google Ads & Google Tag Manager */}
+
+        {/* Inicialización de DataLayer, Google Ads Dynamic Loader y Captura de Atribución UTM/GCLID */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);}`,
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              try {
+                var params = new URLSearchParams(window.location.search);
+                var utmSource = params.get('utm_source');
+                var utmMedium = params.get('utm_medium');
+                var utmCampaign = params.get('utm_campaign');
+                var utmTerm = params.get('utm_term');
+                var gclid = params.get('gclid');
+                var fbclid = params.get('fbclid');
+                if (utmSource || gclid || fbclid) {
+                  var detectedSource = utmSource || (gclid ? 'google_ads' : fbclid ? 'meta_ads' : 'campana');
+                  var attr = {
+                    source: detectedSource,
+                    medium: utmMedium || (gclid || fbclid ? 'cpc' : ''),
+                    campaign: utmCampaign || '',
+                    term: utmTerm || '',
+                    gclid: gclid || '',
+                    fbclid: fbclid || '',
+                    landedAt: new Date().toISOString()
+                  };
+                  localStorage.setItem('toninas_ad_attribution_v1', JSON.stringify(attr));
+                }
+                var rawSettings = localStorage.getItem('toninas_site_settings_v1');
+                var parsedSettings = rawSettings ? JSON.parse(rawSettings) : null;
+                var adsId = (parsedSettings && parsedSettings.googleAdsId) ? parsedSettings.googleAdsId.trim() : '';
+                if (adsId && /^AW-|^G-/i.test(adsId)) {
+                  var s = document.createElement('script');
+                  s.async = true;
+                  s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(adsId);
+                  document.head.appendChild(s);
+                  gtag('config', adsId);
+                }
+              } catch (e) {}
+            `,
           }}
         />
       </head>

@@ -21,6 +21,7 @@ import {
   getBookingColorMap,
   normalizeBookingPayments,
   getCleanNotes,
+  getAttributionLabel,
 } from "@/lib/data";
 import { siteContent } from "@/lib/content";
 import BookingCalendar from "@/components/BookingCalendar";
@@ -1887,9 +1888,22 @@ function ReservasSection({
                         {guestName}
                       </div>
                     </div>
-                    <div className="text-xs text-[#5A697D] flex items-center gap-1 mt-0.5">
-                      <MapPin className="size-3 text-[#1E293B]" />
-                      <span>{guestResidence}</span>
+                    <div className="text-xs text-[#5A697D] flex flex-wrap items-center gap-1.5 mt-0.5">
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="size-3 text-[#1E293B]" />
+                        <span>{guestResidence}</span>
+                      </span>
+                      {(() => {
+                        const attrInfo = getAttributionLabel(b.source);
+                        return (
+                          <span
+                            className={`inline-flex items-center rounded-full border px-2 py-0.2 text-[10px] font-bold ${attrInfo.bg}`}
+                            title={`Canal de origen: ${b.source || "web"}`}
+                          >
+                            {attrInfo.label}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -2467,6 +2481,9 @@ function ConfiguracionSection({ siteSettings, onSave }) {
     siteSettings?.paymentHolder || "Gregorio Rene Flores Barriga"
   );
   const [googleAdsId, setGoogleAdsId] = useState(siteSettings?.googleAdsId || "");
+  const [googleAdsConversionLabel, setGoogleAdsConversionLabel] = useState(
+    siteSettings?.googleAdsConversionLabel || ""
+  );
   const [depositPercentage, setDepositPercentage] = useState(
     siteSettings?.depositPercentage || 50
   );
@@ -2493,6 +2510,7 @@ function ConfiguracionSection({ siteSettings, onSave }) {
       setPaymentCvu(siteSettings.paymentCvu || "0000003100082748753031");
       setPaymentHolder(siteSettings.paymentHolder || "Gregorio Rene Flores Barriga");
       setGoogleAdsId(siteSettings.googleAdsId || "");
+      setGoogleAdsConversionLabel(siteSettings.googleAdsConversionLabel || "");
       setDepositPercentage(siteSettings.depositPercentage || 50);
       setAdminEmail(siteSettings.adminEmail || "admin@duplexlastoninas.com.ar");
       setAdminPassword(siteSettings.adminPassword || "admin123");
@@ -2514,6 +2532,7 @@ function ConfiguracionSection({ siteSettings, onSave }) {
         paymentCvu: paymentCvu.trim(),
         paymentHolder: paymentHolder.trim(),
         googleAdsId: googleAdsId.trim(),
+        googleAdsConversionLabel: googleAdsConversionLabel.trim(),
         depositPercentage: Number(depositPercentage) || 50,
         adminEmail: adminEmail.trim(),
         adminPassword: adminPassword.trim(),
@@ -2692,23 +2711,109 @@ function ConfiguracionSection({ siteSettings, onSave }) {
           </div>
         </div>
 
-        {/* Google Ads */}
-        <div className="pt-2 border-t border-[#EFEFEF]">
-          <div>
-            <label
-              htmlFor="config-google-ads"
-              className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
-            >
-              ID de Google Ads (Opcional)
-            </label>
-            <input
-              id="config-google-ads"
-              type="text"
-              value={googleAdsId}
-              onChange={(e) => setGoogleAdsId(e.target.value)}
-              placeholder="Ej: AW-123456789"
-              className="w-full sm:max-w-md rounded-xl bg-[#EFEFEF]/60 border border-[#D7E0EB] px-4 py-2.5 text-sm font-semibold text-[#1E293B]"
-            />
+        {/* Google Ads, Trazabilidad UTM y Kit de Campaña de Bajo Coste (Estilo EasyBus) */}
+        <div className="rounded-2xl bg-[#EFEFEF]/60 p-5 border border-[#D7E0EB] space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-[#1E293B] text-white">
+              <TrendingUp className="size-5" />
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-[#1E293B]">
+                Google Ads, Trazabilidad UTM y Ecosistema SEO / GEO
+              </h3>
+              <p className="text-xs text-[#5A697D]">
+                Configurá tu ID de Google Ads y utilizá las URLs con seguimiento automático para saber qué anuncio genera cada reserva.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="config-google-ads"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+              >
+                ID de Google Ads / Analytics (Opcional)
+              </label>
+              <input
+                id="config-google-ads"
+                type="text"
+                value={googleAdsId}
+                onChange={(e) => setGoogleAdsId(e.target.value)}
+                placeholder="Ej: AW-123456789 o G-XXXXXXXX"
+                className="w-full rounded-xl bg-white border border-[#D7E0EB] px-4 py-2.5 text-sm font-semibold text-[#1E293B]"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="config-google-ads-label"
+                className="block text-xs font-bold uppercase tracking-wider text-[#1E293B] mb-1.5"
+              >
+                Etiqueta de Conversión (Opcional)
+              </label>
+              <input
+                id="config-google-ads-label"
+                type="text"
+                value={googleAdsConversionLabel}
+                onChange={(e) => setGoogleAdsConversionLabel(e.target.value)}
+                placeholder="Ej: AbCdEfGhIjKlMnOpQr"
+                className="w-full rounded-xl bg-white border border-[#D7E0EB] px-4 py-2.5 text-sm font-semibold text-[#1E293B]"
+              />
+            </div>
+          </div>
+
+          {/* Enlaces listos para campañas con atribución automática en Reservas */}
+          <div className="rounded-xl bg-white p-4 border border-[#D7E0EB] space-y-3">
+            <div className="text-xs font-bold uppercase tracking-wider text-[#1E293B]">
+              URLs de Destino con Trazabilidad Automática (Pegar en tus anuncios)
+            </div>
+            <div className="space-y-2 text-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-2 rounded-lg bg-[#F8FAFC] border border-slate-200">
+                <div>
+                  <span className="font-bold text-blue-900">Google Ads (Búsqueda): </span>
+                  <code className="text-[11px] text-slate-700 break-all">
+                    https://duplexlastoninas.com.ar/?utm_source=google_ads&amp;utm_medium=cpc&amp;utm_campaign=verano_toninas
+                  </code>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-2 rounded-lg bg-[#F8FAFC] border border-slate-200">
+                <div>
+                  <span className="font-bold text-fuchsia-900">Meta Ads (Instagram / Facebook): </span>
+                  <code className="text-[11px] text-slate-700 break-all">
+                    https://duplexlastoninas.com.ar/?utm_source=meta_ads&amp;utm_medium=social&amp;utm_campaign=reels_toninas
+                  </code>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-2 rounded-lg bg-[#F8FAFC] border border-slate-200">
+                <div>
+                  <span className="font-bold text-amber-900">MercadoLibre / Marketplace: </span>
+                  <code className="text-[11px] text-slate-700 break-all">
+                    https://duplexlastoninas.com.ar/reservar?utm_source=mercadolibre&amp;utm_medium=clasificado
+                  </code>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#5A697D] mb-1">
+                Palabras Clave Negativas Recomendadas en Google Ads (Ahorro 40% presupuesto):
+              </div>
+              <p className="text-[11px] font-mono text-slate-700 bg-slate-100 p-2 rounded-lg select-all">
+                -venta -comprar -lote -terreno -inmobiliaria -anual -permanente -gratis -trabajo -empleo -camping -carpa -hotel -pasajes -micro -san clemente -santa teresita -mar del tuyu -san bernardo -mar de ajo -pinamar -villa gesell -mar del plata
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2 text-[11px]">
+              <span className="font-bold text-[#1E293B]">Archivos SEO &amp; GEO Activos:</span>
+              <a href="/llms.txt" target="_blank" rel="noopener noreferrer" className="underline text-emerald-700 font-semibold">/llms.txt</a>
+              <span>·</span>
+              <a href="/llms-full.txt" target="_blank" rel="noopener noreferrer" className="underline text-emerald-700 font-semibold">/llms-full.txt</a>
+              <span>·</span>
+              <a href="/pricing.md" target="_blank" rel="noopener noreferrer" className="underline text-emerald-700 font-semibold">/pricing.md</a>
+              <span>·</span>
+              <a href="/sitemap.xml" target="_blank" rel="noopener noreferrer" className="underline text-emerald-700 font-semibold">/sitemap.xml</a>
+            </div>
           </div>
         </div>
 

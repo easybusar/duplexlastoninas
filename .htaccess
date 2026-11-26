@@ -1,3 +1,7 @@
+AddDefaultCharset UTF-8
+AddType text/markdown .md
+AddType text/plain .txt
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
@@ -17,8 +21,8 @@
 </IfModule>
 
 <IfModule mod_headers.c>
-  # HTML files - no cache so visitors and owner always see latest updates immediately
-  <FilesMatch "\.(html|htm)$">
+  # HTML, Markdown & LLM index files - always fresh
+  <FilesMatch "\.(html|htm|txt|md|xml)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires "0"

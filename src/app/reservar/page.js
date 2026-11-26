@@ -13,6 +13,7 @@ import {
   calculateTotal,
   calculateStayPrice,
   formatDateDDMMAAAA,
+  getStoredAdAttribution,
 } from "@/lib/data";
 import { siteContent } from "@/lib/content";
 import { createBooking, getBookings, getProperties, getSiteSettings } from "@/lib/supabase";
@@ -141,6 +142,8 @@ function ReservarContent() {
     setLoading(true);
     try {
       const total = pricing?.total || 0;
+      const adAttr = getStoredAdAttribution();
+      const bookingSource = adAttr?.source ? adAttr.source : "web";
       await createBooking({
         property_id: selectedProperty,
         guest_name: guestData.name,
@@ -154,7 +157,7 @@ function ReservarContent() {
         deposit_paid: 0,
         status: "pending",
         payment_method: "Transferencia",
-        source: "web",
+        source: bookingSource,
       });
       trackAdsConversion("purchase_reservation", {
         value: total,

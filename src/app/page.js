@@ -174,6 +174,14 @@ function RivrHeroSection({ heroRef, whatsappNumber }) {
                 {navigation?.ubicacion || "Ubicación"}
               </a>
             </li>
+            <li>
+              <a
+                href="#faq"
+                className="transition-colors hover:text-[#0F172A]"
+              >
+                {navigation?.faq || "Preguntas"}
+              </a>
+            </li>
           </ul>
 
           {/* Right CTA Button with Rivr Circular Pill */}
@@ -230,6 +238,13 @@ function RivrHeroSection({ heroRef, whatsappNumber }) {
               className="block py-2 text-sm font-bold text-[#1E293B] border-b border-slate-100"
             >
               {navigation?.ubicacion || "Ubicación"}
+            </a>
+            <a
+              href="#faq"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-sm font-bold text-[#1E293B] border-b border-slate-100"
+            >
+              {navigation?.faq || "Preguntas Frecuentes"}
             </a>
             <a
               href={buildWhatsAppUrl(
@@ -1100,6 +1115,90 @@ function RivrLocationSection() {
   );
 }
 
+// ─── 6B. SECCIÓN PREGUNTAS FRECUENTES (SEO, GEO & GOOGLE ADS) ───────────────
+function RivrFaqSection({ whatsappNumber }) {
+  const { faqSection, brand } = siteContent;
+  if (!faqSection || !Array.isArray(faqSection.items)) return null;
+
+  const faqWaUrl = buildWhatsAppUrl(
+    whatsappNumber,
+    "Hola! Estuve leyendo las preguntas frecuentes en la web de Dúplex Las Toninas y quiero consultar disponibilidad."
+  );
+
+  return (
+    <section
+      id="faq"
+      aria-labelledby="faq-heading"
+      className="mx-auto w-full max-w-[1536px] px-4 py-12 md:px-8 md:py-16"
+    >
+      <div className="rounded-[1.75rem] md:rounded-[2.75rem] bg-white p-6 sm:p-10 md:p-12 border border-[#D7E0EB]/80 shadow-2xs">
+        <div className="max-w-3xl">
+          <span className="inline-flex items-center gap-2 rounded-full bg-[#E7EEF5] px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wider text-[#1E293B]">
+            <ShieldCheck className="size-3.5" />
+            {faqSection.badge}
+          </span>
+          <h2
+            id="faq-heading"
+            className="mt-3 text-2xl sm:text-4xl font-extrabold tracking-tight text-[#1E293B] text-balance"
+          >
+            {faqSection.title}
+          </h2>
+          <p className="mt-2 text-sm sm:text-base font-medium text-[#5A697D] leading-relaxed text-pretty">
+            {faqSection.subtitle}
+          </p>
+        </div>
+
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+          {faqSection.items.map((item, idx) => (
+            <details
+              key={item.q}
+              open={idx < 2}
+              className="group rounded-2xl bg-[#EFEFEF]/65 open:bg-[#E7EEF5]/60 border border-[#D7E0EB] p-4 sm:p-5 transition-colors"
+            >
+              <summary className="list-none flex items-center gap-2.5 cursor-pointer text-sm sm:text-base font-extrabold text-[#1E293B] select-none">
+                <ChevronRight className="size-4 shrink-0 text-[#1E293B] transition-transform duration-200 group-open:rotate-90" />
+                <span>{item.q}</span>
+              </summary>
+              <p className="mt-3 ps-6.5 text-xs sm:text-sm font-medium text-[#5A697D] leading-relaxed">
+                {item.a}
+              </p>
+            </details>
+          ))}
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-[#D7E0EB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <p className="text-xs sm:text-sm font-semibold text-[#5A697D]">
+            ¿Tenés otra consulta sobre fechas, estadías o pagos parciales en{" "}
+            <strong className="text-[#1E293B]">{brand.address}</strong>?
+          </p>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <a
+              href={faqWaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                trackAdsConversion("whatsapp_click", { source: "faq_section" })
+              }
+              className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1ebe5d] px-4 py-2 text-xs font-bold text-white transition-all shadow-2xs"
+            >
+              <WhatsAppIcon className="size-3.5" />
+              <span>Preguntar al Dueño por WhatsApp</span>
+            </a>
+            <Link
+              href="/reservar"
+              onClick={() => trackAdsConversion("click_reservar_faq")}
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#1E293B] hover:bg-[#0F172A] px-4 py-2 text-xs font-bold text-white transition-all"
+            >
+              <span>Ver Calendario Online</span>
+              <ArrowUpRight className="size-3.5" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── 7. BANNER DE CIERRE CTA RIVR ───────────────────────────────────────────
 function RivrCtaBannerSection({ whatsappNumber }) {
   const { hero, bento, ctaBanner } = siteContent;
@@ -1635,6 +1734,7 @@ export default function HomePage() {
       />
       <RivrGallerySection />
       <RivrLocationSection />
+      <RivrFaqSection whatsappNumber={activePhone} />
       <RivrCtaBannerSection whatsappNumber={activePhone} />
       <RivrFooter whatsappNumber={activePhone} visitCount={visitCount} />
 

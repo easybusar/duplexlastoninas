@@ -1,10 +1,69 @@
-# Robots.txt - Dúplex Las Toninas
+# Robots.txt - Dúplex Las Toninas (SEO + GEO AI Search Discovery)
 User-agent: *
+Allow: /
+Allow: /reservar
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /pricing.md
 Disallow: /admin/
 Disallow: /admin
 Disallow: /cuidador/
 Disallow: /cuidador
+
+# OpenAI / ChatGPT Search & Assistant
+User-agent: OAI-SearchBot
 Allow: /
-Allow: /reservar
+Disallow: /admin/
+Disallow: /cuidador/
+
+User-agent: GPTBot
+Allow: /
+Disallow: /admin/
+Disallow: /cuidador/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin/
+Disallow: /cuidador/
+
+# Google Search, Gemini & AI Overviews
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /cuidador/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /admin/
+Disallow: /cuidador/
+
+# Anthropic / Claude
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin/
+Disallow: /cuidador/
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /admin/
+Disallow: /cuidador/
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /cuidador/
+
+# Microsoft Bing & Copilot (fuente de ChatGPT Search)
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /cuidador/
+
+# Apple Intelligence
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /admin/
+Disallow: /cuidador/
 
 Sitemap: https://duplexlastoninas.com.ar/sitemap.xml

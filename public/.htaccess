@@ -1,3 +1,7 @@
+AddDefaultCharset UTF-8
+AddType text/markdown .md
+AddType text/plain .txt
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
@@ -17,8 +21,8 @@
 </IfModule>
 
 <IfModule mod_headers.c>
-  # HTML files - no cache so visitors and owner always see latest updates immediately
-  <FilesMatch "\.(html|htm)$">
+  # HTML, Markdown & LLM index files - always fresh
+  <FilesMatch "\.(html|htm|txt|md|xml)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires "0"
@@ -28,4 +32,9 @@
   <FilesMatch "\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|mp4|webm)$">
     Header set Cache-Control "max-age=31536000, public, immutable"
   </FilesMatch>
+
+  # Bloqueo estricto de indexación en buscadores para el panel de control
+  <If "%{REQUEST_URI} =~ m#^/(admin|cuidador)#">
+    Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
+  </If>
 </IfModule>

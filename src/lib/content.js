@@ -35,6 +35,7 @@ export const siteContent = {
     alojamiento: "Alojamiento",
     galeria: "Galería",
     ubicacion: "Ubicación",
+    faq: "Preguntas",
     ctaButton: "Reservar Online",
   },
 
@@ -199,6 +200,56 @@ export const siteContent = {
         dist: "Check-in 14h · Check-out 10h",
         detail:
           "Acceso directo sobre Calle 12 Nº 495. Horarios de estadía: ingreso a partir de las 14:00 hs y egreso hasta las 10:00 hs.",
+      },
+    ],
+  },
+
+  // ─── 8B. PREGUNTAS FRECUENTES (SEO, GEO & GOOGLE ADS QUALITY SCORE) ─────────
+  faqSection: {
+    badge: "Dudas Frecuentes · Alquiler Dueño Directo",
+    title: "Todo lo que necesitás saber antes de reservar",
+    subtitle:
+      "Transparencia total en tarifas, comodidades y modalidad de reserva directa sin comisiones inmobiliarias en Calle 12 Nº 495, Las Toninas.",
+    items: [
+      {
+        q: "¿A cuántas cuadras reales de la playa están ubicados los dúplex?",
+        a: "Estamos en Calle 12 Nº 495, a exactamente 400 metros reales (4 cuadras derechas) de la playa de Las Toninas, en un barrio residencial tranquilo, seguro y familiar.",
+      },
+      {
+        q: "¿Por qué la playa de esa zona de Las Toninas es más amplia?",
+        a: "Porque a la altura de nuestra bajada se encuentran las escolleras costeras que protegen la orilla y retienen la arena. Gracias a esto, la playa se mantiene ancha y con aguas más serenas durante todo el día, incluso cuando sube la marea.",
+      },
+      {
+        q: "¿Cuál es la capacidad de los dúplex y del departamento?",
+        a: "El complejo cuenta con 5 unidades independientes: 4 Dúplex de dos plantas con capacidad máxima para hasta 6 personas cada uno, y 1 Departamento en primer piso por escalera con capacidad para hasta 5 personas.",
+      },
+      {
+        q: "¿Cómo se reserva y cómo se congela el precio en pesos de la estadía?",
+        a: "Podés elegir tus fechas en nuestro calendario online (/reservar) o por WhatsApp. La reserva queda confirmada y el precio total en pesos argentinos se congela al 100% contra la inflación abonando el 50% de seña mediante transferencia bancaria directa.",
+      },
+      {
+        q: "¿Puedo pagar la seña ahora e ir adelantando pagos parciales antes de viajar?",
+        a: "Sí. Una vez congelada tu reserva con el 50% de seña, podés ir transfiriendo pagos parciales o adelantos a tu ritmo cuando dispongas de dinero hasta completar el 100% antes de ingresar, o abonar el saldo restante en recepción al hacer el check-in. Cada pago queda registrado con fecha en tu tarjeta de reserva.",
+      },
+      {
+        q: "¿Cobran comisión inmobiliaria o gastos administrativos?",
+        a: "No. El alquiler es 100% trato directo con sus dueños. El monto que cotizás en la web es el precio final, sin comisiones inmobiliarias ni costos ocultos.",
+      },
+      {
+        q: "¿Tienen parrilla propia y lugar para estacionar el auto?",
+        a: "Sí, los 4 Dúplex cuentan con patio con parrilla individual propia y espacio descubierto al frente de cada unidad para estacionar el vehículo en la puerta sin cargo adicional.",
+      },
+      {
+        q: "¿Qué equipamiento incluyen las unidades?",
+        a: "Todas las unidades están equipadas con conexión Wi-Fi de alta velocidad, Smart TV, heladera con freezer, microondas, cocina con horno y vajilla completa para la capacidad máxima de huéspedes.",
+      },
+      {
+        q: "¿Cuáles son los horarios de entrada (check-in) y salida (check-out)?",
+        a: "El ingreso (check-in) es a partir de las 14:00 hs en Calle 12 Nº 495, donde nuestro cuidador te recibe con las llaves, y el horario de salida (check-out) es hasta las 10:00 hs.",
+      },
+      {
+        q: "¿Cuáles son los datos bancarios oficiales para transferir la seña?",
+        a: "Las transferencias se realizan únicamente a la cuenta oficial a nombre de Gregorio Rene Flores Barriga (Alias: RENE.LASTONINAS · CVU: 0000003100082748753031), enviando luego el comprobante por WhatsApp para dejar congelada la unidad.",
       },
     ],
   },
